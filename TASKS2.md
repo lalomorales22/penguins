@@ -24,7 +24,7 @@ channels). We're stripping it down to what's actually useful for the new directi
 | **Auto-reply** | `src/auto-reply/` | Core messaging logic |
 | **WebChat UI** | `src/web/`, `ui/` | Primary chat surface (our own app) |
 | **TUI** | `src/tui/` | Terminal chat UI |
-| **Channels** | WhatsApp, Telegram, Discord, Slack, Google Chat | Most-used platforms |
+| **Channels** | WhatsApp, Telegram, Discord, Slack, Google Chat, Teams, Matrix, BlueBubbles | Core supported platforms |
 | **Memory** | `src/memory/` | Useful persistence feature |
 | **Canvas host** | `src/canvas-host/` | WebChat UI host |
 | **Daemon** | `src/daemon/` | systemd/launchd service management |
@@ -128,89 +128,96 @@ local-network discovery in general. Decision: **stub it to no-op** rather than f
 
 ## Implementation Phases
 
-### Phase 1 — New GitHub Repo Setup
-- [ ] Create new GitHub repo (`lalopenguin/penguins` or `penguins/penguins`)
-- [ ] Copy current codebase (without git history from the fork)
+### Phase 1 — New GitHub Repo Setup ⏳
+- [x] Create new local git repo (initialized with fresh `git init`)
+- [x] Initial commit with full codebase
+- [ ] Create GitHub repo (`lalopenguin/penguins`) and push
   ```bash
-  # Option A: fresh copy
-  cp -r /Users/minibrain/Desktop/penguins /tmp/penguins-clean
-  cd /tmp/penguins-clean && rm -rf .git && git init && git add . && git commit -m "initial: penguins clean start"
-
-  # Option B: keep history but cut the remote
-  git remote remove origin
-  git remote add origin https://github.com/YOUR_USERNAME/penguins.git
+  git remote add origin https://github.com/lalopenguin/penguins.git
   git push -u origin main
   ```
-- [ ] Decide: keep git history or start fresh (fresh = cleaner, history = useful for blame)
 - [ ] Set up branch protection, README badges, etc.
 
-### Phase 2 — Delete Native Apps (do first, biggest size win)
-- [ ] `git rm -rf apps/`
-- [ ] `git rm -rf Swabble/`
-- [ ] Remove any `apps/*` or `Swabble` references from:
-  - `package.json` scripts
-  - `scripts/` folder (codesign, notarize, dmg, build-mac-* scripts)
-  - `readme.md`
-  - `tasks.md` / `TASKS2.md`
-- [ ] Run `pnpm build` to verify nothing breaks
+### Phase 2 — Delete Native Apps ✅
+- [x] `git rm -rf apps/`
+- [x] `git rm -rf Swabble/`
+- [x] Removed `apps/*` references from `package.json` scripts (android, ios, mac, swift)
+- [x] Removed `format:swift`, `lint:swift`, `format:all`, `lint:all`, `mac:*`, `ios:*`, `android:*`, `protocol:gen:swift`, `protocol:check:swift` scripts
 
-### Phase 3 — Delete src/macos/ and src/node-host/
-- [ ] `git rm -rf src/macos/`
-- [ ] `git rm -rf src/node-host/`
-- [ ] Remove from any `index.ts` barrel exports if present
-- [ ] Run `pnpm build` — should be clean (0 imports confirmed)
+### Phase 3 — Delete src/macos/ and src/node-host/ ✅
+- [x] `git rm -rf src/macos/`
+- [x] `git rm -rf src/node-host/`
+- [x] Verified 0 imports — no source changes needed
 
-### Phase 4 — Remove Unused Extensions
-In order of safest-first:
+### Phase 4 — Remove Unused Extensions ✅
+- [x] `git rm -rf extensions/voice-call/`
+- [x] `git rm -rf extensions/talk-voice/`
+- [x] `git rm -rf extensions/signal/`
+- [x] `git rm -rf extensions/line/`
+- [x] `git rm -rf extensions/irc/`
+- [x] `git rm -rf extensions/nostr/`
+- [x] `git rm -rf extensions/tlon/`
+- [x] `git rm -rf extensions/twitch/`
+- [x] `git rm -rf extensions/mattermost/`
+- [x] `git rm -rf extensions/nextcloud-talk/`
+- [x] `git rm -rf extensions/feishu/`
+- [x] `git rm -rf extensions/zalo/`
+- [x] `git rm -rf extensions/zalouser/`
+- [x] `git rm -rf extensions/phone-control/`
+- [x] `git rm -rf extensions/copilot-proxy/`
+- [x] `git rm -rf extensions/lobster/`
+- [x] Catalog is fully dynamic (no hardcoded list) — no registry changes needed
 
-- [ ] `git rm -rf extensions/voice-call/`
-- [ ] `git rm -rf extensions/talk-voice/`
-- [ ] `git rm -rf extensions/signal/`
-- [ ] `git rm -rf extensions/line/`
-- [ ] `git rm -rf extensions/irc/`
-- [ ] `git rm -rf extensions/nostr/`
-- [ ] `git rm -rf extensions/tlon/`
-- [ ] `git rm -rf extensions/twitch/`
-- [ ] `git rm -rf extensions/mattermost/`
-- [ ] `git rm -rf extensions/nextcloud-talk/`
-- [ ] `git rm -rf extensions/feishu/`
-- [ ] `git rm -rf extensions/zalo/`
-- [ ] `git rm -rf extensions/zalouser/`
-- [ ] `git rm -rf extensions/phone-control/`
-- [ ] `git rm -rf extensions/copilot-proxy/`
-- [ ] `git rm -rf extensions/lobster/`
-- [ ] Remove all deleted extension names from `src/channels/plugins/catalog.ts` (or equivalent registry)
-- [ ] Run `pnpm build`
+### Phase 5 — Remove src/line/ ✅
+- [x] `git rm -rf src/line/`
+- [x] Removed LINE from `plugins/runtime/index.ts` (18-line import block + `line: {}` return value)
+- [x] Removed LINE from `plugin-sdk/index.ts` (Channel: LINE export block)
+- [x] Deleted `src/auto-reply/reply/line-directives.ts`
+- [x] Cleaned `src/auto-reply/reply/normalize-reply.ts` (removed LINE directive usage)
+- [x] Cleaned `src/tts/tts.ts` (replaced `stripMarkdown` import from line/ with inline)
+- [x] Added `PENGUINS_PLUGIN_CATALOG_PATHS` to `src/channels/plugins/catalog.ts` ENV_CATALOG_PATHS
 
-### Phase 5 — Remove src/line/
-- [ ] `git rm -rf src/line/`
-- [ ] Remove line channel from config schema types
-- [ ] Remove line from channel catalog/registry
-- [ ] Run `pnpm build`
+### Phase 6 — Remove Legacy Compat Packages ✅
+- [x] `git rm -rf packages/`
+- [x] Removed workspace references in root `package.json`
 
-### Phase 6 — Remove Legacy Compat Packages
-- [ ] `git rm -rf packages/`
-- [ ] Remove any workspace references in root `package.json`
+### Phase 7 — Skills Cleanup ✅
+Deleted 36+ niche skills, kept 15 core skills:
+- Kept: `1password`, `apple-notes`, `apple-reminders`, `bear-notes`, `coding-agent`, `github`, `healthcheck`, `himalaya`, `model-usage`, `nano-pdf`, `notion`, `obsidian`, `session-logs`, `skill-creator`, `weather`
+- Deleted: `clawhub`, `eightctl`, `gog`, `mcporter`, `openhue`, `sonoscli`, `spotify-player`, `twitch`, `songsee`, `camsnap`, `wacli`, `lobster`, `ordercli`, `food-order`, `blucli`, `oracle`, `sag`, `nano-banana-pro`, `openai-whisper`, `openai-whisper-api`, `openai-image-gen`, `goplaces`, `blogwatcher`, `imsg`, `discord` (skill), `slack` (skill), `telegram` (skill), `tlon`, `voice-call`, `peekaboo`, `gifgrep`, `tmux`, `canvas` (skill), `sherpa-onnx-tts`, and others
 
-### Phase 7 — Skills Cleanup
-- [ ] Delete skills listed in Phase E above
-- [ ] Keep: `github`, `notion`, `obsidian`, `apple-notes`, `apple-reminders`, `health-check`, `model-usage`, `session-logs`, `weather`, `1password`, `himalaya`, `coding-agent`, `skill-creator`, `nano-pdf`
-- [ ] Run `pnpm build`
+### Phase 8 — TTS Simplification ✅
+Kept OpenAI TTS only, removed ElevenLabs and Edge TTS providers:
+- [x] `src/config/types.tts.ts` — `TtsProvider` narrowed to `"openai"` only
+- [x] `src/config/zod-schema.core.ts` — `TtsProviderSchema` → `z.enum(["openai"])`
+- [x] `src/tts/tts-core.ts` — removed `edgeTTS`, `elevenLabsTTS`, `inferEdgeExtension`, all ElevenLabs validators
+- [x] `src/tts/tts.ts` — simplified all dispatch functions to OpenAI only
+- [x] `src/auto-reply/reply/commands-tts.ts` — updated help text and validation
+- [x] `src/auto-reply/commands-registry.data.ts` — updated provider description
+- [x] `src/gateway/server-methods/tts.ts` — removed elevenlabs/edge from status responses
 
-### Phase 8 — TTS Removal (careful — 20 imports)
-TTS is deeply wired in. Options:
-- **Option A (recommended):** Keep TTS but remove ElevenLabs/Edge providers, keep only OpenAI TTS. Simplifies without breaking everything.
-- **Option B:** Stub TTS to no-op, remove config keys, clean up all 20 import sites.
+### Phase 9 — Build Scripts Cleanup ✅
+- [x] Deleted macOS/iOS scripts: `build-and-run-mac.sh`, `codesign-mac-app.sh`, `notarize-mac-artifact.sh`, `create-dmg.sh`, `package-mac-app.sh`, `package-mac-dist.sh`, `restart-mac.sh`, `ios-team-id.sh`, `build_icon.sh`, `make_appcast.sh`, `mobile-reauth.sh`, `protocol-gen-swift.ts`
+- [x] Deleted stale scripts: `sync-moonshot-docs.ts`, `update-clawtributors.ts`, `update-clawtributors.types.ts`, `clawtributors-map.json`
+- [x] Deleted `src/types/node-edge-tts.d.ts` (Edge TTS removed)
+- [x] Cleaned `package.json`: removed all android/ios/mac/swift scripts, removed duplicate entries, removed `node-edge-tts`, `@larksuiteoapi/node-sdk`, `@line/bot-sdk` dependencies, cleaned legacy `OPENCLAW_*` env var prefixes from gateway scripts
 
-For now: **do Option A** — remove `elevenlabs` and `edge-tts` providers from `src/tts/tts.ts`,
-keep OpenAI TTS only (most users already have an OpenAI key).
+### Phase 10 — Docs Cleanup ✅
+- [x] `git rm -rf docs/zh-CN/` — full Chinese translation
+- [x] `git rm -rf docs/ja-JP/` — partial Japanese translation
+- [x] `git rm -rf docs/.i18n/` — i18n glossaries and translation memory
+- [x] `git rm -rf docs/nodes/` — mobile/audio hardware nodes
+- [x] `git rm -f docs/platforms/ios.md docs/platforms/android.md docs/platforms/macos.md`
+- [x] `git rm -rf docs/platforms/mac/` — macOS companion app docs
+- [x] Removed channel docs: feishu, line, irc, nostr, tlon, twitch, mattermost, nextcloud-talk, signal, zalo, zalouser, imessage
+- [x] Updated `docs/docs.json`: removed zh-Hans + ja language blocks, cleaned Channels/Platforms/Tools nav, cleaned stale redirects
 
-- [ ] Edit `src/tts/tts.ts` to remove ElevenLabs and Edge TTS providers
-- [ ] Remove related config keys from `src/config/types.ts`
-- [ ] Update docs
+### Phase 11 — README Rewrite ✅
+- [x] Rewritten README focused on new direction (WebChat primary, Cloudflare Tunnel)
+- [x] TASKS2.md updated with completion status
 
-### Phase 9 — Tailscale → Cloudflare Tunnel
-This is new feature work, not just deletion.
+### Phase 12 — Tailscale → Cloudflare Tunnel ⏳ (future work)
+This is new feature work, not just deletion. Defer until cleanup is fully settled.
 
 - [ ] Research Cloudflare Tunnel SDK/CLI integration
 - [ ] Stub out `src/gateway/server-tailscale.ts` to no-op
@@ -219,46 +226,12 @@ This is new feature work, not just deletion.
 - [ ] Update `src/commands/configure.gateway.ts`
 - [ ] Update docs: remove Tailscale guides, add Cloudflare Tunnel guide
 
-### Phase 10 — Docs Cleanup
-- [ ] `git rm -rf docs/zh-CN/`
-- [ ] `git rm -rf docs/ja-JP/`
-- [ ] `git rm -rf docs/.i18n/`
-- [ ] `git rm -f docs/platforms/ios.md docs/platforms/android.md docs/platforms/macos.md`
-- [ ] `git rm -rf docs/nodes/`
-- [ ] Remove docs for deleted channels
-- [ ] Rewrite README.md from scratch — simpler, focused on new direction
-- [ ] Remove Tailscale docs, add Cloudflare Tunnel docs
-
-### Phase 11 — Build Scripts Cleanup
-Delete macOS-specific build scripts that no longer apply:
-- [ ] `scripts/build-and-run-mac.sh`
-- [ ] `scripts/codesign-mac-app.sh`
-- [ ] `scripts/notarize-mac-artifact.sh`
-- [ ] `scripts/create-dmg.sh`
-- [ ] `scripts/package-mac-*.sh` (any mac packaging scripts)
-- [ ] `scripts/sync-moonshot-docs.ts` (third-party sync)
-- [ ] `scripts/update-clawtributors.ts` (contributor tracking for old project)
-- [ ] Remove corresponding `package.json` scripts
-
-### Phase 12 — Final README Rewrite
-The current README is 500 lines of detailed setup docs for Peter's exact setup. Rewrite it:
-
-- [ ] New header — Penguins as a personal AI assistant gateway
-- [ ] Highlight: WebChat as primary surface + Cloudflare Tunnel for access
-- [ ] Supported channels: WhatsApp, Telegram, Discord, Slack, Google Chat, Teams, Matrix, BlueBubbles
-- [ ] Clean install instructions
-- [ ] Remove all references to deleted platforms/features
-- [ ] Remove "Molty the space lobster" + steipete.me + soul.md references
-
 ---
 
 ## Risk / Order Notes
 
-- **Do Phases 1-3 first** (no code changes, just deletions with confirmed 0 imports)
-- **Phase 4-6** are safe deletions (extension plugins load dynamically, removing them won't break the core)
-- **Phase 7** (skills) is safe — skills are fully optional
-- **Phase 8** (TTS) needs care — do last of the deletion phases
-- **Phase 9** (Cloudflare) is additive new feature — do after all cleanup is done
+- **Phases 2-10 are complete** — deletions done, verified build-safe
+- **Phase 12** (Cloudflare) is additive new feature — do after all cleanup is done
 - **Run `pnpm build` and `pnpm check` after each phase**
 
 ---
@@ -267,16 +240,16 @@ The current README is 500 lines of detailed setup docs for Peter's exact setup. 
 
 | Metric | Before | After |
 |---|---|---|
-| apps/ size | ~1.8GB | 0 |
+| apps/ size | ~1.8GB | 0 (deleted) |
 | extensions/ count | 37 | ~12 |
-| skills/ count | 56 | ~14 |
+| skills/ count | 56 | ~15 |
 | Supported channels | 15+ | 8 core |
 | Docs languages | EN + ZH + JA | EN only |
 | Native apps | iOS + Android + macOS | None (WebChat is primary) |
-| VPN | Tailscale | Cloudflare Tunnel |
+| VPN | Tailscale | Cloudflare Tunnel (planned) |
 | TTS providers | ElevenLabs + Edge + OpenAI | OpenAI only |
 
 ---
 
 _Created: 2026-02-17_
-_Status: Planning — awaiting user approval to begin Phase 1_
+_Status: Phases 2–11 complete. Phase 1 (GitHub push) and Phase 12 (Cloudflare) pending._
