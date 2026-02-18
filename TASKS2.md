@@ -128,15 +128,15 @@ local-network discovery in general. Decision: **stub it to no-op** rather than f
 
 ## Implementation Phases
 
-### Phase 1 — New GitHub Repo Setup ⏳
+### Phase 1 — New GitHub Repo Setup ✅
 - [x] Create new local git repo (initialized with fresh `git init`)
 - [x] Initial commit with full codebase
-- [ ] Create GitHub repo (`lalopenguin/penguins`) and push
+- [x] Create GitHub repo (`lalomorales22/penguins`) and push
   ```bash
-  git remote add origin https://github.com/lalopenguin/penguins.git
+  git remote add origin https://github.com/lalomorales22/penguins.git
   git push -u origin main
   ```
-- [ ] Set up branch protection, README badges, etc.
+- [ ] Set up branch protection, README badges, etc. (optional — defer)
 
 ### Phase 2 — Delete Native Apps ✅
 - [x] `git rm -rf apps/`
@@ -252,4 +252,4 @@ This is new feature work, not just deletion. Defer until cleanup is fully settle
 ---
 
 _Created: 2026-02-17_
-_Status: Phases 2–11 complete. Phase 1 (GitHub push) and Phase 12 (Cloudflare) pending._
+_Status: Phases 1–11 complete. Phase 12 (Cloudflare) is future work._
