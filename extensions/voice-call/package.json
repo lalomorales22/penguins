@@ -1,0 +1,19 @@
+{
+  "name": "@penguins/voice-call",
+  "version": "2026.2.15",
+  "description": "Penguins voice-call plugin",
+  "type": "module",
+  "dependencies": {
+    "@sinclair/typebox": "0.34.48",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "penguins": "workspace:*"
+  },
+  "penguins": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

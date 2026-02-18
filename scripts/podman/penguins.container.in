@@ -1,0 +1,26 @@
+# Penguins gateway — Podman Quadlet (rootless)
+# Installed by setup-podman.sh into penguins's ~/.config/containers/systemd/
+# {{PENGUINS_HOME}} is replaced at install time.
+
+[Unit]
+Description=Penguins gateway (rootless Podman)
+
+[Container]
+Image=penguins:local
+ContainerName=penguins
+UserNS=keep-id
+Volume={{PENGUINS_HOME}}/.penguins:/home/node/.penguins
+EnvironmentFile={{PENGUINS_HOME}}/.penguins/.env
+Environment=HOME=/home/node
+Environment=TERM=xterm-256color
+PublishPort=18789:18789
+PublishPort=18790:18790
+Pull=never
+Exec=node dist/index.js gateway --bind lan --port 18789
+
+[Service]
+TimeoutStartSec=300
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

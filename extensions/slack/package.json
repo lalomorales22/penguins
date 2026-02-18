@@ -1,0 +1,15 @@
+{
+  "name": "@penguins/slack",
+  "version": "2026.2.15",
+  "private": true,
+  "description": "Penguins Slack channel plugin",
+  "type": "module",
+  "devDependencies": {
+    "penguins": "workspace:*"
+  },
+  "penguins": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

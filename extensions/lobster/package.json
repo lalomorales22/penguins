@@ -1,0 +1,14 @@
+{
+  "name": "@penguins/lobster",
+  "version": "2026.2.15",
+  "description": "Lobster workflow tool plugin (typed pipelines + resumable approvals)",
+  "type": "module",
+  "devDependencies": {
+    "penguins": "workspace:*"
+  },
+  "penguins": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
