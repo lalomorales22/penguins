@@ -165,7 +165,7 @@ export const MarkdownConfigSchema = z
   .strict()
   .optional();
 
-export const TtsProviderSchema = z.enum(["elevenlabs", "openai", "edge"]);
+export const TtsProviderSchema = z.enum(["openai"]);
 export const TtsModeSchema = z.enum(["final", "all"]);
 export const TtsAutoSchema = z.enum(["off", "always", "inbound", "tagged"]);
 export const TtsConfigSchema = z
@@ -188,48 +188,11 @@ export const TtsConfigSchema = z
       })
       .strict()
       .optional(),
-    elevenlabs: z
-      .object({
-        apiKey: z.string().optional().register(sensitive),
-        baseUrl: z.string().optional(),
-        voiceId: z.string().optional(),
-        modelId: z.string().optional(),
-        seed: z.number().int().min(0).max(4294967295).optional(),
-        applyTextNormalization: z.enum(["auto", "on", "off"]).optional(),
-        languageCode: z.string().optional(),
-        voiceSettings: z
-          .object({
-            stability: z.number().min(0).max(1).optional(),
-            similarityBoost: z.number().min(0).max(1).optional(),
-            style: z.number().min(0).max(1).optional(),
-            useSpeakerBoost: z.boolean().optional(),
-            speed: z.number().min(0.5).max(2).optional(),
-          })
-          .strict()
-          .optional(),
-      })
-      .strict()
-      .optional(),
     openai: z
       .object({
         apiKey: z.string().optional().register(sensitive),
         model: z.string().optional(),
         voice: z.string().optional(),
-      })
-      .strict()
-      .optional(),
-    edge: z
-      .object({
-        enabled: z.boolean().optional(),
-        voice: z.string().optional(),
-        lang: z.string().optional(),
-        outputFormat: z.string().optional(),
-        pitch: z.string().optional(),
-        rate: z.string().optional(),
-        volume: z.string().optional(),
-        saveSubtitles: z.boolean().optional(),
-        proxy: z.string().optional(),
-        timeoutMs: z.number().int().min(1000).max(120000).optional(),
       })
       .strict()
       .optional(),

@@ -45,13 +45,13 @@ Reference the nix-penguins README for module options.
 
 ## Nix Mode Runtime Behavior
 
-When `OPENCLAW_NIX_MODE=1` is set (automatic with nix-penguins):
+When `PENGUINS_NIX_MODE=1` is set (automatic with nix-penguins):
 
 Penguins supports a **Nix mode** that makes configuration deterministic and disables auto-install flows.
 Enable it by exporting:
 
 ```bash
-OPENCLAW_NIX_MODE=1
+PENGUINS_NIX_MODE=1
 ```
 
 On macOS, the GUI app does not automatically inherit shell env vars. You can
@@ -63,12 +63,12 @@ defaults write bot.molt.mac penguins.nixMode -bool true
 
 ### Config + state paths
 
-Penguins reads JSON5 config from `OPENCLAW_CONFIG_PATH` and stores mutable data in `OPENCLAW_STATE_DIR`.
-When needed, you can also set `OPENCLAW_HOME` to control the base home directory used for internal path resolution.
+Penguins reads JSON5 config from `PENGUINS_CONFIG_PATH` and stores mutable data in `PENGUINS_STATE_DIR`.
+When needed, you can also set `PENGUINS_HOME` to control the base home directory used for internal path resolution.
 
-- `OPENCLAW_HOME` (default precedence: `HOME` / `USERPROFILE` / `os.homedir()`)
-- `OPENCLAW_STATE_DIR` (default: `~/.penguins`)
-- `OPENCLAW_CONFIG_PATH` (default: `$OPENCLAW_STATE_DIR/penguins.json`)
+- `PENGUINS_HOME` (default precedence: `HOME` / `USERPROFILE` / `os.homedir()`)
+- `PENGUINS_STATE_DIR` (default: `~/.penguins`)
+- `PENGUINS_CONFIG_PATH` (default: `$PENGUINS_STATE_DIR/penguins.json`)
 
 When running under Nix, set these explicitly to Nix-managed locations so runtime state and config
 stay out of the immutable store.

@@ -6,7 +6,7 @@
 # Usage: ./setup-podman.sh [--quadlet|--container]
 #   --quadlet   Install systemd Quadlet so the container runs as a user service
 #   --container Only install user + image + launch script; you start the container manually (default)
-#   Or set OPENCLAW_PODMAN_QUADLET=1 (or 0) to choose without a flag.
+#   Or set PENGUINS_PODMAN_QUADLET=1 (or 0) to choose without a flag.
 #
 # After this, start the gateway manually:
 #   ./scripts/run-penguins-podman.sh launch
@@ -16,7 +16,7 @@
 set -euo pipefail
 
 PENGUINS_USER="${PENGUINS_PODMAN_USER:-penguins}"
-REPO_PATH="${OPENCLAW_REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+REPO_PATH="${PENGUINS_REPO_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 RUN_SCRIPT_SRC="$REPO_PATH/scripts/run-penguins-podman.sh"
 QUADLET_TEMPLATE="$REPO_PATH/scripts/podman/penguins.container.in"
 
@@ -56,7 +56,7 @@ run_as_penguins() {
   run_as_user "$PENGUINS_USER" env HOME="$PENGUINS_HOME" "$@"
 }
 
-# Quadlet: opt-in via --quadlet or OPENCLAW_PODMAN_QUADLET=1
+# Quadlet: opt-in via --quadlet or PENGUINS_PODMAN_QUADLET=1
 INSTALL_QUADLET=false
 for arg in "$@"; do
   case "$arg" in
@@ -64,8 +64,8 @@ for arg in "$@"; do
     --container) INSTALL_QUADLET=false ;;
   esac
 done
-if [[ -n "${OPENCLAW_PODMAN_QUADLET:-}" ]]; then
-  case "${OPENCLAW_PODMAN_QUADLET,,}" in
+if [[ -n "${PENGUINS_PODMAN_QUADLET:-}" ]]; then
+  case "${PENGUINS_PODMAN_QUADLET,,}" in
     1|yes|true)  INSTALL_QUADLET=true ;;
     0|no|false) INSTALL_QUADLET=false ;;
   esac
@@ -76,7 +76,7 @@ if ! is_root; then
   require_cmd sudo
 fi
 if [[ ! -f "$REPO_PATH/Dockerfile" ]]; then
-  echo "Dockerfile not found at $REPO_PATH. Set OPENCLAW_REPO_PATH to the repo root." >&2
+  echo "Dockerfile not found at $REPO_PATH. Set PENGUINS_REPO_PATH to the repo root." >&2
   exit 1
 fi
 if [[ ! -f "$RUN_SCRIPT_SRC" ]]; then
@@ -156,7 +156,7 @@ else
 fi
 
 PENGUINS_HOME="$(resolve_user_home "$PENGUINS_USER")"
-OPENCLAW_UID="$(id -u "$PENGUINS_USER" 2>/dev/null || true)"
+PENGUINS_UID="$(id -u "$PENGUINS_USER" 2>/dev/null || true)"
 PENGUINS_CONFIG="$PENGUINS_HOME/.penguins"
 LAUNCH_SCRIPT_DST="$PENGUINS_HOME/run-penguins-podman.sh"
 
@@ -165,8 +165,8 @@ LAUNCH_SCRIPT_DST="$PENGUINS_HOME/run-penguins-podman.sh"
 if command -v loginctl &>/dev/null; then
   run_root loginctl enable-linger "$PENGUINS_USER" 2>/dev/null || true
 fi
-if [[ -n "${OPENCLAW_UID:-}" && -d /run/user ]] && command -v systemctl &>/dev/null; then
-  run_root systemctl start "user@${OPENCLAW_UID}.service" 2>/dev/null || true
+if [[ -n "${PENGUINS_UID:-}" && -d /run/user ]] && command -v systemctl &>/dev/null; then
+  run_root systemctl start "user@${PENGUINS_UID}.service" 2>/dev/null || true
 fi
 
 # Rootless Podman needs subuid/subgid for the run user

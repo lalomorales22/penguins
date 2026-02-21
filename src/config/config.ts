@@ -18,7 +18,4 @@ export {
   validateConfigObjectRawWithPlugins,
   validateConfigObjectWithPlugins,
 } from "./validation.js";
-export { PenguinsSchema, PenguinsSchema } from "./zod-schema.js";
-
-// Backwards compatibility alias
-export type { PenguinsConfig as PenguinsConfig } from "./types.js";
+export { PenguinsSchema } from "./zod-schema.js";

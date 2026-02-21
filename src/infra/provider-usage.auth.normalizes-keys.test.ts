@@ -31,8 +31,8 @@ describe("resolveProviderAuths key normalization", () => {
       "USERPROFILE",
       "HOMEDRIVE",
       "HOMEPATH",
-      "OPENCLAW_HOME",
-      "OPENCLAW_STATE_DIR",
+      "PENGUINS_HOME",
+      "PENGUINS_STATE_DIR",
       ...Object.keys(env),
     ]);
     const snapshot: Record<string, string | undefined> = {};
@@ -42,8 +42,8 @@ describe("resolveProviderAuths key normalization", () => {
 
     process.env.HOME = base;
     process.env.USERPROFILE = base;
-    delete process.env.OPENCLAW_HOME;
-    process.env.OPENCLAW_STATE_DIR = path.join(base, ".penguins");
+    delete process.env.PENGUINS_HOME;
+    process.env.PENGUINS_STATE_DIR = path.join(base, ".penguins");
     for (const [key, value] of Object.entries(env)) {
       if (value === undefined) {
         delete process.env[key];

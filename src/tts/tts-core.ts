@@ -1,5 +1,4 @@
 import { completeSimple, type TextContent } from "@mariozechner/pi-ai";
-import { EdgeTTS } from "node-edge-tts";
 import { rmSync } from "node:fs";
 import type { PenguinsConfig } from "../config/config.js";
 import type {
@@ -17,79 +16,7 @@ import {
 } from "../agents/model-selection.js";
 import { resolveModel } from "../agents/pi-embedded-runner/model.js";
 
-const DEFAULT_ELEVENLABS_BASE_URL = "https://api.elevenlabs.io";
 const TEMP_FILE_CLEANUP_DELAY_MS = 5 * 60 * 1000; // 5 minutes
-
-export function isValidVoiceId(voiceId: string): boolean {
-  return /^[a-zA-Z0-9]{10,40}$/.test(voiceId);
-}
-
-function normalizeElevenLabsBaseUrl(baseUrl: string): string {
-  const trimmed = baseUrl.trim();
-  if (!trimmed) {
-    return DEFAULT_ELEVENLABS_BASE_URL;
-  }
-  return trimmed.replace(/\/+$/, "");
-}
-
-function requireInRange(value: number, min: number, max: number, label: string): void {
-  if (!Number.isFinite(value) || value < min || value > max) {
-    throw new Error(`${label} must be between ${min} and ${max}`);
-  }
-}
-
-function assertElevenLabsVoiceSettings(settings: ResolvedTtsConfig["elevenlabs"]["voiceSettings"]) {
-  requireInRange(settings.stability, 0, 1, "stability");
-  requireInRange(settings.similarityBoost, 0, 1, "similarityBoost");
-  requireInRange(settings.style, 0, 1, "style");
-  requireInRange(settings.speed, 0.5, 2, "speed");
-}
-
-function normalizeLanguageCode(code?: string): string | undefined {
-  const trimmed = code?.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-  const normalized = trimmed.toLowerCase();
-  if (!/^[a-z]{2}$/.test(normalized)) {
-    throw new Error("languageCode must be a 2-letter ISO 639-1 code (e.g. en, de, fr)");
-  }
-  return normalized;
-}
-
-function normalizeApplyTextNormalization(mode?: string): "auto" | "on" | "off" | undefined {
-  const trimmed = mode?.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-  const normalized = trimmed.toLowerCase();
-  if (normalized === "auto" || normalized === "on" || normalized === "off") {
-    return normalized;
-  }
-  throw new Error("applyTextNormalization must be one of: auto, on, off");
-}
-
-function normalizeSeed(seed?: number): number | undefined {
-  if (seed == null) {
-    return undefined;
-  }
-  const next = Math.floor(seed);
-  if (!Number.isFinite(next) || next < 0 || next > 4_294_967_295) {
-    throw new Error("seed must be between 0 and 4294967295");
-  }
-  return next;
-}
-
-function parseBooleanValue(value: string): boolean | undefined {
-  const normalized = value.trim().toLowerCase();
-  if (["true", "1", "yes", "on"].includes(normalized)) {
-    return true;
-  }
-  if (["false", "0", "no", "off"].includes(normalized)) {
-    return false;
-  }
-  return undefined;
-}
 
 function parseNumberValue(value: string): number | undefined {
   const parsed = Number.parseFloat(value);
@@ -139,7 +66,7 @@ export function parseTtsDirectives(
             if (!policy.allowProvider) {
               break;
             }
-            if (rawValue === "openai" || rawValue === "elevenlabs" || rawValue === "edge") {
+            if (rawValue === "openai") {
               overrides.provider = rawValue;
             } else {
               warnings.push(`unsupported provider "${rawValue}"`);
@@ -157,24 +84,9 @@ export function parseTtsDirectives(
               warnings.push(`invalid OpenAI voice "${rawValue}"`);
             }
             break;
-          case "voiceid":
-          case "voice_id":
-          case "elevenlabs_voice":
-          case "elevenlabsvoice":
-            if (!policy.allowVoice) {
-              break;
-            }
-            if (isValidVoiceId(rawValue)) {
-              overrides.elevenlabs = { ...overrides.elevenlabs, voiceId: rawValue };
-            } else {
-              warnings.push(`invalid ElevenLabs voiceId "${rawValue}"`);
-            }
-            break;
           case "model":
           case "modelid":
           case "model_id":
-          case "elevenlabs_model":
-          case "elevenlabsmodel":
           case "openai_model":
           case "openaimodel":
             if (!policy.allowModelId) {
@@ -183,128 +95,8 @@ export function parseTtsDirectives(
             if (isValidOpenAIModel(rawValue)) {
               overrides.openai = { ...overrides.openai, model: rawValue };
             } else {
-              overrides.elevenlabs = { ...overrides.elevenlabs, modelId: rawValue };
+              warnings.push(`unsupported model "${rawValue}"`);
             }
-            break;
-          case "stability":
-            if (!policy.allowVoiceSettings) {
-              break;
-            }
-            {
-              const value = parseNumberValue(rawValue);
-              if (value == null) {
-                warnings.push("invalid stability value");
-                break;
-              }
-              requireInRange(value, 0, 1, "stability");
-              overrides.elevenlabs = {
-                ...overrides.elevenlabs,
-                voiceSettings: { ...overrides.elevenlabs?.voiceSettings, stability: value },
-              };
-            }
-            break;
-          case "similarity":
-          case "similarityboost":
-          case "similarity_boost":
-            if (!policy.allowVoiceSettings) {
-              break;
-            }
-            {
-              const value = parseNumberValue(rawValue);
-              if (value == null) {
-                warnings.push("invalid similarityBoost value");
-                break;
-              }
-              requireInRange(value, 0, 1, "similarityBoost");
-              overrides.elevenlabs = {
-                ...overrides.elevenlabs,
-                voiceSettings: { ...overrides.elevenlabs?.voiceSettings, similarityBoost: value },
-              };
-            }
-            break;
-          case "style":
-            if (!policy.allowVoiceSettings) {
-              break;
-            }
-            {
-              const value = parseNumberValue(rawValue);
-              if (value == null) {
-                warnings.push("invalid style value");
-                break;
-              }
-              requireInRange(value, 0, 1, "style");
-              overrides.elevenlabs = {
-                ...overrides.elevenlabs,
-                voiceSettings: { ...overrides.elevenlabs?.voiceSettings, style: value },
-              };
-            }
-            break;
-          case "speed":
-            if (!policy.allowVoiceSettings) {
-              break;
-            }
-            {
-              const value = parseNumberValue(rawValue);
-              if (value == null) {
-                warnings.push("invalid speed value");
-                break;
-              }
-              requireInRange(value, 0.5, 2, "speed");
-              overrides.elevenlabs = {
-                ...overrides.elevenlabs,
-                voiceSettings: { ...overrides.elevenlabs?.voiceSettings, speed: value },
-              };
-            }
-            break;
-          case "speakerboost":
-          case "speaker_boost":
-          case "usespeakerboost":
-          case "use_speaker_boost":
-            if (!policy.allowVoiceSettings) {
-              break;
-            }
-            {
-              const value = parseBooleanValue(rawValue);
-              if (value == null) {
-                warnings.push("invalid useSpeakerBoost value");
-                break;
-              }
-              overrides.elevenlabs = {
-                ...overrides.elevenlabs,
-                voiceSettings: { ...overrides.elevenlabs?.voiceSettings, useSpeakerBoost: value },
-              };
-            }
-            break;
-          case "normalize":
-          case "applytextnormalization":
-          case "apply_text_normalization":
-            if (!policy.allowNormalization) {
-              break;
-            }
-            overrides.elevenlabs = {
-              ...overrides.elevenlabs,
-              applyTextNormalization: normalizeApplyTextNormalization(rawValue),
-            };
-            break;
-          case "language":
-          case "languagecode":
-          case "language_code":
-            if (!policy.allowNormalization) {
-              break;
-            }
-            overrides.elevenlabs = {
-              ...overrides.elevenlabs,
-              languageCode: normalizeLanguageCode(rawValue),
-            };
-            break;
-          case "seed":
-            if (!policy.allowSeed) {
-              break;
-            }
-            overrides.elevenlabs = {
-              ...overrides.elevenlabs,
-              seed: normalizeSeed(Number.parseInt(rawValue, 10)),
-            };
             break;
           default:
             break;
@@ -511,83 +303,6 @@ export function scheduleCleanup(
   timer.unref();
 }
 
-export async function elevenLabsTTS(params: {
-  text: string;
-  apiKey: string;
-  baseUrl: string;
-  voiceId: string;
-  modelId: string;
-  outputFormat: string;
-  seed?: number;
-  applyTextNormalization?: "auto" | "on" | "off";
-  languageCode?: string;
-  voiceSettings: ResolvedTtsConfig["elevenlabs"]["voiceSettings"];
-  timeoutMs: number;
-}): Promise<Buffer> {
-  const {
-    text,
-    apiKey,
-    baseUrl,
-    voiceId,
-    modelId,
-    outputFormat,
-    seed,
-    applyTextNormalization,
-    languageCode,
-    voiceSettings,
-    timeoutMs,
-  } = params;
-  if (!isValidVoiceId(voiceId)) {
-    throw new Error("Invalid voiceId format");
-  }
-  assertElevenLabsVoiceSettings(voiceSettings);
-  const normalizedLanguage = normalizeLanguageCode(languageCode);
-  const normalizedNormalization = normalizeApplyTextNormalization(applyTextNormalization);
-  const normalizedSeed = normalizeSeed(seed);
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const url = new URL(`${normalizeElevenLabsBaseUrl(baseUrl)}/v1/text-to-speech/${voiceId}`);
-    if (outputFormat) {
-      url.searchParams.set("output_format", outputFormat);
-    }
-
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "xi-api-key": apiKey,
-        "Content-Type": "application/json",
-        Accept: "audio/mpeg",
-      },
-      body: JSON.stringify({
-        text,
-        model_id: modelId,
-        seed: normalizedSeed,
-        apply_text_normalization: normalizedNormalization,
-        language_code: normalizedLanguage,
-        voice_settings: {
-          stability: voiceSettings.stability,
-          similarity_boost: voiceSettings.similarityBoost,
-          style: voiceSettings.style,
-          use_speaker_boost: voiceSettings.useSpeakerBoost,
-          speed: voiceSettings.speed,
-        },
-      }),
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      throw new Error(`ElevenLabs API error (${response.status})`);
-    }
-
-    return Buffer.from(await response.arrayBuffer());
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 export async function openaiTTS(params: {
   text: string;
   apiKey: string;
@@ -634,40 +349,3 @@ export async function openaiTTS(params: {
   }
 }
 
-export function inferEdgeExtension(outputFormat: string): string {
-  const normalized = outputFormat.toLowerCase();
-  if (normalized.includes("webm")) {
-    return ".webm";
-  }
-  if (normalized.includes("ogg")) {
-    return ".ogg";
-  }
-  if (normalized.includes("opus")) {
-    return ".opus";
-  }
-  if (normalized.includes("wav") || normalized.includes("riff") || normalized.includes("pcm")) {
-    return ".wav";
-  }
-  return ".mp3";
-}
-
-export async function edgeTTS(params: {
-  text: string;
-  outputPath: string;
-  config: ResolvedTtsConfig["edge"];
-  timeoutMs: number;
-}): Promise<void> {
-  const { text, outputPath, config, timeoutMs } = params;
-  const tts = new EdgeTTS({
-    voice: config.voice,
-    lang: config.lang,
-    outputFormat: config.outputFormat,
-    saveSubtitles: config.saveSubtitles,
-    proxy: config.proxy,
-    rate: config.rate,
-    pitch: config.pitch,
-    volume: config.volume,
-    timeout: config.timeoutMs ?? timeoutMs,
-  });
-  await tts.ttsPromise(text, outputPath);
-}

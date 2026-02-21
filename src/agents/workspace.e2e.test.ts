@@ -16,9 +16,9 @@ import {
 } from "./workspace.js";
 
 describe("resolveDefaultAgentWorkspaceDir", () => {
-  it("uses OPENCLAW_HOME for default workspace resolution", () => {
+  it("uses PENGUINS_HOME for default workspace resolution", () => {
     const dir = resolveDefaultAgentWorkspaceDir({
-      OPENCLAW_HOME: "/srv/penguins-home",
+      PENGUINS_HOME: "/srv/penguins-home",
       HOME: "/home/other",
     } as NodeJS.ProcessEnv);
 

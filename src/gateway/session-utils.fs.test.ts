@@ -635,8 +635,8 @@ describe("resolveSessionTranscriptCandidates", () => {
     vi.unstubAllEnvs();
   });
 
-  test("fallback candidate uses OPENCLAW_HOME instead of os.homedir()", () => {
-    vi.stubEnv("OPENCLAW_HOME", "/srv/penguins-home");
+  test("fallback candidate uses PENGUINS_HOME instead of os.homedir()", () => {
+    vi.stubEnv("PENGUINS_HOME", "/srv/penguins-home");
     vi.stubEnv("HOME", "/home/other");
 
     const candidates = resolveSessionTranscriptCandidates("sess-1", undefined);
@@ -695,7 +695,7 @@ describe("archiveSessionTranscripts", () => {
   beforeAll(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "penguins-archive-test-"));
     storePath = path.join(tmpDir, "sessions.json");
-    vi.stubEnv("OPENCLAW_HOME", tmpDir);
+    vi.stubEnv("PENGUINS_HOME", tmpDir);
   });
 
   afterAll(() => {

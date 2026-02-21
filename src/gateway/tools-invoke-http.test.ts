@@ -163,8 +163,8 @@ afterAll(async () => {
 });
 
 beforeEach(() => {
-  delete process.env.OPENCLAW_GATEWAY_TOKEN;
-  delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+  delete process.env.PENGUINS_GATEWAY_TOKEN;
+  delete process.env.PENGUINS_GATEWAY_PASSWORD;
   pluginHttpHandlers = [];
   cfg = {};
 });

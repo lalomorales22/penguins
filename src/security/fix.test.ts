@@ -69,8 +69,8 @@ describe("security fix", () => {
 
     const env = {
       ...process.env,
-      OPENCLAW_STATE_DIR: stateDir,
-      OPENCLAW_CONFIG_PATH: configPath,
+      PENGUINS_STATE_DIR: stateDir,
+      PENGUINS_CONFIG_PATH: configPath,
     };
 
     const res = await fixSecurityFootguns({ env, stateDir, configPath });
@@ -136,8 +136,8 @@ describe("security fix", () => {
 
     const env = {
       ...process.env,
-      OPENCLAW_STATE_DIR: stateDir,
-      OPENCLAW_CONFIG_PATH: configPath,
+      PENGUINS_STATE_DIR: stateDir,
+      PENGUINS_CONFIG_PATH: configPath,
     };
 
     const res = await fixSecurityFootguns({ env, stateDir, configPath });
@@ -180,8 +180,8 @@ describe("security fix", () => {
 
     const env = {
       ...process.env,
-      OPENCLAW_STATE_DIR: stateDir,
-      OPENCLAW_CONFIG_PATH: configPath,
+      PENGUINS_STATE_DIR: stateDir,
+      PENGUINS_CONFIG_PATH: configPath,
     };
 
     const res = await fixSecurityFootguns({ env, stateDir, configPath });
@@ -203,8 +203,8 @@ describe("security fix", () => {
 
     const env = {
       ...process.env,
-      OPENCLAW_STATE_DIR: stateDir,
-      OPENCLAW_CONFIG_PATH: configPath,
+      PENGUINS_STATE_DIR: stateDir,
+      PENGUINS_CONFIG_PATH: configPath,
     };
 
     const res = await fixSecurityFootguns({ env, stateDir, configPath });
@@ -258,8 +258,8 @@ describe("security fix", () => {
 
     const env = {
       ...process.env,
-      OPENCLAW_STATE_DIR: stateDir,
-      OPENCLAW_CONFIG_PATH: configPath,
+      PENGUINS_STATE_DIR: stateDir,
+      PENGUINS_CONFIG_PATH: configPath,
     };
 
     const res = await fixSecurityFootguns({ env, stateDir, configPath });

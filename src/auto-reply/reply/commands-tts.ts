@@ -54,15 +54,13 @@ function ttsUsage(): ReplyPayload {
       `• /tts summary [on|off] — View/change auto-summary\n` +
       `• /tts audio <text> — Generate audio from text\n\n` +
       `**Providers:**\n` +
-      `• edge — Free, fast (default)\n` +
-      `• openai — High quality (requires API key)\n` +
-      `• elevenlabs — Premium voices (requires API key)\n\n` +
+      `• openai — High quality (requires API key)\n\n` +
       `**Text Limit (default: 1500, max: 4096):**\n` +
       `When text exceeds the limit:\n` +
       `• Summary ON: AI summarizes, then generates audio\n` +
       `• Summary OFF: Truncates text, then generates audio\n\n` +
       `**Examples:**\n` +
-      `/tts provider edge\n` +
+      `/tts provider openai\n` +
       `/tts limit 2000\n` +
       `/tts audio Hello, this is a test!`,
   };
@@ -160,8 +158,6 @@ export const handleTtsCommands: CommandHandler = async (params, allowTextCommand
     const currentProvider = getTtsProvider(config, prefsPath);
     if (!args.trim()) {
       const hasOpenAI = Boolean(resolveTtsApiKey(config, "openai"));
-      const hasElevenLabs = Boolean(resolveTtsApiKey(config, "elevenlabs"));
-      const hasEdge = isTtsProviderConfigured(config, "edge");
       return {
         shouldContinue: false,
         reply: {
@@ -169,19 +165,17 @@ export const handleTtsCommands: CommandHandler = async (params, allowTextCommand
             `🎙️ TTS provider\n` +
             `Primary: ${currentProvider}\n` +
             `OpenAI key: ${hasOpenAI ? "✅" : "❌"}\n` +
-            `ElevenLabs key: ${hasElevenLabs ? "✅" : "❌"}\n` +
-            `Edge enabled: ${hasEdge ? "✅" : "❌"}\n` +
-            `Usage: /tts provider openai | elevenlabs | edge`,
+            `Usage: /tts provider openai`,
         },
       };
     }
 
     const requested = args.trim().toLowerCase();
-    if (requested !== "openai" && requested !== "elevenlabs" && requested !== "edge") {
+    if (requested !== "openai") {
       return { shouldContinue: false, reply: ttsUsage() };
     }
 
-    setTtsProvider(prefsPath, requested);
+    setTtsProvider(prefsPath, requested as "openai");
     return {
       shouldContinue: false,
       reply: { text: `✅ TTS provider set to ${requested}.` },

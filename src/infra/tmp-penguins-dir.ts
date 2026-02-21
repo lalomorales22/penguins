@@ -3,8 +3,6 @@ import os from "node:os";
 import path from "node:path";
 
 export const POSIX_PENGUINS_TMP_DIR = "/tmp/penguins";
-/** @deprecated Use POSIX_PENGUINS_TMP_DIR instead */
-export const POSIX_OPENCLAW_TMP_DIR = POSIX_PENGUINS_TMP_DIR;
 
 type ResolvePreferredPenguinsTmpDirOptions = {
   accessSync?: (path: string, mode?: number) => void;
@@ -18,9 +16,6 @@ type ResolvePreferredPenguinsTmpDirOptions = {
   getuid?: () => number | undefined;
   tmpdir?: () => string;
 };
-
-/** @deprecated Use ResolvePreferredPenguinsTmpDirOptions instead */
-type ResolvePreferredPenguinsTmpDirOptions = ResolvePreferredPenguinsTmpDirOptions;
 
 type MaybeNodeError = { code?: string };
 
@@ -107,6 +102,3 @@ export function resolvePreferredPenguinsTmpDir(
     return fallback();
   }
 }
-
-/** @deprecated Use resolvePreferredPenguinsTmpDir instead */
-export const resolvePreferredPenguinsTmpDir = resolvePreferredPenguinsTmpDir;

@@ -19,7 +19,7 @@ describe("doctor command", () => {
 
     const missingDir = fs.mkdtempSync(path.join(os.tmpdir(), "penguins-missing-state-"));
     fs.rmSync(missingDir, { recursive: true, force: true });
-    process.env.OPENCLAW_STATE_DIR = missingDir;
+    process.env.PENGUINS_STATE_DIR = missingDir;
     note.mockClear();
 
     const { doctorCommand } = await import("./doctor.js");
@@ -67,7 +67,7 @@ describe("doctor command", () => {
     expect(warned).toBe(true);
   });
 
-  it("skips gateway auth warning when OPENCLAW_GATEWAY_TOKEN is set", async () => {
+  it("skips gateway auth warning when PENGUINS_GATEWAY_TOKEN is set", async () => {
     readConfigFileSnapshot.mockResolvedValue({
       path: "/tmp/penguins.json",
       exists: true,
@@ -81,8 +81,8 @@ describe("doctor command", () => {
       legacyIssues: [],
     });
 
-    const prevToken = process.env.OPENCLAW_GATEWAY_TOKEN;
-    process.env.OPENCLAW_GATEWAY_TOKEN = "env-token-1234567890";
+    const prevToken = process.env.PENGUINS_GATEWAY_TOKEN;
+    process.env.PENGUINS_GATEWAY_TOKEN = "env-token-1234567890";
     note.mockClear();
 
     try {
@@ -93,9 +93,9 @@ describe("doctor command", () => {
       );
     } finally {
       if (prevToken === undefined) {
-        delete process.env.OPENCLAW_GATEWAY_TOKEN;
+        delete process.env.PENGUINS_GATEWAY_TOKEN;
       } else {
-        process.env.OPENCLAW_GATEWAY_TOKEN = prevToken;
+        process.env.PENGUINS_GATEWAY_TOKEN = prevToken;
       }
     }
 

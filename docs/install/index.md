@@ -168,9 +168,9 @@ penguins dashboard      # open the browser UI
 
 If you need custom runtime paths, use:
 
-- `OPENCLAW_HOME` for home-directory based internal paths
-- `OPENCLAW_STATE_DIR` for mutable state location
-- `OPENCLAW_CONFIG_PATH` for config file location
+- `PENGUINS_HOME` for home-directory based internal paths
+- `PENGUINS_STATE_DIR` for mutable state location
+- `PENGUINS_CONFIG_PATH` for config file location
 
 See [Environment vars](/help/environment) for precedence and full details.
 

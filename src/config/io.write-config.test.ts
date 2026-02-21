@@ -24,11 +24,11 @@ describe("config io write", () => {
       "USERPROFILE",
       "HOMEDRIVE",
       "HOMEPATH",
-      "OPENCLAW_STATE_DIR",
+      "PENGUINS_STATE_DIR",
     ]);
     process.env.HOME = home;
     process.env.USERPROFILE = home;
-    process.env.OPENCLAW_STATE_DIR = path.join(home, ".penguins");
+    process.env.PENGUINS_STATE_DIR = path.join(home, ".penguins");
 
     if (process.platform === "win32") {
       const match = home.match(/^([A-Za-z]:)(.*)$/);
@@ -411,9 +411,9 @@ describe("config io write", () => {
 
       const io = createConfigIO({
         env: {
-          OPENCLAW_WATCH_MODE: "1",
-          OPENCLAW_WATCH_SESSION: "watch-session-1",
-          OPENCLAW_WATCH_COMMAND: "gateway --force",
+          PENGUINS_WATCH_MODE: "1",
+          PENGUINS_WATCH_SESSION: "watch-session-1",
+          PENGUINS_WATCH_COMMAND: "gateway --force",
         } as NodeJS.ProcessEnv,
         homedir: () => home,
         logger: {

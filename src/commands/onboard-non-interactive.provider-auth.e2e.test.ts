@@ -40,32 +40,32 @@ async function withOnboardEnv(
 ): Promise<void> {
   const prev = captureEnv([
     "HOME",
-    "OPENCLAW_STATE_DIR",
-    "OPENCLAW_CONFIG_PATH",
-    "OPENCLAW_SKIP_CHANNELS",
-    "OPENCLAW_SKIP_GMAIL_WATCHER",
-    "OPENCLAW_SKIP_CRON",
-    "OPENCLAW_SKIP_CANVAS_HOST",
-    "OPENCLAW_GATEWAY_TOKEN",
-    "OPENCLAW_GATEWAY_PASSWORD",
+    "PENGUINS_STATE_DIR",
+    "PENGUINS_CONFIG_PATH",
+    "PENGUINS_SKIP_CHANNELS",
+    "PENGUINS_SKIP_GMAIL_WATCHER",
+    "PENGUINS_SKIP_CRON",
+    "PENGUINS_SKIP_CANVAS_HOST",
+    "PENGUINS_GATEWAY_TOKEN",
+    "PENGUINS_GATEWAY_PASSWORD",
     "CUSTOM_API_KEY",
-    "OPENCLAW_DISABLE_CONFIG_CACHE",
+    "PENGUINS_DISABLE_CONFIG_CACHE",
   ]);
 
-  process.env.OPENCLAW_SKIP_CHANNELS = "1";
-  process.env.OPENCLAW_SKIP_GMAIL_WATCHER = "1";
-  process.env.OPENCLAW_SKIP_CRON = "1";
-  process.env.OPENCLAW_SKIP_CANVAS_HOST = "1";
-  process.env.OPENCLAW_DISABLE_CONFIG_CACHE = "1";
-  delete process.env.OPENCLAW_GATEWAY_TOKEN;
-  delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+  process.env.PENGUINS_SKIP_CHANNELS = "1";
+  process.env.PENGUINS_SKIP_GMAIL_WATCHER = "1";
+  process.env.PENGUINS_SKIP_CRON = "1";
+  process.env.PENGUINS_SKIP_CANVAS_HOST = "1";
+  process.env.PENGUINS_DISABLE_CONFIG_CACHE = "1";
+  delete process.env.PENGUINS_GATEWAY_TOKEN;
+  delete process.env.PENGUINS_GATEWAY_PASSWORD;
   delete process.env.CUSTOM_API_KEY;
 
   const tempHome = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
   const configPath = path.join(tempHome, "penguins.json");
   process.env.HOME = tempHome;
-  process.env.OPENCLAW_STATE_DIR = tempHome;
-  process.env.OPENCLAW_CONFIG_PATH = configPath;
+  process.env.PENGUINS_STATE_DIR = tempHome;
+  process.env.PENGUINS_CONFIG_PATH = configPath;
 
   const runtime: RuntimeMock = {
     log: () => {},

@@ -137,11 +137,12 @@ Or edit manually — see `penguins configure --help` for all options.
 
 | Variable | Description |
 |---|---|
-| `PENGUINS_CONFIG_DIR` | Override config directory |
-| `PENGUINS_STATE_DIR` | Override state directory |
+| `PENGUINS_STATE_DIR` | Override state/data directory (default: `~/.penguins`) |
+| `PENGUINS_CONFIG_PATH` | Override config file path (default: `~/.penguins/penguins.json`) |
 | `PENGUINS_GATEWAY_TOKEN` | Gateway auth token |
 | `PENGUINS_GATEWAY_PASSWORD` | Gateway auth password |
-| `PENGUINS_LOAD_SHELL_ENV` | Load env from login shell |
+| `PENGUINS_LOAD_SHELL_ENV` | Load env from login shell (`1` to enable) |
+| `PENGUINS_EMBEDDING_BACKEND` | Force embedding backend: `local` or `openai` |
 
 ---
 
@@ -182,14 +183,22 @@ pnpm check          # lint + types + format check
 If you were using the old `openclaw` CLI:
 
 ```bash
-# Both commands work — openclaw now shows a deprecation warning
+# Both commands work — openclaw shows a deprecation warning
 openclaw     # works, warns: use "penguins" instead
 penguins     # preferred
-
-# Env vars: PENGUINS_* is preferred, OPENCLAW_* still works as fallback
 ```
 
-Config and state directories are unchanged — no migration needed.
+**Env vars:** Rename any `OPENCLAW_*` variables in your shell profile or `.env` files to `PENGUINS_*`:
+
+```bash
+# Old                          New
+OPENCLAW_GATEWAY_TOKEN      → PENGUINS_GATEWAY_TOKEN
+OPENCLAW_GATEWAY_PASSWORD   → PENGUINS_GATEWAY_PASSWORD
+OPENCLAW_STATE_DIR          → PENGUINS_STATE_DIR
+OPENCLAW_CONFIG_PATH        → PENGUINS_CONFIG_PATH
+```
+
+**Config and state directories** are unchanged — no data migration needed. Your existing `~/.penguins/` directory and config work as-is.
 
 ---
 

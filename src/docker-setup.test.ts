@@ -69,9 +69,9 @@ function createEnv(
     LC_ALL: process.env.LC_ALL,
     TMPDIR: process.env.TMPDIR,
     DOCKER_STUB_LOG: sandbox.logPath,
-    OPENCLAW_GATEWAY_TOKEN: "test-token",
-    OPENCLAW_CONFIG_DIR: join(sandbox.rootDir, "config"),
-    OPENCLAW_WORKSPACE_DIR: join(sandbox.rootDir, "penguins"),
+    PENGUINS_GATEWAY_TOKEN: "test-token",
+    PENGUINS_CONFIG_DIR: join(sandbox.rootDir, "config"),
+    PENGUINS_WORKSPACE_DIR: join(sandbox.rootDir, "penguins"),
   };
 
   for (const [key, value] of Object.entries(overrides)) {
@@ -118,23 +118,23 @@ describe("docker-setup.sh", () => {
     const result = spawnSync("bash", [sandbox.scriptPath], {
       cwd: sandbox.rootDir,
       env: createEnv(sandbox, {
-        OPENCLAW_DOCKER_APT_PACKAGES: "ffmpeg build-essential",
-        OPENCLAW_EXTRA_MOUNTS: undefined,
-        OPENCLAW_HOME_VOLUME: "penguins-home",
+        PENGUINS_DOCKER_APT_PACKAGES: "ffmpeg build-essential",
+        PENGUINS_EXTRA_MOUNTS: undefined,
+        PENGUINS_HOME_VOLUME: "penguins-home",
       }),
       stdio: ["ignore", "ignore", "pipe"],
     });
     expect(result.status).toBe(0);
     const envFile = await readFile(join(sandbox.rootDir, ".env"), "utf8");
-    expect(envFile).toContain("OPENCLAW_DOCKER_APT_PACKAGES=ffmpeg build-essential");
-    expect(envFile).toContain("OPENCLAW_EXTRA_MOUNTS=");
-    expect(envFile).toContain("OPENCLAW_HOME_VOLUME=penguins-home");
+    expect(envFile).toContain("PENGUINS_DOCKER_APT_PACKAGES=ffmpeg build-essential");
+    expect(envFile).toContain("PENGUINS_EXTRA_MOUNTS=");
+    expect(envFile).toContain("PENGUINS_HOME_VOLUME=penguins-home");
     const extraCompose = await readFile(join(sandbox.rootDir, "docker-compose.extra.yml"), "utf8");
     expect(extraCompose).toContain("penguins-home:/home/node");
     expect(extraCompose).toContain("volumes:");
     expect(extraCompose).toContain("penguins-home:");
     const log = await readFile(sandbox.logPath, "utf8");
-    expect(log).toContain("--build-arg OPENCLAW_DOCKER_APT_PACKAGES=ffmpeg build-essential");
+    expect(log).toContain("--build-arg PENGUINS_DOCKER_APT_PACKAGES=ffmpeg build-essential");
   });
 
   it("avoids associative arrays so the script remains Bash 3.2-compatible", async () => {

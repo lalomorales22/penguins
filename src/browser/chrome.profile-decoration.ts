@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  DEFAULT_OPENCLAW_BROWSER_COLOR,
-  DEFAULT_OPENCLAW_BROWSER_PROFILE_NAME,
+  DEFAULT_PENGUINS_BROWSER_COLOR,
+  DEFAULT_PENGUINS_BROWSER_PROFILE_NAME,
 } from "./constants.js";
 
 function decoratedMarkerPath(userDataDir: string) {
@@ -130,8 +130,8 @@ export function decoratePenguinsProfile(
   userDataDir: string,
   opts?: { name?: string; color?: string },
 ) {
-  const desiredName = opts?.name ?? DEFAULT_OPENCLAW_BROWSER_PROFILE_NAME;
-  const desiredColor = (opts?.color ?? DEFAULT_OPENCLAW_BROWSER_COLOR).toUpperCase();
+  const desiredName = opts?.name ?? DEFAULT_PENGUINS_BROWSER_PROFILE_NAME;
+  const desiredColor = (opts?.color ?? DEFAULT_PENGUINS_BROWSER_COLOR).toUpperCase();
   const desiredColorInt = parseHexRgbToSignedArgbInt(desiredColor);
 
   const localStatePath = path.join(userDataDir, "Local State");

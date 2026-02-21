@@ -10,13 +10,13 @@ const runCommandWithTimeoutMock = vi.fn();
 const scanDirectoryWithSummaryMock = vi.fn();
 const fetchWithSsrFGuardMock = vi.fn();
 
-const originalPenguinsStateDir = process.env.OPENCLAW_STATE_DIR;
+const originalPenguinsStateDir = process.env.PENGUINS_STATE_DIR;
 
 afterEach(() => {
   if (originalPenguinsStateDir === undefined) {
-    delete process.env.OPENCLAW_STATE_DIR;
+    delete process.env.PENGUINS_STATE_DIR;
   } else {
-    process.env.OPENCLAW_STATE_DIR = originalPenguinsStateDir;
+    process.env.PENGUINS_STATE_DIR = originalPenguinsStateDir;
   }
 });
 
@@ -89,7 +89,7 @@ async function fileExists(filePath: string): Promise<boolean> {
 
 function setTempStateDir(workspaceDir: string): string {
   const stateDir = path.join(workspaceDir, "state");
-  process.env.OPENCLAW_STATE_DIR = stateDir;
+  process.env.PENGUINS_STATE_DIR = stateDir;
   return stateDir;
 }
 

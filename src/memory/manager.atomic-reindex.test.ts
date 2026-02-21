@@ -50,7 +50,7 @@ describe("memory manager atomic reindex", () => {
   });
 
   beforeEach(async () => {
-    vi.stubEnv("OPENCLAW_TEST_MEMORY_UNSAFE_REINDEX", "0");
+    vi.stubEnv("PENGUINS_TEST_MEMORY_UNSAFE_REINDEX", "0");
     shouldFail = false;
     workspaceDir = path.join(fixtureRoot, `case-${caseId++}`);
     await fs.mkdir(workspaceDir, { recursive: true });

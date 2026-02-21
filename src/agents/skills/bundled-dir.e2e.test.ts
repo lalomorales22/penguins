@@ -15,18 +15,18 @@ async function writeSkill(dir: string, name: string) {
 }
 
 describe("resolveBundledSkillsDir", () => {
-  const originalOverride = process.env.OPENCLAW_BUNDLED_SKILLS_DIR;
+  const originalOverride = process.env.PENGUINS_BUNDLED_SKILLS_DIR;
 
   afterEach(() => {
     if (originalOverride === undefined) {
-      delete process.env.OPENCLAW_BUNDLED_SKILLS_DIR;
+      delete process.env.PENGUINS_BUNDLED_SKILLS_DIR;
     } else {
-      process.env.OPENCLAW_BUNDLED_SKILLS_DIR = originalOverride;
+      process.env.PENGUINS_BUNDLED_SKILLS_DIR = originalOverride;
     }
   });
 
   it("resolves bundled skills under a flattened dist layout", async () => {
-    delete process.env.OPENCLAW_BUNDLED_SKILLS_DIR;
+    delete process.env.PENGUINS_BUNDLED_SKILLS_DIR;
 
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "penguins-bundled-"));
     await fs.writeFile(path.join(root, "package.json"), JSON.stringify({ name: "penguins" }));

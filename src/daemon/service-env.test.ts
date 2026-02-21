@@ -224,25 +224,25 @@ describe("buildServiceEnvironment", () => {
     } else {
       expect(env.PATH).toContain("/usr/bin");
     }
-    expect(env.OPENCLAW_GATEWAY_PORT).toBe("18789");
-    expect(env.OPENCLAW_GATEWAY_TOKEN).toBe("secret");
-    expect(env.OPENCLAW_SERVICE_MARKER).toBe("penguins");
-    expect(env.OPENCLAW_SERVICE_KIND).toBe("gateway");
-    expect(typeof env.OPENCLAW_SERVICE_VERSION).toBe("string");
-    expect(env.OPENCLAW_SYSTEMD_UNIT).toBe("penguins-gateway.service");
+    expect(env.PENGUINS_GATEWAY_PORT).toBe("18789");
+    expect(env.PENGUINS_GATEWAY_TOKEN).toBe("secret");
+    expect(env.PENGUINS_SERVICE_MARKER).toBe("penguins");
+    expect(env.PENGUINS_SERVICE_KIND).toBe("gateway");
+    expect(typeof env.PENGUINS_SERVICE_VERSION).toBe("string");
+    expect(env.PENGUINS_SYSTEMD_UNIT).toBe("penguins-gateway.service");
     if (process.platform === "darwin") {
-      expect(env.OPENCLAW_LAUNCHD_LABEL).toBe("ai.penguins.gateway");
+      expect(env.PENGUINS_LAUNCHD_LABEL).toBe("ai.penguins.gateway");
     }
   });
 
   it("uses profile-specific unit and label", () => {
     const env = buildServiceEnvironment({
-      env: { HOME: "/home/user", OPENCLAW_PROFILE: "work" },
+      env: { HOME: "/home/user", PENGUINS_PROFILE: "work" },
       port: 18789,
     });
-    expect(env.OPENCLAW_SYSTEMD_UNIT).toBe("penguins-gateway-work.service");
+    expect(env.PENGUINS_SYSTEMD_UNIT).toBe("penguins-gateway-work.service");
     if (process.platform === "darwin") {
-      expect(env.OPENCLAW_LAUNCHD_LABEL).toBe("ai.penguins.work");
+      expect(env.PENGUINS_LAUNCHD_LABEL).toBe("ai.penguins.work");
     }
   });
 });
@@ -263,27 +263,27 @@ describe("resolveGatewayStateDir", () => {
   });
 
   it("appends the profile suffix when set", () => {
-    const env = { HOME: "/Users/test", OPENCLAW_PROFILE: "rescue" };
+    const env = { HOME: "/Users/test", PENGUINS_PROFILE: "rescue" };
     expect(resolveGatewayStateDir(env)).toBe(path.join("/Users/test", ".penguins-rescue"));
   });
 
   it("treats default profiles as the base state dir", () => {
-    const env = { HOME: "/Users/test", OPENCLAW_PROFILE: "Default" };
+    const env = { HOME: "/Users/test", PENGUINS_PROFILE: "Default" };
     expect(resolveGatewayStateDir(env)).toBe(path.join("/Users/test", ".penguins"));
   });
 
-  it("uses OPENCLAW_STATE_DIR when provided", () => {
-    const env = { HOME: "/Users/test", OPENCLAW_STATE_DIR: "/var/lib/penguins" };
+  it("uses PENGUINS_STATE_DIR when provided", () => {
+    const env = { HOME: "/Users/test", PENGUINS_STATE_DIR: "/var/lib/penguins" };
     expect(resolveGatewayStateDir(env)).toBe(path.resolve("/var/lib/penguins"));
   });
 
-  it("expands ~ in OPENCLAW_STATE_DIR", () => {
-    const env = { HOME: "/Users/test", OPENCLAW_STATE_DIR: "~/penguins-state" };
+  it("expands ~ in PENGUINS_STATE_DIR", () => {
+    const env = { HOME: "/Users/test", PENGUINS_STATE_DIR: "~/penguins-state" };
     expect(resolveGatewayStateDir(env)).toBe(path.resolve("/Users/test/penguins-state"));
   });
 
   it("preserves Windows absolute paths without HOME", () => {
-    const env = { OPENCLAW_STATE_DIR: "C:\\State\\penguins" };
+    const env = { PENGUINS_STATE_DIR: "C:\\State\\penguins" };
     expect(resolveGatewayStateDir(env)).toBe("C:\\State\\penguins");
   });
 });

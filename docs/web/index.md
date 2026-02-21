@@ -88,7 +88,7 @@ Open:
   gateway: {
     bind: "loopback",
     tailscale: { mode: "funnel" },
-    auth: { mode: "password" }, // or OPENCLAW_GATEWAY_PASSWORD
+    auth: { mode: "password" }, // or PENGUINS_GATEWAY_PASSWORD
   },
 }
 ```

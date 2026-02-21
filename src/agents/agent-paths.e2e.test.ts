@@ -6,7 +6,7 @@ import { captureEnv } from "../test-utils/env.js";
 import { resolvePenguinsAgentDir } from "./agent-paths.js";
 
 describe("resolvePenguinsAgentDir", () => {
-  const env = captureEnv(["OPENCLAW_STATE_DIR", "OPENCLAW_AGENT_DIR", "PI_CODING_AGENT_DIR"]);
+  const env = captureEnv(["PENGUINS_STATE_DIR", "PENGUINS_AGENT_DIR", "PI_CODING_AGENT_DIR"]);
   let tempStateDir: string | null = null;
 
   afterEach(async () => {
@@ -19,8 +19,8 @@ describe("resolvePenguinsAgentDir", () => {
 
   it("defaults to the multi-agent path when no overrides are set", async () => {
     tempStateDir = await fs.mkdtemp(path.join(os.tmpdir(), "penguins-agent-"));
-    process.env.OPENCLAW_STATE_DIR = tempStateDir;
-    delete process.env.OPENCLAW_AGENT_DIR;
+    process.env.PENGUINS_STATE_DIR = tempStateDir;
+    delete process.env.PENGUINS_AGENT_DIR;
     delete process.env.PI_CODING_AGENT_DIR;
 
     const resolved = resolvePenguinsAgentDir();
@@ -28,10 +28,10 @@ describe("resolvePenguinsAgentDir", () => {
     expect(resolved).toBe(path.join(tempStateDir, "agents", "main", "agent"));
   });
 
-  it("honors OPENCLAW_AGENT_DIR overrides", async () => {
+  it("honors PENGUINS_AGENT_DIR overrides", async () => {
     tempStateDir = await fs.mkdtemp(path.join(os.tmpdir(), "penguins-agent-"));
     const override = path.join(tempStateDir, "agent");
-    process.env.OPENCLAW_AGENT_DIR = override;
+    process.env.PENGUINS_AGENT_DIR = override;
     delete process.env.PI_CODING_AGENT_DIR;
 
     const resolved = resolvePenguinsAgentDir();

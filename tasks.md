@@ -47,25 +47,25 @@ Complete rebrand from "OpenClaw" to "Penguins". This document outlines a 5-phase
 
 ### 1.3 Environment Variables
 
-- [x] Update all `OPENCLAW_*` → `PENGUINS_*` in:
+- [x] Update all `PENGUINS_*` → `PENGUINS_*` in:
   - `src/config/paths.ts`
   - `src/infra/home-dir.ts`
   - All source files using env vars
 - [x] Update `package.json` scripts that set env vars
 - [ ] Update CI/CD workflow files (GitHub Actions - Phase 5)
 - [x] Full list of env vars migrated (with backwards compatibility):
-  - `OPENCLAW_HOME` → `PENGUINS_HOME`
-  - `OPENCLAW_STATE_DIR` → `PENGUINS_STATE_DIR`
-  - `OPENCLAW_CONFIG_PATH` → `PENGUINS_CONFIG_PATH`
-  - `OPENCLAW_GATEWAY_PORT` → `PENGUINS_GATEWAY_PORT`
-  - `OPENCLAW_GATEWAY_TOKEN` → `PENGUINS_GATEWAY_TOKEN`
-  - `OPENCLAW_GATEWAY_PASSWORD` → `PENGUINS_GATEWAY_PASSWORD`
-  - `OPENCLAW_OAUTH_DIR` → `PENGUINS_OAUTH_DIR`
-  - `OPENCLAW_LIVE_TEST` → `PENGUINS_LIVE_TEST`
-  - `OPENCLAW_E2E_WORKERS` → `PENGUINS_E2E_WORKERS`
-  - `OPENCLAW_E2E_VERBOSE` → `PENGUINS_E2E_VERBOSE`
-  - `OPENCLAW_TEST_HOME` → `PENGUINS_TEST_HOME`
-  - `OPENCLAW_PROFILE` → `PENGUINS_PROFILE`
+  - `PENGUINS_HOME` → `PENGUINS_HOME`
+  - `PENGUINS_STATE_DIR` → `PENGUINS_STATE_DIR`
+  - `PENGUINS_CONFIG_PATH` → `PENGUINS_CONFIG_PATH`
+  - `PENGUINS_GATEWAY_PORT` → `PENGUINS_GATEWAY_PORT`
+  - `PENGUINS_GATEWAY_TOKEN` → `PENGUINS_GATEWAY_TOKEN`
+  - `PENGUINS_GATEWAY_PASSWORD` → `PENGUINS_GATEWAY_PASSWORD`
+  - `PENGUINS_OAUTH_DIR` → `PENGUINS_OAUTH_DIR`
+  - `PENGUINS_LIVE_TEST` → `PENGUINS_LIVE_TEST`
+  - `PENGUINS_E2E_WORKERS` → `PENGUINS_E2E_WORKERS`
+  - `PENGUINS_E2E_VERBOSE` → `PENGUINS_E2E_VERBOSE`
+  - `PENGUINS_TEST_HOME` → `PENGUINS_TEST_HOME`
+  - `PENGUINS_PROFILE` → `PENGUINS_PROFILE`
 
 ### 1.4 String Constants
 
@@ -162,7 +162,7 @@ Update all 38 `extensions/*/package.json` files:
 ### 2.5 Control UI Package
 
 - [x] Rename `openclaw-control-ui` → `penguins-control-ui`
-- [x] Update `OPENCLAW_CONTROL_UI_BASE_PATH` → `PENGUINS_CONTROL_UI_BASE_PATH`
+- [x] Update `PENGUINS_CONTROL_UI_BASE_PATH` → `PENGUINS_CONTROL_UI_BASE_PATH`
 
 ### Phase 2 Verification (✅ COMPLETE)
 
@@ -345,18 +345,18 @@ Update all 38 `extensions/*/package.json` files:
   - Detection and migration of `~/.clawdbot/`, `~/.moldbot/`, `~/.moltbot/` → `~/.penguins/`
   - Session, agent dir, WhatsApp auth, and Telegram migration
   - Symlink creation for legacy paths after migration
-- [x] Updated skip logic to check `PENGUINS_STATE_DIR` OR `OPENCLAW_STATE_DIR`
+- [x] Updated skip logic to check `PENGUINS_STATE_DIR` OR `PENGUINS_STATE_DIR`
 - [x] Doctor command (`src/commands/doctor.ts`) already prompts user to migrate legacy state
 - Note: `~/.openclaw/` directory migration not needed — product went directly from `.clawdbot`/`.moltbot` to `.penguins`
 
 ### 5.2 Environment Variable Backwards Compatibility ✅
 
-- [x] `src/config/paths.ts` — already falls back: `PENGUINS_*` → `OPENCLAW_*` → `CLAWDBOT_*`
-- [x] `src/infra/home-dir.ts` — already falls back: `PENGUINS_HOME` → `OPENCLAW_HOME`
-- [x] `src/infra/shell-env.ts` — updated to check `PENGUINS_*` first, fallback to `OPENCLAW_*`:
-  - `PENGUINS_LOAD_SHELL_ENV` (was `OPENCLAW_LOAD_SHELL_ENV`)
-  - `PENGUINS_DEFER_SHELL_ENV_FALLBACK` (was `OPENCLAW_DEFER_SHELL_ENV_FALLBACK`)
-  - `PENGUINS_SHELL_ENV_TIMEOUT_MS` (was `OPENCLAW_SHELL_ENV_TIMEOUT_MS`)
+- [x] `src/config/paths.ts` — already falls back: `PENGUINS_*` → `PENGUINS_*` → `PENGUINS_*`
+- [x] `src/infra/home-dir.ts` — already falls back: `PENGUINS_HOME` → `PENGUINS_HOME`
+- [x] `src/infra/shell-env.ts` — updated to check `PENGUINS_*` first, fallback to `PENGUINS_*`:
+  - `PENGUINS_LOAD_SHELL_ENV` (was `PENGUINS_LOAD_SHELL_ENV`)
+  - `PENGUINS_DEFER_SHELL_ENV_FALLBACK` (was `PENGUINS_DEFER_SHELL_ENV_FALLBACK`)
+  - `PENGUINS_SHELL_ENV_TIMEOUT_MS` (was `PENGUINS_SHELL_ENV_TIMEOUT_MS`)
 
 ### 5.3 CLI Command Aliases ✅
 
@@ -408,15 +408,15 @@ Update all 38 `extensions/*/package.json` files:
 ### Doctor Platform Notes ✅
 
 - [x] `src/commands/doctor-platform-notes.ts`:
-  - `noteDeprecatedLegacyEnvVars` now detects both `CLAWDBOT_*` and `OPENCLAW_*` and redirects to `PENGUINS_*`
+  - `noteDeprecatedLegacyEnvVars` now detects both `PENGUINS_*` and `PENGUINS_*` and redirects to `PENGUINS_*`
   - launchctl overrides check updated to `PENGUINS_GATEWAY_TOKEN`/`PENGUINS_GATEWAY_PASSWORD`
-  - Deprecation notices updated for `CLAWDBOT_*` and `OPENCLAW_*` to say "use `PENGUINS_*` instead"
+  - Deprecation notices updated for `PENGUINS_*` and `PENGUINS_*` to say "use `PENGUINS_*` instead"
 
 ### Phase 5 Verification
 
 - [x] `openclaw` binary alias works (redirects to penguins with deprecation warning)
-- [x] `OPENCLAW_*` env vars still work as fallbacks
-- [x] Doctor surfaces deprecated env var warnings for both `CLAWDBOT_*` and `OPENCLAW_*`
+- [x] `PENGUINS_*` env vars still work as fallbacks
+- [x] Doctor surfaces deprecated env var warnings for both `PENGUINS_*` and `PENGUINS_*`
 - [x] State migration skips when `PENGUINS_STATE_DIR` is set
 - [ ] npm publish (pending)
 - [ ] GitHub repo rename (pending)

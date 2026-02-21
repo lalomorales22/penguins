@@ -210,7 +210,7 @@ Flags are case-insensitive and support wildcards (e.g. `telegram.*` or `*`).
 Env override (one-off):
 
 ```
-OPENCLAW_DIAGNOSTICS=telegram.http,telegram.payload
+PENGUINS_DIAGNOSTICS=telegram.http,telegram.payload
 ```
 
 Notes:

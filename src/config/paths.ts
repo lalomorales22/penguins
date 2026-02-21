@@ -12,7 +12,7 @@ import { expandHomePrefix, resolveRequiredHomeDir } from "../infra/home-dir.js";
  * - Config is managed externally (read-only from Nix perspective)
  */
 export function resolveIsNixMode(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.PENGUINS_NIX_MODE === "1" || env.OPENCLAW_NIX_MODE === "1";
+  return env.PENGUINS_NIX_MODE === "1" || env.PENGUINS_NIX_MODE === "1";
 }
 
 export const isNixMode = resolveIsNixMode();
@@ -69,8 +69,8 @@ export function resolveStateDir(
   const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
   const override =
     env.PENGUINS_STATE_DIR?.trim() ||
-    env.OPENCLAW_STATE_DIR?.trim() ||
-    env.CLAWDBOT_STATE_DIR?.trim();
+    env.PENGUINS_STATE_DIR?.trim() ||
+    env.PENGUINS_STATE_DIR?.trim();
   if (override) {
     return resolveUserPath(override, env, effectiveHomedir);
   }
@@ -126,8 +126,8 @@ export function resolveCanonicalConfigPath(
 ): string {
   const override =
     env.PENGUINS_CONFIG_PATH?.trim() ||
-    env.OPENCLAW_CONFIG_PATH?.trim() ||
-    env.CLAWDBOT_CONFIG_PATH?.trim();
+    env.PENGUINS_CONFIG_PATH?.trim() ||
+    env.PENGUINS_CONFIG_PATH?.trim();
   if (override) {
     return resolveUserPath(override, env, envHomedir(env));
   }
@@ -164,11 +164,11 @@ export function resolveConfigPath(
   stateDir: string = resolveStateDir(env, envHomedir(env)),
   homedir: () => string = envHomedir(env),
 ): string {
-  const override = env.PENGUINS_CONFIG_PATH?.trim() || env.OPENCLAW_CONFIG_PATH?.trim();
+  const override = env.PENGUINS_CONFIG_PATH?.trim() || env.PENGUINS_CONFIG_PATH?.trim();
   if (override) {
     return resolveUserPath(override, env, homedir);
   }
-  const stateOverride = env.PENGUINS_STATE_DIR?.trim() || env.OPENCLAW_STATE_DIR?.trim();
+  const stateOverride = env.PENGUINS_STATE_DIR?.trim() || env.PENGUINS_STATE_DIR?.trim();
   const candidates = [
     path.join(stateDir, CONFIG_FILENAME),
     ...LEGACY_CONFIG_FILENAMES.map((name) => path.join(stateDir, name)),
@@ -206,8 +206,8 @@ export function resolveDefaultConfigCandidates(
   const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
   const explicit =
     env.PENGUINS_CONFIG_PATH?.trim() ||
-    env.OPENCLAW_CONFIG_PATH?.trim() ||
-    env.CLAWDBOT_CONFIG_PATH?.trim();
+    env.PENGUINS_CONFIG_PATH?.trim() ||
+    env.PENGUINS_CONFIG_PATH?.trim();
   if (explicit) {
     return [resolveUserPath(explicit, env, effectiveHomedir)];
   }
@@ -215,8 +215,8 @@ export function resolveDefaultConfigCandidates(
   const candidates: string[] = [];
   const penguinsStateDir =
     env.PENGUINS_STATE_DIR?.trim() ||
-    env.OPENCLAW_STATE_DIR?.trim() ||
-    env.CLAWDBOT_STATE_DIR?.trim();
+    env.PENGUINS_STATE_DIR?.trim() ||
+    env.PENGUINS_STATE_DIR?.trim();
   if (penguinsStateDir) {
     const resolved = resolveUserPath(penguinsStateDir, env, effectiveHomedir);
     candidates.push(path.join(resolved, CONFIG_FILENAME));
@@ -257,7 +257,7 @@ export function resolveOAuthDir(
   env: NodeJS.ProcessEnv = process.env,
   stateDir: string = resolveStateDir(env, envHomedir(env)),
 ): string {
-  const override = env.PENGUINS_OAUTH_DIR?.trim() || env.OPENCLAW_OAUTH_DIR?.trim();
+  const override = env.PENGUINS_OAUTH_DIR?.trim() || env.PENGUINS_OAUTH_DIR?.trim();
   if (override) {
     return resolveUserPath(override, env, envHomedir(env));
   }
@@ -277,8 +277,8 @@ export function resolveGatewayPort(
 ): number {
   const envRaw =
     env.PENGUINS_GATEWAY_PORT?.trim() ||
-    env.OPENCLAW_GATEWAY_PORT?.trim() ||
-    env.CLAWDBOT_GATEWAY_PORT?.trim();
+    env.PENGUINS_GATEWAY_PORT?.trim() ||
+    env.PENGUINS_GATEWAY_PORT?.trim();
   if (envRaw) {
     const parsed = Number.parseInt(envRaw, 10);
     if (Number.isFinite(parsed) && parsed > 0) {

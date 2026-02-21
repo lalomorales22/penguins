@@ -6,7 +6,7 @@
 termux-toast "Syncing Penguins auth..."
 
 # Run sync on l36 server
-SERVER="${OPENCLAW_SERVER:-${CLAWDBOT_SERVER:-l36}}"
+SERVER="${PENGUINS_SERVER:-${PENGUINS_SERVER:-l36}}"
 RESULT=$(ssh "$SERVER" '/home/admin/penguins/scripts/sync-claude-code-auth.sh' 2>&1)
 EXIT_CODE=$?
 

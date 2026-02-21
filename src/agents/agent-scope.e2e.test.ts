@@ -263,19 +263,19 @@ describe("resolveAgentConfig", () => {
     expect(result?.workspace).toBe("~/penguins");
   });
 
-  it("uses OPENCLAW_HOME for default agent workspace", () => {
+  it("uses PENGUINS_HOME for default agent workspace", () => {
     const home = path.join(path.sep, "srv", "penguins-home");
-    vi.stubEnv("OPENCLAW_HOME", home);
+    vi.stubEnv("PENGUINS_HOME", home);
 
     const workspace = resolveAgentWorkspaceDir({} as PenguinsConfig, "main");
     expect(workspace).toBe(path.join(path.resolve(home), ".penguins", "workspace"));
   });
 
-  it("uses OPENCLAW_HOME for default agentDir", () => {
+  it("uses PENGUINS_HOME for default agentDir", () => {
     const home = path.join(path.sep, "srv", "penguins-home");
-    vi.stubEnv("OPENCLAW_HOME", home);
-    // Clear state dir so it falls back to OPENCLAW_HOME
-    vi.stubEnv("OPENCLAW_STATE_DIR", "");
+    vi.stubEnv("PENGUINS_HOME", home);
+    // Clear state dir so it falls back to PENGUINS_HOME
+    vi.stubEnv("PENGUINS_STATE_DIR", "");
 
     const agentDir = resolveAgentDir({} as PenguinsConfig, "main");
     expect(agentDir).toBe(path.join(path.resolve(home), ".penguins", "agents", "main", "agent"));

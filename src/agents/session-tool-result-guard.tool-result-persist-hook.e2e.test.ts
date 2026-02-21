@@ -71,7 +71,7 @@ describe("tool_result_persist hook", () => {
 
   it("loads tool_result_persist hooks without breaking persistence", () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "penguins-toolpersist-"));
-    process.env.OPENCLAW_BUNDLED_PLUGINS_DIR = "/nonexistent/bundled/plugins";
+    process.env.PENGUINS_BUNDLED_PLUGINS_DIR = "/nonexistent/bundled/plugins";
 
     const pluginA = writeTempPlugin({
       dir: tmp,

@@ -18,56 +18,56 @@ function envWith(overrides: Record<string, string | undefined>): NodeJS.ProcessE
 
 function loadConfigForHome(home: string) {
   return createConfigIO({
-    env: envWith({ OPENCLAW_HOME: home }),
+    env: envWith({ PENGUINS_HOME: home }),
     homedir: () => home,
   }).loadConfig();
 }
 
 describe("Nix integration (U3, U5, U9)", () => {
   describe("U3: isNixMode env var detection", () => {
-    it("isNixMode is false when OPENCLAW_NIX_MODE is not set", () => {
-      expect(resolveIsNixMode(envWith({ OPENCLAW_NIX_MODE: undefined }))).toBe(false);
+    it("isNixMode is false when PENGUINS_NIX_MODE is not set", () => {
+      expect(resolveIsNixMode(envWith({ PENGUINS_NIX_MODE: undefined }))).toBe(false);
     });
 
-    it("isNixMode is false when OPENCLAW_NIX_MODE is empty", () => {
-      expect(resolveIsNixMode(envWith({ OPENCLAW_NIX_MODE: "" }))).toBe(false);
+    it("isNixMode is false when PENGUINS_NIX_MODE is empty", () => {
+      expect(resolveIsNixMode(envWith({ PENGUINS_NIX_MODE: "" }))).toBe(false);
     });
 
-    it("isNixMode is false when OPENCLAW_NIX_MODE is not '1'", () => {
-      expect(resolveIsNixMode(envWith({ OPENCLAW_NIX_MODE: "true" }))).toBe(false);
+    it("isNixMode is false when PENGUINS_NIX_MODE is not '1'", () => {
+      expect(resolveIsNixMode(envWith({ PENGUINS_NIX_MODE: "true" }))).toBe(false);
     });
 
-    it("isNixMode is true when OPENCLAW_NIX_MODE=1", () => {
-      expect(resolveIsNixMode(envWith({ OPENCLAW_NIX_MODE: "1" }))).toBe(true);
+    it("isNixMode is true when PENGUINS_NIX_MODE=1", () => {
+      expect(resolveIsNixMode(envWith({ PENGUINS_NIX_MODE: "1" }))).toBe(true);
     });
   });
 
   describe("U5: CONFIG_PATH and STATE_DIR env var overrides", () => {
     it("STATE_DIR defaults to ~/.penguins when env not set", () => {
-      expect(resolveStateDir(envWith({ OPENCLAW_STATE_DIR: undefined }))).toMatch(/\.penguins$/);
+      expect(resolveStateDir(envWith({ PENGUINS_STATE_DIR: undefined }))).toMatch(/\.penguins$/);
     });
 
-    it("STATE_DIR respects OPENCLAW_STATE_DIR override", () => {
-      expect(resolveStateDir(envWith({ OPENCLAW_STATE_DIR: "/custom/state/dir" }))).toBe(
+    it("STATE_DIR respects PENGUINS_STATE_DIR override", () => {
+      expect(resolveStateDir(envWith({ PENGUINS_STATE_DIR: "/custom/state/dir" }))).toBe(
         path.resolve("/custom/state/dir"),
       );
     });
 
-    it("STATE_DIR respects OPENCLAW_HOME when state override is unset", () => {
+    it("STATE_DIR respects PENGUINS_HOME when state override is unset", () => {
       const customHome = path.join(path.sep, "custom", "home");
       expect(
-        resolveStateDir(envWith({ OPENCLAW_HOME: customHome, OPENCLAW_STATE_DIR: undefined })),
+        resolveStateDir(envWith({ PENGUINS_HOME: customHome, PENGUINS_STATE_DIR: undefined })),
       ).toBe(path.join(path.resolve(customHome), ".penguins"));
     });
 
-    it("CONFIG_PATH defaults to OPENCLAW_HOME/.penguins/penguins.json", () => {
+    it("CONFIG_PATH defaults to PENGUINS_HOME/.penguins/penguins.json", () => {
       const customHome = path.join(path.sep, "custom", "home");
       expect(
         resolveConfigPathCandidate(
           envWith({
-            OPENCLAW_HOME: customHome,
-            OPENCLAW_CONFIG_PATH: undefined,
-            OPENCLAW_STATE_DIR: undefined,
+            PENGUINS_HOME: customHome,
+            PENGUINS_CONFIG_PATH: undefined,
+            PENGUINS_STATE_DIR: undefined,
           }),
         ),
       ).toBe(path.join(path.resolve(customHome), ".penguins", "penguins.json"));
@@ -76,24 +76,24 @@ describe("Nix integration (U3, U5, U9)", () => {
     it("CONFIG_PATH defaults to ~/.penguins/penguins.json when env not set", () => {
       expect(
         resolveConfigPathCandidate(
-          envWith({ OPENCLAW_CONFIG_PATH: undefined, OPENCLAW_STATE_DIR: undefined }),
+          envWith({ PENGUINS_CONFIG_PATH: undefined, PENGUINS_STATE_DIR: undefined }),
         ),
       ).toMatch(/\.penguins[\\/]penguins\.json$/);
     });
 
-    it("CONFIG_PATH respects OPENCLAW_CONFIG_PATH override", () => {
+    it("CONFIG_PATH respects PENGUINS_CONFIG_PATH override", () => {
       expect(
         resolveConfigPathCandidate(
-          envWith({ OPENCLAW_CONFIG_PATH: "/nix/store/abc/penguins.json" }),
+          envWith({ PENGUINS_CONFIG_PATH: "/nix/store/abc/penguins.json" }),
         ),
       ).toBe(path.resolve("/nix/store/abc/penguins.json"));
     });
 
-    it("CONFIG_PATH expands ~ in OPENCLAW_CONFIG_PATH override", async () => {
+    it("CONFIG_PATH expands ~ in PENGUINS_CONFIG_PATH override", async () => {
       await withTempHome(async (home) => {
         expect(
           resolveConfigPathCandidate(
-            envWith({ OPENCLAW_HOME: home, OPENCLAW_CONFIG_PATH: "~/.penguins/custom.json" }),
+            envWith({ PENGUINS_HOME: home, PENGUINS_CONFIG_PATH: "~/.penguins/custom.json" }),
             () => home,
           ),
         ).toBe(path.join(home, ".penguins", "custom.json"));
@@ -101,7 +101,7 @@ describe("Nix integration (U3, U5, U9)", () => {
     });
 
     it("CONFIG_PATH uses STATE_DIR when only state dir is overridden", () => {
-      expect(resolveConfigPathCandidate(envWith({ OPENCLAW_STATE_DIR: "/custom/state" }))).toBe(
+      expect(resolveConfigPathCandidate(envWith({ PENGUINS_STATE_DIR: "/custom/state" }))).toBe(
         path.join(path.resolve("/custom/state"), "penguins.json"),
       );
     });
@@ -185,16 +185,16 @@ describe("Nix integration (U3, U5, U9)", () => {
 
   describe("U6: gateway port resolution", () => {
     it("uses default when env and config are unset", () => {
-      expect(resolveGatewayPort({}, envWith({ OPENCLAW_GATEWAY_PORT: undefined }))).toBe(
+      expect(resolveGatewayPort({}, envWith({ PENGUINS_GATEWAY_PORT: undefined }))).toBe(
         DEFAULT_GATEWAY_PORT,
       );
     });
 
-    it("prefers OPENCLAW_GATEWAY_PORT over config", () => {
+    it("prefers PENGUINS_GATEWAY_PORT over config", () => {
       expect(
         resolveGatewayPort(
           { gateway: { port: 19002 } },
-          envWith({ OPENCLAW_GATEWAY_PORT: "19001" }),
+          envWith({ PENGUINS_GATEWAY_PORT: "19001" }),
         ),
       ).toBe(19001);
     });
@@ -203,7 +203,7 @@ describe("Nix integration (U3, U5, U9)", () => {
       expect(
         resolveGatewayPort(
           { gateway: { port: 19003 } },
-          envWith({ OPENCLAW_GATEWAY_PORT: "nope" }),
+          envWith({ PENGUINS_GATEWAY_PORT: "nope" }),
         ),
       ).toBe(19003);
     });

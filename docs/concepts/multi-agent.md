@@ -39,8 +39,8 @@ reach other host locations unless sandboxing is enabled. See
 
 ## Paths (quick map)
 
-- Config: `~/.penguins/penguins.json` (or `OPENCLAW_CONFIG_PATH`)
-- State dir: `~/.penguins` (or `OPENCLAW_STATE_DIR`)
+- Config: `~/.penguins/penguins.json` (or `PENGUINS_CONFIG_PATH`)
+- State dir: `~/.penguins` (or `PENGUINS_STATE_DIR`)
 - Workspace: `~/.penguins/workspace` (or `~/.penguins/workspace-<agentId>`)
 - Agent dir: `~/.penguins/agents/<agentId>/agent` (or `agents.list[].agentDir`)
 - Sessions: `~/.penguins/agents/<agentId>/sessions`
@@ -51,7 +51,7 @@ If you do nothing, Penguins runs a single agent:
 
 - `agentId` defaults to **`main`**.
 - Sessions are keyed as `agent:main:<mainKey>`.
-- Workspace defaults to `~/.penguins/workspace` (or `~/.penguins/workspace-<profile>` when `OPENCLAW_PROFILE` is set).
+- Workspace defaults to `~/.penguins/workspace` (or `~/.penguins/workspace-<profile>` when `PENGUINS_PROFILE` is set).
 - State defaults to `~/.penguins/agents/main/agent`.
 
 ## Agent helper

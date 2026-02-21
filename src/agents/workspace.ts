@@ -12,7 +12,7 @@ export function resolveDefaultAgentWorkspaceDir(
   homedir: () => string = os.homedir,
 ): string {
   const home = resolveRequiredHomeDir(env, homedir);
-  const profile = env.OPENCLAW_PROFILE?.trim();
+  const profile = env.PENGUINS_PROFILE?.trim();
   if (profile && profile.toLowerCase() !== "default") {
     return path.join(home, ".penguins", `workspace-${profile}`);
   }

@@ -200,7 +200,7 @@ Kept OpenAI TTS only, removed ElevenLabs and Edge TTS providers:
 - [x] Deleted macOS/iOS scripts: `build-and-run-mac.sh`, `codesign-mac-app.sh`, `notarize-mac-artifact.sh`, `create-dmg.sh`, `package-mac-app.sh`, `package-mac-dist.sh`, `restart-mac.sh`, `ios-team-id.sh`, `build_icon.sh`, `make_appcast.sh`, `mobile-reauth.sh`, `protocol-gen-swift.ts`
 - [x] Deleted stale scripts: `sync-moonshot-docs.ts`, `update-clawtributors.ts`, `update-clawtributors.types.ts`, `clawtributors-map.json`
 - [x] Deleted `src/types/node-edge-tts.d.ts` (Edge TTS removed)
-- [x] Cleaned `package.json`: removed all android/ios/mac/swift scripts, removed duplicate entries, removed `node-edge-tts`, `@larksuiteoapi/node-sdk`, `@line/bot-sdk` dependencies, cleaned legacy `OPENCLAW_*` env var prefixes from gateway scripts
+- [x] Cleaned `package.json`: removed all android/ios/mac/swift scripts, removed duplicate entries, removed `node-edge-tts`, `@larksuiteoapi/node-sdk`, `@line/bot-sdk` dependencies, cleaned legacy `PENGUINS_*` env var prefixes from gateway scripts
 
 ### Phase 10 — Docs Cleanup ✅
 - [x] `git rm -rf docs/zh-CN/` — full Chinese translation

@@ -24,7 +24,7 @@ inside a sandbox workspace under `~/.penguins/sandboxes`, not your host workspac
 ## Default location
 
 - Default: `~/.penguins/workspace`
-- If `OPENCLAW_PROFILE` is set and not `"default"`, the default becomes
+- If `PENGUINS_PROFILE` is set and not `"default"`, the default becomes
   `~/.penguins/workspace-<profile>`.
 - Override in `~/.penguins/penguins.json`:
 

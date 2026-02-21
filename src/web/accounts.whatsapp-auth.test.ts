@@ -15,9 +15,9 @@ describe("hasAnyWhatsAppAuth", () => {
   };
 
   beforeEach(() => {
-    envSnapshot = captureEnv(["OPENCLAW_OAUTH_DIR"]);
+    envSnapshot = captureEnv(["PENGUINS_OAUTH_DIR"]);
     tempOauthDir = fs.mkdtempSync(path.join(os.tmpdir(), "penguins-oauth-"));
-    process.env.OPENCLAW_OAUTH_DIR = tempOauthDir;
+    process.env.PENGUINS_OAUTH_DIR = tempOauthDir;
   });
 
   afterEach(() => {

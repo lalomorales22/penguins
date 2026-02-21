@@ -54,8 +54,8 @@ describe("resolveStorePath", () => {
     vi.unstubAllEnvs();
   });
 
-  it("uses OPENCLAW_HOME for tilde expansion", () => {
-    vi.stubEnv("OPENCLAW_HOME", "/srv/penguins-home");
+  it("uses PENGUINS_HOME for tilde expansion", () => {
+    vi.stubEnv("PENGUINS_HOME", "/srv/penguins-home");
     vi.stubEnv("HOME", "/home/other");
 
     const resolved = resolveStorePath("~/.penguins/agents/{agentId}/sessions/sessions.json", {

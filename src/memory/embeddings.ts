@@ -137,6 +137,19 @@ async function createLocalEmbeddingProvider(
 export async function createEmbeddingProvider(
   options: EmbeddingProviderOptions,
 ): Promise<EmbeddingProviderResult> {
+  // Allow env override to force a specific backend regardless of config.
+  // PENGUINS_EMBEDDING_BACKEND=local  → always use node-llama-cpp
+  // PENGUINS_EMBEDDING_BACKEND=openai → always use OpenAI (skip auto-local)
+  const envOverride = process.env.PENGUINS_EMBEDDING_BACKEND?.trim().toLowerCase();
+  if (envOverride === "local") {
+    const provider = await createLocalEmbeddingProvider(options);
+    return { provider, requestedProvider: "local" };
+  }
+  if (envOverride === "openai") {
+    const { provider, client } = await createOpenAiEmbeddingProvider(options);
+    return { provider, openAi: client, requestedProvider: "openai" };
+  }
+
   const requestedProvider = options.provider;
   const fallback = options.fallback;
 

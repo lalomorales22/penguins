@@ -34,7 +34,7 @@ const { withTempHome } = createTempHomeHarness({ prefix: "penguins-rawbody-" });
 
 describe("RawBody directive parsing", () => {
   beforeEach(() => {
-    vi.stubEnv("OPENCLAW_TEST_FAST", "1");
+    vi.stubEnv("PENGUINS_TEST_FAST", "1");
     agentMocks.runEmbeddedPiAgent.mockReset();
     agentMocks.loadModelCatalog.mockReset();
     agentMocks.loadModelCatalog.mockResolvedValue([

@@ -53,9 +53,9 @@ const connectNodeClient = async (params: {
   displayName?: string;
   onEvent?: (evt: { event?: string; payload?: unknown }) => void;
 }) => {
-  const token = process.env.OPENCLAW_GATEWAY_TOKEN;
+  const token = process.env.PENGUINS_GATEWAY_TOKEN;
   if (!token) {
-    throw new Error("OPENCLAW_GATEWAY_TOKEN is required for node test clients");
+    throw new Error("PENGUINS_GATEWAY_TOKEN is required for node test clients");
   }
   let settled = false;
   let resolveReady: (() => void) | null = null;

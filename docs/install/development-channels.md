@@ -45,7 +45,7 @@ This updates via the corresponding npm dist-tag (`latest`, `beta`, `dev`).
 When you **explicitly** switch channels with `--channel`, Penguins also aligns
 the install method:
 
-- `dev` ensures a git checkout (default `~/penguins`, override with `OPENCLAW_GIT_DIR`),
+- `dev` ensures a git checkout (default `~/penguins`, override with `PENGUINS_GIT_DIR`),
   updates it, and installs the global CLI from that checkout.
 - `stable`/`beta` installs from npm using the matching dist-tag.
 

@@ -81,43 +81,43 @@ vi.mock("./progress.js", () => ({
 
 describe("daemon-cli coverage", () => {
   const originalEnv = {
-    OPENCLAW_STATE_DIR: process.env.OPENCLAW_STATE_DIR,
-    OPENCLAW_CONFIG_PATH: process.env.OPENCLAW_CONFIG_PATH,
-    OPENCLAW_GATEWAY_PORT: process.env.OPENCLAW_GATEWAY_PORT,
-    OPENCLAW_PROFILE: process.env.OPENCLAW_PROFILE,
+    PENGUINS_STATE_DIR: process.env.PENGUINS_STATE_DIR,
+    PENGUINS_CONFIG_PATH: process.env.PENGUINS_CONFIG_PATH,
+    PENGUINS_GATEWAY_PORT: process.env.PENGUINS_GATEWAY_PORT,
+    PENGUINS_PROFILE: process.env.PENGUINS_PROFILE,
   };
 
   beforeEach(() => {
-    process.env.OPENCLAW_STATE_DIR = "/tmp/penguins-cli-state";
-    process.env.OPENCLAW_CONFIG_PATH = "/tmp/penguins-cli-state/penguins.json";
-    delete process.env.OPENCLAW_GATEWAY_PORT;
-    delete process.env.OPENCLAW_PROFILE;
+    process.env.PENGUINS_STATE_DIR = "/tmp/penguins-cli-state";
+    process.env.PENGUINS_CONFIG_PATH = "/tmp/penguins-cli-state/penguins.json";
+    delete process.env.PENGUINS_GATEWAY_PORT;
+    delete process.env.PENGUINS_PROFILE;
     serviceReadCommand.mockResolvedValue(null);
   });
 
   afterEach(() => {
-    if (originalEnv.OPENCLAW_STATE_DIR !== undefined) {
-      process.env.OPENCLAW_STATE_DIR = originalEnv.OPENCLAW_STATE_DIR;
+    if (originalEnv.PENGUINS_STATE_DIR !== undefined) {
+      process.env.PENGUINS_STATE_DIR = originalEnv.PENGUINS_STATE_DIR;
     } else {
-      delete process.env.OPENCLAW_STATE_DIR;
+      delete process.env.PENGUINS_STATE_DIR;
     }
 
-    if (originalEnv.OPENCLAW_CONFIG_PATH !== undefined) {
-      process.env.OPENCLAW_CONFIG_PATH = originalEnv.OPENCLAW_CONFIG_PATH;
+    if (originalEnv.PENGUINS_CONFIG_PATH !== undefined) {
+      process.env.PENGUINS_CONFIG_PATH = originalEnv.PENGUINS_CONFIG_PATH;
     } else {
-      delete process.env.OPENCLAW_CONFIG_PATH;
+      delete process.env.PENGUINS_CONFIG_PATH;
     }
 
-    if (originalEnv.OPENCLAW_GATEWAY_PORT !== undefined) {
-      process.env.OPENCLAW_GATEWAY_PORT = originalEnv.OPENCLAW_GATEWAY_PORT;
+    if (originalEnv.PENGUINS_GATEWAY_PORT !== undefined) {
+      process.env.PENGUINS_GATEWAY_PORT = originalEnv.PENGUINS_GATEWAY_PORT;
     } else {
-      delete process.env.OPENCLAW_GATEWAY_PORT;
+      delete process.env.PENGUINS_GATEWAY_PORT;
     }
 
-    if (originalEnv.OPENCLAW_PROFILE !== undefined) {
-      process.env.OPENCLAW_PROFILE = originalEnv.OPENCLAW_PROFILE;
+    if (originalEnv.PENGUINS_PROFILE !== undefined) {
+      process.env.PENGUINS_PROFILE = originalEnv.PENGUINS_PROFILE;
     } else {
-      delete process.env.OPENCLAW_PROFILE;
+      delete process.env.PENGUINS_PROFILE;
     }
   });
 
@@ -148,10 +148,10 @@ describe("daemon-cli coverage", () => {
     serviceReadCommand.mockResolvedValueOnce({
       programArguments: ["/bin/node", "cli", "gateway", "--port", "19001"],
       environment: {
-        OPENCLAW_PROFILE: "dev",
-        OPENCLAW_STATE_DIR: "/tmp/penguins-daemon-state",
-        OPENCLAW_CONFIG_PATH: "/tmp/penguins-daemon-state/penguins.json",
-        OPENCLAW_GATEWAY_PORT: "19001",
+        PENGUINS_PROFILE: "dev",
+        PENGUINS_STATE_DIR: "/tmp/penguins-daemon-state",
+        PENGUINS_CONFIG_PATH: "/tmp/penguins-daemon-state/penguins.json",
+        PENGUINS_GATEWAY_PORT: "19001",
       },
       sourcePath: "/tmp/bot.molt.gateway.plist",
     });

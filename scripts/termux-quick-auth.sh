@@ -5,7 +5,7 @@
 # One-tap: shows status toast
 # If expired: directly opens auth URL
 
-SERVER="${OPENCLAW_SERVER:-${CLAWDBOT_SERVER:-l36}}"
+SERVER="${PENGUINS_SERVER:-${PENGUINS_SERVER:-l36}}"
 
 STATUS=$(ssh -o ConnectTimeout=5 "$SERVER" '$HOME/penguins/scripts/claude-auth-status.sh simple' 2>&1)
 

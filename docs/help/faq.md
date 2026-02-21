@@ -343,7 +343,7 @@ The wizard opens your browser with a clean (non-tokenized) dashboard URL right a
 **Localhost (same machine):**
 
 - Open `http://127.0.0.1:18789/`.
-- If it asks for auth, paste the token from `gateway.auth.token` (or `OPENCLAW_GATEWAY_TOKEN`) into Control UI settings.
+- If it asks for auth, paste the token from `gateway.auth.token` (or `PENGUINS_GATEWAY_TOKEN`) into Control UI settings.
 - Retrieve it from the gateway host: `penguins config get gateway.auth.token` (or generate one: `penguins doctor --generate-gateway-token`).
 
 **Not on localhost:**
@@ -416,7 +416,7 @@ keeps your bot "exactly the same" (memory, session history, auth, and channel
 state) as long as you copy **both** locations:
 
 1. Install Penguins on the new machine.
-2. Copy `$OPENCLAW_STATE_DIR` (default: `~/.penguins`) from the old machine.
+2. Copy `$PENGUINS_STATE_DIR` (default: `~/.penguins`) from the old machine.
 3. Copy your workspace (default: `~/.penguins/workspace`).
 4. Run `penguins doctor` and restart the Gateway service.
 
@@ -1045,7 +1045,7 @@ scheduled jobs will not run.
 
 Checklist:
 
-- Confirm cron is enabled (`cron.enabled`) and `OPENCLAW_SKIP_CRON` is not set.
+- Confirm cron is enabled (`cron.enabled`) and `PENGUINS_SKIP_CRON` is not set.
 - Check the Gateway is running 24/7 (no sleep/restarts).
 - Verify timezone settings for the job (`--tz` vs host timezone).
 
@@ -1174,8 +1174,8 @@ Yes. See [Sandboxing](/gateway/sandboxing). For Docker-specific setup (full gate
 The default image is security-first and runs as the `node` user, so it does not
 include system packages, Homebrew, or bundled browsers. For a fuller setup:
 
-- Persist `/home/node` with `OPENCLAW_HOME_VOLUME` so caches survive.
-- Bake system deps into the image with `OPENCLAW_DOCKER_APT_PACKAGES`.
+- Persist `/home/node` with `PENGUINS_HOME_VOLUME` so caches survive.
+- Bake system deps into the image with `PENGUINS_DOCKER_APT_PACKAGES`.
 - Install Playwright browsers via the bundled CLI:
   `node /app/node_modules/playwright-core/cli.js install chromium`
 - Set `PLAYWRIGHT_BROWSERS_PATH` and ensure the path is persisted.
@@ -1265,18 +1265,18 @@ Related: [Agent workspace](/concepts/agent-workspace), [Memory](/concepts/memory
 
 ### Where does Penguins store its data
 
-Everything lives under `$OPENCLAW_STATE_DIR` (default: `~/.penguins`):
+Everything lives under `$PENGUINS_STATE_DIR` (default: `~/.penguins`):
 
 | Path                                                            | Purpose                                                      |
 | --------------------------------------------------------------- | ------------------------------------------------------------ |
-| `$OPENCLAW_STATE_DIR/penguins.json`                             | Main config (JSON5)                                          |
-| `$OPENCLAW_STATE_DIR/credentials/oauth.json`                    | Legacy OAuth import (copied into auth profiles on first use) |
-| `$OPENCLAW_STATE_DIR/agents/<agentId>/agent/auth-profiles.json` | Auth profiles (OAuth + API keys)                             |
-| `$OPENCLAW_STATE_DIR/agents/<agentId>/agent/auth.json`          | Runtime auth cache (managed automatically)                   |
-| `$OPENCLAW_STATE_DIR/credentials/`                              | Provider state (e.g. `whatsapp/<accountId>/creds.json`)      |
-| `$OPENCLAW_STATE_DIR/agents/`                                   | Per-agent state (agentDir + sessions)                        |
-| `$OPENCLAW_STATE_DIR/agents/<agentId>/sessions/`                | Conversation history & state (per agent)                     |
-| `$OPENCLAW_STATE_DIR/agents/<agentId>/sessions/sessions.json`   | Session metadata (per agent)                                 |
+| `$PENGUINS_STATE_DIR/penguins.json`                             | Main config (JSON5)                                          |
+| `$PENGUINS_STATE_DIR/credentials/oauth.json`                    | Legacy OAuth import (copied into auth profiles on first use) |
+| `$PENGUINS_STATE_DIR/agents/<agentId>/agent/auth-profiles.json` | Auth profiles (OAuth + API keys)                             |
+| `$PENGUINS_STATE_DIR/agents/<agentId>/agent/auth.json`          | Runtime auth cache (managed automatically)                   |
+| `$PENGUINS_STATE_DIR/credentials/`                              | Provider state (e.g. `whatsapp/<accountId>/creds.json`)      |
+| `$PENGUINS_STATE_DIR/agents/`                                   | Per-agent state (agentDir + sessions)                        |
+| `$PENGUINS_STATE_DIR/agents/<agentId>/sessions/`                | Conversation history & state (per agent)                     |
+| `$PENGUINS_STATE_DIR/agents/<agentId>/sessions/sessions.json`   | Session metadata (per agent)                                 |
 
 Legacy single-agent path: `~/.penguins/agent/*` (migrated by `penguins doctor`).
 
@@ -1354,17 +1354,17 @@ Session state is owned by the **gateway host**. If you're in remote mode, the se
 
 ### What format is the config Where is it
 
-Penguins reads an optional **JSON5** config from `$OPENCLAW_CONFIG_PATH` (default: `~/.penguins/penguins.json`):
+Penguins reads an optional **JSON5** config from `$PENGUINS_CONFIG_PATH` (default: `~/.penguins/penguins.json`):
 
 ```
-$OPENCLAW_CONFIG_PATH
+$PENGUINS_CONFIG_PATH
 ```
 
 If the file is missing, it uses safe-ish defaults (including a default workspace of `~/.penguins/workspace`).
 
 ### I set gatewaybind lan or tailnet and now nothing listens the UI says unauthorized
 
-Non-loopback binds **require auth**. Configure `gateway.auth.mode` + `gateway.auth.token` (or use `OPENCLAW_GATEWAY_TOKEN`).
+Non-loopback binds **require auth**. Configure `gateway.auth.mode` + `gateway.auth.token` (or use `PENGUINS_GATEWAY_TOKEN`).
 
 ```json5
 {
@@ -1677,7 +1677,7 @@ Docs: [Gateway protocol](/gateway/protocol), [Discovery](/gateway/discovery), [m
 Penguins reads env vars from the parent process (shell, launchd/systemd, CI, etc.) and additionally loads:
 
 - `.env` from the current working directory
-- a global fallback `.env` from `~/.penguins/.env` (aka `$OPENCLAW_STATE_DIR/.env`)
+- a global fallback `.env` from `~/.penguins/.env` (aka `$PENGUINS_STATE_DIR/.env`)
 
 Neither `.env` file overrides existing env vars.
 
@@ -1713,7 +1713,7 @@ Two common fixes:
 ```
 
 This runs your login shell and imports only missing expected keys (never overrides). Env var equivalents:
-`OPENCLAW_LOAD_SHELL_ENV=1`, `OPENCLAW_SHELL_ENV_TIMEOUT_MS=15000`.
+`PENGUINS_LOAD_SHELL_ENV=1`, `PENGUINS_SHELL_ENV_TIMEOUT_MS=15000`.
 
 ### I set COPILOTGITHUBTOKEN but models status shows Shell env off Why
 
@@ -1810,7 +1810,7 @@ penguins onboard --install-daemon
 Notes:
 
 - The onboarding wizard also offers **Reset** if it sees an existing config. See [Wizard](/start/wizard).
-- If you used profiles (`--profile` / `OPENCLAW_PROFILE`), reset each state dir (defaults are `~/.penguins-<profile>`).
+- If you used profiles (`--profile` / `PENGUINS_PROFILE`), reset each state dir (defaults are `~/.penguins-<profile>`).
 - Dev reset: `penguins gateway --dev --reset` (dev-only; wipes dev config + credentials + sessions + workspace).
 
 ### Im getting context too large errors how do I reset or compact
@@ -2353,7 +2353,7 @@ The wizard explicitly supports Anthropic setup-token and OpenAI Codex OAuth and 
 Precedence:
 
 ```
---port > OPENCLAW_GATEWAY_PORT > gateway.port > default 18789
+--port > PENGUINS_GATEWAY_PORT > gateway.port > default 18789
 ```
 
 ### Why does penguins gateway status say Runtime running but RPC probe failed
@@ -2368,7 +2368,7 @@ Use `penguins gateway status` and trust these lines:
 
 ### Why does penguins gateway status show Config cli and Config service different
 
-You're editing one config file while the service is running another (often a `--profile` / `OPENCLAW_STATE_DIR` mismatch).
+You're editing one config file while the service is running another (often a `--profile` / `PENGUINS_STATE_DIR` mismatch).
 
 Fix:
 
@@ -2419,7 +2419,7 @@ Fix:
 - Fastest: `penguins dashboard` (prints + copies the dashboard URL, tries to open; shows SSH hint if headless).
 - If you don't have a token yet: `penguins doctor --generate-gateway-token`.
 - If remote, tunnel first: `ssh -N -L 18789:127.0.0.1:18789 user@host` then open `http://127.0.0.1:18789/`.
-- Set `gateway.auth.token` (or `OPENCLAW_GATEWAY_TOKEN`) on the gateway host.
+- Set `gateway.auth.token` (or `PENGUINS_GATEWAY_TOKEN`) on the gateway host.
 - In the Control UI settings, paste the same token.
 - Still stuck? Run `penguins status --all` and follow [Troubleshooting](/gateway/troubleshooting). See [Dashboard](/web/dashboard) for auth details.
 
@@ -2440,8 +2440,8 @@ Usually no - one Gateway can run multiple messaging channels and agents. Use mul
 
 Yes, but you must isolate:
 
-- `OPENCLAW_CONFIG_PATH` (per-instance config)
-- `OPENCLAW_STATE_DIR` (per-instance state)
+- `PENGUINS_CONFIG_PATH` (per-instance config)
+- `PENGUINS_STATE_DIR` (per-instance state)
 - `agents.defaults.workspace` (workspace isolation)
 - `gateway.port` (unique ports)
 
@@ -2500,7 +2500,7 @@ penguins logs --follow
 
 Service/supervisor logs (when the gateway runs via launchd/systemd):
 
-- macOS: `$OPENCLAW_STATE_DIR/logs/gateway.log` and `gateway.err.log` (default: `~/.penguins/logs/...`; profiles use `~/.penguins-<profile>/logs/...`)
+- macOS: `$PENGUINS_STATE_DIR/logs/gateway.log` and `gateway.err.log` (default: `~/.penguins/logs/...`; profiles use `~/.penguins-<profile>/logs/...`)
 - Linux: `journalctl --user -u penguins-gateway[-<profile>].service -n 200 --no-pager`
 - Windows: `schtasks /Query /TN "Penguins Gateway (<profile>)" /V /FO LIST`
 

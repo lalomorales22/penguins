@@ -15,7 +15,7 @@ export function resolveEffectiveHomeDir(
 }
 
 function resolveRawHomeDir(env: NodeJS.ProcessEnv, homedir: () => string): string | undefined {
-  const explicitHome = normalize(env.PENGUINS_HOME) ?? normalize(env.OPENCLAW_HOME);
+  const explicitHome = normalize(env.PENGUINS_HOME) ?? normalize(env.PENGUINS_HOME);
   if (explicitHome) {
     if (explicitHome === "~" || explicitHome.startsWith("~/") || explicitHome.startsWith("~\\")) {
       const fallbackHome =

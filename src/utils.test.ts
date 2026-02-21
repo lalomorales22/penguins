@@ -142,8 +142,8 @@ describe("resolveConfigDir", () => {
 });
 
 describe("resolveHomeDir", () => {
-  it("prefers OPENCLAW_HOME over HOME", () => {
-    vi.stubEnv("OPENCLAW_HOME", "/srv/penguins-home");
+  it("prefers PENGUINS_HOME over HOME", () => {
+    vi.stubEnv("PENGUINS_HOME", "/srv/penguins-home");
     vi.stubEnv("HOME", "/home/other");
 
     expect(resolveHomeDir()).toBe(path.resolve("/srv/penguins-home"));
@@ -153,12 +153,12 @@ describe("resolveHomeDir", () => {
 });
 
 describe("shortenHomePath", () => {
-  it("uses $OPENCLAW_HOME prefix when OPENCLAW_HOME is set", () => {
-    vi.stubEnv("OPENCLAW_HOME", "/srv/penguins-home");
+  it("uses $PENGUINS_HOME prefix when PENGUINS_HOME is set", () => {
+    vi.stubEnv("PENGUINS_HOME", "/srv/penguins-home");
     vi.stubEnv("HOME", "/home/other");
 
     expect(shortenHomePath(`${path.resolve("/srv/penguins-home")}/.penguins/penguins.json`)).toBe(
-      "$OPENCLAW_HOME/.penguins/penguins.json",
+      "$PENGUINS_HOME/.penguins/penguins.json",
     );
 
     vi.unstubAllEnvs();
@@ -166,13 +166,13 @@ describe("shortenHomePath", () => {
 });
 
 describe("shortenHomeInString", () => {
-  it("uses $OPENCLAW_HOME replacement when OPENCLAW_HOME is set", () => {
-    vi.stubEnv("OPENCLAW_HOME", "/srv/penguins-home");
+  it("uses $PENGUINS_HOME replacement when PENGUINS_HOME is set", () => {
+    vi.stubEnv("PENGUINS_HOME", "/srv/penguins-home");
     vi.stubEnv("HOME", "/home/other");
 
     expect(
       shortenHomeInString(`config: ${path.resolve("/srv/penguins-home")}/.penguins/penguins.json`),
-    ).toBe("config: $OPENCLAW_HOME/.penguins/penguins.json");
+    ).toBe("config: $PENGUINS_HOME/.penguins/penguins.json");
 
     vi.unstubAllEnvs();
   });
@@ -209,8 +209,8 @@ describe("resolveUserPath", () => {
     expect(resolveUserPath("tmp/dir")).toBe(path.resolve("tmp/dir"));
   });
 
-  it("prefers OPENCLAW_HOME for tilde expansion", () => {
-    vi.stubEnv("OPENCLAW_HOME", "/srv/penguins-home");
+  it("prefers PENGUINS_HOME for tilde expansion", () => {
+    vi.stubEnv("PENGUINS_HOME", "/srv/penguins-home");
     vi.stubEnv("HOME", "/home/other");
 
     expect(resolveUserPath("~/penguins")).toBe(path.resolve("/srv/penguins-home", "penguins"));

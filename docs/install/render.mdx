@@ -38,11 +38,11 @@ services:
         value: "8080"
       - key: SETUP_PASSWORD
         sync: false # prompts during deploy
-      - key: OPENCLAW_STATE_DIR
+      - key: PENGUINS_STATE_DIR
         value: /data/.penguins
-      - key: OPENCLAW_WORKSPACE_DIR
+      - key: PENGUINS_WORKSPACE_DIR
         value: /data/workspace
-      - key: OPENCLAW_GATEWAY_TOKEN
+      - key: PENGUINS_GATEWAY_TOKEN
         generateValue: true # auto-generates a secure token
     disk:
       name: penguins-data

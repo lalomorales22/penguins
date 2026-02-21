@@ -19,8 +19,8 @@ async function makeEnv() {
   return {
     env: {
       ...process.env,
-      OPENCLAW_STATE_DIR: dir,
-      OPENCLAW_CONFIG_PATH: configPath,
+      PENGUINS_STATE_DIR: dir,
+      PENGUINS_CONFIG_PATH: configPath,
     },
     cleanup: async () => {},
   };

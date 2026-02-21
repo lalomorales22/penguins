@@ -50,8 +50,8 @@ describe("run-node script", () => {
           args: ["--version"],
           env: {
             ...process.env,
-            OPENCLAW_FORCE_BUILD: "1",
-            OPENCLAW_RUNNER_LOG: "0",
+            PENGUINS_FORCE_BUILD: "1",
+            PENGUINS_RUNNER_LOG: "0",
           },
           spawn,
           execPath: process.execPath,

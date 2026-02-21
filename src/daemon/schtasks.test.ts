@@ -35,59 +35,59 @@ describe("schtasks runtime parsing", () => {
 });
 
 describe("resolveTaskScriptPath", () => {
-  it("uses default path when OPENCLAW_PROFILE is default", () => {
-    const env = { USERPROFILE: "C:\\Users\\test", OPENCLAW_PROFILE: "default" };
+  it("uses default path when PENGUINS_PROFILE is default", () => {
+    const env = { USERPROFILE: "C:\\Users\\test", PENGUINS_PROFILE: "default" };
     expect(resolveTaskScriptPath(env)).toBe(
       path.join("C:\\Users\\test", ".penguins", "gateway.cmd"),
     );
   });
 
-  it("uses default path when OPENCLAW_PROFILE is unset", () => {
+  it("uses default path when PENGUINS_PROFILE is unset", () => {
     const env = { USERPROFILE: "C:\\Users\\test" };
     expect(resolveTaskScriptPath(env)).toBe(
       path.join("C:\\Users\\test", ".penguins", "gateway.cmd"),
     );
   });
 
-  it("uses profile-specific path when OPENCLAW_PROFILE is set to a custom value", () => {
-    const env = { USERPROFILE: "C:\\Users\\test", OPENCLAW_PROFILE: "jbphoenix" };
+  it("uses profile-specific path when PENGUINS_PROFILE is set to a custom value", () => {
+    const env = { USERPROFILE: "C:\\Users\\test", PENGUINS_PROFILE: "jbphoenix" };
     expect(resolveTaskScriptPath(env)).toBe(
       path.join("C:\\Users\\test", ".penguins-jbphoenix", "gateway.cmd"),
     );
   });
 
-  it("prefers OPENCLAW_STATE_DIR over profile-derived defaults", () => {
+  it("prefers PENGUINS_STATE_DIR over profile-derived defaults", () => {
     const env = {
       USERPROFILE: "C:\\Users\\test",
-      OPENCLAW_PROFILE: "rescue",
-      OPENCLAW_STATE_DIR: "C:\\State\\penguins",
+      PENGUINS_PROFILE: "rescue",
+      PENGUINS_STATE_DIR: "C:\\State\\penguins",
     };
     expect(resolveTaskScriptPath(env)).toBe(path.join("C:\\State\\penguins", "gateway.cmd"));
   });
 
   it("handles case-insensitive 'Default' profile", () => {
-    const env = { USERPROFILE: "C:\\Users\\test", OPENCLAW_PROFILE: "Default" };
+    const env = { USERPROFILE: "C:\\Users\\test", PENGUINS_PROFILE: "Default" };
     expect(resolveTaskScriptPath(env)).toBe(
       path.join("C:\\Users\\test", ".penguins", "gateway.cmd"),
     );
   });
 
   it("handles case-insensitive 'DEFAULT' profile", () => {
-    const env = { USERPROFILE: "C:\\Users\\test", OPENCLAW_PROFILE: "DEFAULT" };
+    const env = { USERPROFILE: "C:\\Users\\test", PENGUINS_PROFILE: "DEFAULT" };
     expect(resolveTaskScriptPath(env)).toBe(
       path.join("C:\\Users\\test", ".penguins", "gateway.cmd"),
     );
   });
 
-  it("trims whitespace from OPENCLAW_PROFILE", () => {
-    const env = { USERPROFILE: "C:\\Users\\test", OPENCLAW_PROFILE: "  myprofile  " };
+  it("trims whitespace from PENGUINS_PROFILE", () => {
+    const env = { USERPROFILE: "C:\\Users\\test", PENGUINS_PROFILE: "  myprofile  " };
     expect(resolveTaskScriptPath(env)).toBe(
       path.join("C:\\Users\\test", ".penguins-myprofile", "gateway.cmd"),
     );
   });
 
   it("falls back to HOME when USERPROFILE is not set", () => {
-    const env = { HOME: "/home/test", OPENCLAW_PROFILE: "default" };
+    const env = { HOME: "/home/test", PENGUINS_PROFILE: "default" };
     expect(resolveTaskScriptPath(env)).toBe(path.join("/home/test", ".penguins", "gateway.cmd"));
   });
 });
@@ -104,7 +104,7 @@ describe("readScheduledTaskCommand", () => {
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toEqual({
         programArguments: ["node", "gateway.js", "--port", "18789"],
@@ -125,7 +125,7 @@ describe("readScheduledTaskCommand", () => {
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toEqual({
         programArguments: ["node", "gateway.js"],
@@ -147,7 +147,7 @@ describe("readScheduledTaskCommand", () => {
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toEqual({
         programArguments: ["node", "gateway.js"],
@@ -173,7 +173,7 @@ describe("readScheduledTaskCommand", () => {
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toEqual({
         programArguments: ["C:/Program Files/Node/node.exe", "gateway.js"],
@@ -186,7 +186,7 @@ describe("readScheduledTaskCommand", () => {
   it("returns null when script does not exist", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "penguins-schtasks-test-"));
     try {
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toBeNull();
     } finally {
@@ -205,7 +205,7 @@ describe("readScheduledTaskCommand", () => {
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toBeNull();
     } finally {
@@ -225,20 +225,20 @@ describe("readScheduledTaskCommand", () => {
           "rem Penguins Gateway",
           "cd /d C:\\Projects\\penguins",
           "set NODE_ENV=production",
-          "set OPENCLAW_PORT=18789",
+          "set PENGUINS_PORT=18789",
           "node gateway.js --verbose",
         ].join("\r\n"),
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toEqual({
         programArguments: ["node", "gateway.js", "--verbose"],
         workingDirectory: "C:\\Projects\\penguins",
         environment: {
           NODE_ENV: "production",
-          OPENCLAW_PORT: "18789",
+          PENGUINS_PORT: "18789",
         },
       });
     } finally {
@@ -259,7 +259,7 @@ describe("readScheduledTaskCommand", () => {
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toEqual({
         programArguments: [
@@ -289,7 +289,7 @@ describe("readScheduledTaskCommand", () => {
         "utf8",
       );
 
-      const env = { USERPROFILE: tmpDir, OPENCLAW_PROFILE: "default" };
+      const env = { USERPROFILE: tmpDir, PENGUINS_PROFILE: "default" };
       const result = await readScheduledTaskCommand(env);
       expect(result).toEqual({
         programArguments: [

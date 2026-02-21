@@ -73,10 +73,10 @@ export async function noteMacLaunchctlGatewayEnvOverrides(
 
   const getenv = deps?.getenv ?? launchctlGetenv;
   const deprecatedLaunchctlEntries = [
-    ["CLAWDBOT_GATEWAY_TOKEN", await getenv("CLAWDBOT_GATEWAY_TOKEN")],
-    ["CLAWDBOT_GATEWAY_PASSWORD", await getenv("CLAWDBOT_GATEWAY_PASSWORD")],
-    ["OPENCLAW_GATEWAY_TOKEN", await getenv("OPENCLAW_GATEWAY_TOKEN")],
-    ["OPENCLAW_GATEWAY_PASSWORD", await getenv("OPENCLAW_GATEWAY_PASSWORD")],
+    ["PENGUINS_GATEWAY_TOKEN", await getenv("PENGUINS_GATEWAY_TOKEN")],
+    ["PENGUINS_GATEWAY_PASSWORD", await getenv("PENGUINS_GATEWAY_PASSWORD")],
+    ["PENGUINS_GATEWAY_TOKEN", await getenv("PENGUINS_GATEWAY_TOKEN")],
+    ["PENGUINS_GATEWAY_PASSWORD", await getenv("PENGUINS_GATEWAY_PASSWORD")],
   ].filter((entry): entry is [string, string] => Boolean(entry[1]?.trim()));
   if (deprecatedLaunchctlEntries.length > 0) {
     const lines = [

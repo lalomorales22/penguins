@@ -315,14 +315,14 @@ describe("mention helpers", () => {
   });
 
   it("normalizes zero-width characters", () => {
-    expect(normalizeMentionText("open\u200bclaw")).toBe("penguins");
+    expect(normalizeMentionText("open\u200bclaw")).toBe("openclaw");
   });
 
   it("matches patterns case-insensitively", () => {
     const regexes = buildMentionRegexes({
       messages: { groupChat: { mentionPatterns: ["\\bpenguins\\b"] } },
     });
-    expect(matchesMentionPatterns("OPENCLAW: hi", regexes)).toBe(true);
+    expect(matchesMentionPatterns("PENGUINS: hi", regexes)).toBe(true);
   });
 
   it("uses per-agent mention patterns when configured", () => {

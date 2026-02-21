@@ -675,5 +675,3 @@ export const PenguinsSchema = z
     }
   });
 
-// New name for the schema (Penguins is the new brand name)
-export const PenguinsSchema = PenguinsSchema;

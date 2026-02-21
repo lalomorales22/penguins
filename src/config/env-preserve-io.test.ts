@@ -119,8 +119,8 @@ describe("env snapshot TOCTOU via wrapper APIs", () => {
     await withTempConfig(configJson, async (configPath) => {
       await withEnvOverrides(
         {
-          OPENCLAW_CONFIG_PATH: configPath,
-          OPENCLAW_DISABLE_CONFIG_CACHE: "1",
+          PENGUINS_CONFIG_PATH: configPath,
+          PENGUINS_DISABLE_CONFIG_CACHE: "1",
           MY_API_KEY: "original-key-123",
         },
         async () => {
@@ -147,8 +147,8 @@ describe("env snapshot TOCTOU via wrapper APIs", () => {
     await withTempConfig(configJson, async (configPath) => {
       await withEnvOverrides(
         {
-          OPENCLAW_CONFIG_PATH: configPath,
-          OPENCLAW_DISABLE_CONFIG_CACHE: "1",
+          PENGUINS_CONFIG_PATH: configPath,
+          PENGUINS_DISABLE_CONFIG_CACHE: "1",
           MY_API_KEY: "original-key-123",
         },
         async () => {

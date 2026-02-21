@@ -15,11 +15,11 @@ export async function withTempHome<T>(
     "USERPROFILE",
     "HOMEDRIVE",
     "HOMEPATH",
-    "OPENCLAW_STATE_DIR",
+    "PENGUINS_STATE_DIR",
   ]);
   process.env.HOME = home;
   process.env.USERPROFILE = home;
-  process.env.OPENCLAW_STATE_DIR = path.join(home, ".penguins");
+  process.env.PENGUINS_STATE_DIR = path.join(home, ".penguins");
 
   if (process.platform === "win32") {
     const match = home.match(/^([A-Za-z]:)(.*)$/);

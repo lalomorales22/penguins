@@ -94,7 +94,7 @@ describe("doctor command", () => {
   });
 
   it("offers to update first for git checkouts", async () => {
-    delete process.env.OPENCLAW_UPDATE_IN_PROGRESS;
+    delete process.env.PENGUINS_UPDATE_IN_PROGRESS;
 
     const root = "/tmp/penguins";
     resolvePenguinsPackageRoot.mockResolvedValueOnce(root);

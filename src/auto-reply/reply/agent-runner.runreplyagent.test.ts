@@ -79,7 +79,7 @@ beforeAll(async () => {
 beforeEach(() => {
   state.runEmbeddedPiAgentMock.mockReset();
   state.runCliAgentMock.mockReset();
-  vi.stubEnv("OPENCLAW_TEST_FAST", "1");
+  vi.stubEnv("PENGUINS_TEST_FAST", "1");
 });
 
 function createMinimalRun(params?: {
@@ -270,18 +270,18 @@ describe("runReplyAgent typing (heartbeat)", () => {
   let caseId = 0;
 
   type StateEnvSnapshot = {
-    OPENCLAW_STATE_DIR: string | undefined;
+    PENGUINS_STATE_DIR: string | undefined;
   };
 
   function snapshotStateEnv(): StateEnvSnapshot {
-    return { OPENCLAW_STATE_DIR: process.env.OPENCLAW_STATE_DIR };
+    return { PENGUINS_STATE_DIR: process.env.PENGUINS_STATE_DIR };
   }
 
   function restoreStateEnv(snapshot: StateEnvSnapshot) {
-    if (snapshot.OPENCLAW_STATE_DIR === undefined) {
-      delete process.env.OPENCLAW_STATE_DIR;
+    if (snapshot.PENGUINS_STATE_DIR === undefined) {
+      delete process.env.PENGUINS_STATE_DIR;
     } else {
-      process.env.OPENCLAW_STATE_DIR = snapshot.OPENCLAW_STATE_DIR;
+      process.env.PENGUINS_STATE_DIR = snapshot.PENGUINS_STATE_DIR;
     }
   }
 
@@ -289,7 +289,7 @@ describe("runReplyAgent typing (heartbeat)", () => {
     const stateDir = path.join(fixtureRoot, `case-${++caseId}`);
     await fs.mkdir(stateDir, { recursive: true });
     const envSnapshot = snapshotStateEnv();
-    process.env.OPENCLAW_STATE_DIR = stateDir;
+    process.env.PENGUINS_STATE_DIR = stateDir;
     try {
       return await fn(stateDir);
     } finally {

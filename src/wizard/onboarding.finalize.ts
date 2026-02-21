@@ -308,7 +308,7 @@ export async function finalizeOnboardingWizard(
     await prompter.note(
       [
         "Gateway token: shared auth for the Gateway + Control UI.",
-        "Stored in: ~/.penguins/penguins.json (gateway.auth.token) or OPENCLAW_GATEWAY_TOKEN.",
+        "Stored in: ~/.penguins/penguins.json (gateway.auth.token) or PENGUINS_GATEWAY_TOKEN.",
         `View token: ${formatCliCommand("penguins config get gateway.auth.token")}`,
         `Generate token: ${formatCliCommand("penguins doctor --generate-gateway-token")}`,
         "Web UI stores a copy in this browser's localStorage (penguins.control.settings.v1).",

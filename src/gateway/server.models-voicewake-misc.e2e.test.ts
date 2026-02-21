@@ -80,12 +80,12 @@ const emptyRegistry = createRegistry([]);
 describe("gateway server models + voicewake", () => {
   const setTempHome = (homeDir: string) => {
     const prevHome = process.env.HOME;
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const prevUserProfile = process.env.USERPROFILE;
     const prevHomeDrive = process.env.HOMEDRIVE;
     const prevHomePath = process.env.HOMEPATH;
     process.env.HOME = homeDir;
-    process.env.OPENCLAW_STATE_DIR = path.join(homeDir, ".penguins");
+    process.env.PENGUINS_STATE_DIR = path.join(homeDir, ".penguins");
     process.env.USERPROFILE = homeDir;
     if (process.platform === "win32") {
       const parsed = path.parse(homeDir);
@@ -99,9 +99,9 @@ describe("gateway server models + voicewake", () => {
         process.env.HOME = prevHome;
       }
       if (prevStateDir === undefined) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
       if (prevUserProfile === undefined) {
         delete process.env.USERPROFILE;
@@ -302,14 +302,14 @@ describe("gateway server models + voicewake", () => {
 
 describe("gateway server misc", () => {
   test("hello-ok advertises the gateway port for canvas host", async () => {
-    const envSnapshot = captureEnv(["OPENCLAW_CANVAS_HOST_PORT", "OPENCLAW_GATEWAY_TOKEN"]);
+    const envSnapshot = captureEnv(["PENGUINS_CANVAS_HOST_PORT", "PENGUINS_GATEWAY_TOKEN"]);
     try {
-      process.env.OPENCLAW_GATEWAY_TOKEN = "secret";
+      process.env.PENGUINS_GATEWAY_TOKEN = "secret";
       testTailnetIPv4.value = "100.64.0.1";
       testState.gatewayBind = "lan";
       const canvasPort = await getFreePort();
       testState.canvasHostPort = canvasPort;
-      process.env.OPENCLAW_CANVAS_HOST_PORT = String(canvasPort);
+      process.env.PENGUINS_CANVAS_HOST_PORT = String(canvasPort);
 
       const testPort = await getFreePort();
       const canvasHostUrl = resolveCanvasHostUrl({
@@ -355,9 +355,9 @@ describe("gateway server misc", () => {
   });
 
   test("auto-enables configured channel plugins on startup", async () => {
-    const configPath = process.env.OPENCLAW_CONFIG_PATH;
+    const configPath = process.env.PENGUINS_CONFIG_PATH;
     if (!configPath) {
-      throw new Error("Missing OPENCLAW_CONFIG_PATH");
+      throw new Error("Missing PENGUINS_CONFIG_PATH");
     }
     await fs.mkdir(path.dirname(configPath), { recursive: true });
     await fs.writeFile(

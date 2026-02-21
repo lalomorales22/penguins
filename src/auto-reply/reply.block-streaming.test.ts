@@ -28,7 +28,7 @@ type HomeEnvSnapshot = {
   USERPROFILE: string | undefined;
   HOMEDRIVE: string | undefined;
   HOMEPATH: string | undefined;
-  OPENCLAW_STATE_DIR: string | undefined;
+  PENGUINS_STATE_DIR: string | undefined;
 };
 
 function snapshotHomeEnv(): HomeEnvSnapshot {
@@ -37,7 +37,7 @@ function snapshotHomeEnv(): HomeEnvSnapshot {
     USERPROFILE: process.env.USERPROFILE,
     HOMEDRIVE: process.env.HOMEDRIVE,
     HOMEPATH: process.env.HOMEPATH,
-    OPENCLAW_STATE_DIR: process.env.OPENCLAW_STATE_DIR,
+    PENGUINS_STATE_DIR: process.env.PENGUINS_STATE_DIR,
   };
 }
 
@@ -60,7 +60,7 @@ async function withTempHome<T>(fn: (home: string) => Promise<T>): Promise<T> {
   const envSnapshot = snapshotHomeEnv();
   process.env.HOME = home;
   process.env.USERPROFILE = home;
-  process.env.OPENCLAW_STATE_DIR = path.join(home, ".penguins");
+  process.env.PENGUINS_STATE_DIR = path.join(home, ".penguins");
 
   if (process.platform === "win32") {
     const match = home.match(/^([A-Za-z]:)(.*)$/);
@@ -99,7 +99,7 @@ describe("block streaming", () => {
   });
 
   beforeEach(() => {
-    vi.stubEnv("OPENCLAW_TEST_FAST", "1");
+    vi.stubEnv("PENGUINS_TEST_FAST", "1");
     piEmbeddedMock.abortEmbeddedPiRun.mockReset().mockReturnValue(false);
     piEmbeddedMock.queueEmbeddedPiMessage.mockReset().mockReturnValue(false);
     piEmbeddedMock.isEmbeddedPiRunActive.mockReset().mockReturnValue(false);

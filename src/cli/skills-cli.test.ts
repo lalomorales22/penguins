@@ -224,10 +224,10 @@ describe("skills-cli", () => {
     let buildWorkspaceSkillStatus: typeof import("../agents/skills-status.js").buildWorkspaceSkillStatus;
 
     beforeAll(async () => {
-      envSnapshot = captureEnv(["OPENCLAW_BUNDLED_SKILLS_DIR"]);
+      envSnapshot = captureEnv(["PENGUINS_BUNDLED_SKILLS_DIR"]);
       tempWorkspaceDir = fs.mkdtempSync(path.join(os.tmpdir(), "penguins-skills-test-"));
       tempBundledDir = fs.mkdtempSync(path.join(os.tmpdir(), "penguins-bundled-skills-test-"));
-      process.env.OPENCLAW_BUNDLED_SKILLS_DIR = tempBundledDir;
+      process.env.PENGUINS_BUNDLED_SKILLS_DIR = tempBundledDir;
       ({ buildWorkspaceSkillStatus } = await import("../agents/skills-status.js"));
     });
 

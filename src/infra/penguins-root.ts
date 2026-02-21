@@ -97,9 +97,6 @@ export async function resolvePenguinsPackageRoot(opts: {
   return null;
 }
 
-/** @deprecated Use resolvePenguinsPackageRoot instead */
-export const resolvePenguinsPackageRoot = resolvePenguinsPackageRoot;
-
 export function resolvePenguinsPackageRootSync(opts: {
   cwd?: string;
   argv1?: string;
@@ -114,9 +111,6 @@ export function resolvePenguinsPackageRootSync(opts: {
 
   return null;
 }
-
-/** @deprecated Use resolvePenguinsPackageRootSync instead */
-export const resolvePenguinsPackageRootSync = resolvePenguinsPackageRootSync;
 
 function buildCandidates(opts: { cwd?: string; argv1?: string; moduleUrl?: string }): string[] {
   const candidates: string[] = [];

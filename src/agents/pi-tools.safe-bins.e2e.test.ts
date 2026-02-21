@@ -6,10 +6,10 @@ import type { PenguinsConfig } from "../config/config.js";
 import type { ExecApprovalsResolved } from "../infra/exec-approvals.js";
 import { captureEnv } from "../test-utils/env.js";
 
-const bundledPluginsDirSnapshot = captureEnv(["OPENCLAW_BUNDLED_PLUGINS_DIR"]);
+const bundledPluginsDirSnapshot = captureEnv(["PENGUINS_BUNDLED_PLUGINS_DIR"]);
 
 beforeAll(() => {
-  process.env.OPENCLAW_BUNDLED_PLUGINS_DIR = path.join(
+  process.env.PENGUINS_BUNDLED_PLUGINS_DIR = path.join(
     os.tmpdir(),
     "penguins-test-no-bundled-extensions",
   );
@@ -96,10 +96,10 @@ describe("createPenguinsCodingTools safeBins", () => {
     expect(execTool).toBeDefined();
 
     const marker = `safe-bins-${Date.now()}`;
-    const envSnapshot = captureEnv(["OPENCLAW_SHELL_ENV_TIMEOUT_MS"]);
+    const envSnapshot = captureEnv(["PENGUINS_SHELL_ENV_TIMEOUT_MS"]);
     const result = await (async () => {
       try {
-        process.env.OPENCLAW_SHELL_ENV_TIMEOUT_MS = "1000";
+        process.env.PENGUINS_SHELL_ENV_TIMEOUT_MS = "1000";
         return await execTool!.execute("call1", {
           command: `echo ${marker}`,
           workdir: tmpDir,

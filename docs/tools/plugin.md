@@ -183,7 +183,7 @@ registry export). Drop a JSON file at one of:
 - `~/.penguins/mpm/catalog.json`
 - `~/.penguins/plugins/catalog.json`
 
-Or point `OPENCLAW_PLUGIN_CATALOG_PATHS` (or `OPENCLAW_MPM_CATALOG_PATHS`) at
+Or point `PENGUINS_PLUGIN_CATALOG_PATHS` (or `PENGUINS_MPM_CATALOG_PATHS`) at
 one or more JSON files (comma/semicolon/`PATH`-delimited). Each file should
 contain `{ "entries": [ { "name": "@scope/pkg", "penguins": { "channel": {...}, "install": {...} } } ] }`.
 

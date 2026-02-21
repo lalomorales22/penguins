@@ -365,7 +365,7 @@ After configuring multi-agent sandbox and tools:
 4. **Monitor logs:**
 
    ```exec
-   tail -f "${OPENCLAW_STATE_DIR:-$HOME/.penguins}/logs/gateway.log" | grep -E "routing|sandbox|tools"
+   tail -f "${PENGUINS_STATE_DIR:-$HOME/.penguins}/logs/gateway.log" | grep -E "routing|sandbox|tools"
    ```
 
 ---

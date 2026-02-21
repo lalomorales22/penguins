@@ -98,8 +98,8 @@ describe("session cost usage", () => {
       },
     } as PenguinsConfig;
 
-    const originalState = process.env.OPENCLAW_STATE_DIR;
-    process.env.OPENCLAW_STATE_DIR = root;
+    const originalState = process.env.PENGUINS_STATE_DIR;
+    process.env.PENGUINS_STATE_DIR = root;
     try {
       const summary = await loadCostUsageSummary({ days: 30, config });
       expect(summary.daily.length).toBe(1);
@@ -107,9 +107,9 @@ describe("session cost usage", () => {
       expect(summary.totals.totalCost).toBeCloseTo(0.03003, 5);
     } finally {
       if (originalState === undefined) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = originalState;
+        process.env.PENGUINS_STATE_DIR = originalState;
       }
     }
   });
@@ -225,8 +225,8 @@ describe("session cost usage", () => {
     const now = Date.now();
     await fs.utimes(sessionFile, now / 1000, now / 1000);
 
-    const originalState = process.env.OPENCLAW_STATE_DIR;
-    process.env.OPENCLAW_STATE_DIR = root;
+    const originalState = process.env.PENGUINS_STATE_DIR;
+    process.env.PENGUINS_STATE_DIR = root;
     try {
       const sessions = await discoverAllSessions({
         startMs: now - 7 * 24 * 60 * 60 * 1000,
@@ -236,9 +236,9 @@ describe("session cost usage", () => {
       expect(sessions[0]?.sessionId).toBe("sess-late");
     } finally {
       if (originalState === undefined) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = originalState;
+        process.env.PENGUINS_STATE_DIR = originalState;
       }
     }
   });
@@ -270,8 +270,8 @@ describe("session cost usage", () => {
       "utf-8",
     );
 
-    const originalState = process.env.OPENCLAW_STATE_DIR;
-    process.env.OPENCLAW_STATE_DIR = root;
+    const originalState = process.env.PENGUINS_STATE_DIR;
+    process.env.PENGUINS_STATE_DIR = root;
     try {
       const summary = await loadSessionCostSummary({
         sessionId: "sess-worker-1",
@@ -282,9 +282,9 @@ describe("session cost usage", () => {
       expect(summary?.totalCost).toBeCloseTo(0.01, 5);
     } finally {
       if (originalState === undefined) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = originalState;
+        process.env.PENGUINS_STATE_DIR = originalState;
       }
     }
   });
@@ -312,8 +312,8 @@ describe("session cost usage", () => {
       "utf-8",
     );
 
-    const originalState = process.env.OPENCLAW_STATE_DIR;
-    process.env.OPENCLAW_STATE_DIR = root;
+    const originalState = process.env.PENGUINS_STATE_DIR;
+    process.env.PENGUINS_STATE_DIR = root;
     try {
       const timeseries = await loadSessionUsageTimeSeries({
         sessionId: "sess-worker-2",
@@ -324,9 +324,9 @@ describe("session cost usage", () => {
       expect(timeseries?.points[0]?.totalTokens).toBe(8);
     } finally {
       if (originalState === undefined) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = originalState;
+        process.env.PENGUINS_STATE_DIR = originalState;
       }
     }
   });
@@ -352,8 +352,8 @@ describe("session cost usage", () => {
       "utf-8",
     );
 
-    const originalState = process.env.OPENCLAW_STATE_DIR;
-    process.env.OPENCLAW_STATE_DIR = root;
+    const originalState = process.env.PENGUINS_STATE_DIR;
+    process.env.PENGUINS_STATE_DIR = root;
     try {
       const logs = await loadSessionLogs({
         sessionId: "sess-worker-3",
@@ -365,9 +365,9 @@ describe("session cost usage", () => {
       expect(logs?.[0]?.role).toBe("user");
     } finally {
       if (originalState === undefined) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = originalState;
+        process.env.PENGUINS_STATE_DIR = originalState;
       }
     }
   });

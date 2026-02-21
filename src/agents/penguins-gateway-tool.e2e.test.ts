@@ -19,10 +19,10 @@ describe("gateway tool", () => {
   it("schedules SIGUSR1 restart", async () => {
     vi.useFakeTimers();
     const kill = vi.spyOn(process, "kill").mockImplementation(() => true);
-    const envSnapshot = captureEnv(["OPENCLAW_STATE_DIR", "OPENCLAW_PROFILE"]);
+    const envSnapshot = captureEnv(["PENGUINS_STATE_DIR", "PENGUINS_PROFILE"]);
     const stateDir = await fs.mkdtemp(path.join(os.tmpdir(), "penguins-test-"));
-    process.env.OPENCLAW_STATE_DIR = stateDir;
-    process.env.OPENCLAW_PROFILE = "isolated";
+    process.env.PENGUINS_STATE_DIR = stateDir;
+    process.env.PENGUINS_PROFILE = "isolated";
 
     try {
       const tool = createPenguinsTools({

@@ -598,10 +598,10 @@ describe("update-cli", () => {
 
   it("updateWizardCommand offers dev checkout and forwards selections", async () => {
     const tempDir = await createCaseDir("penguins-update-wizard");
-    const envSnapshot = captureEnv(["OPENCLAW_GIT_DIR"]);
+    const envSnapshot = captureEnv(["PENGUINS_GIT_DIR"]);
     try {
       setTty(true);
-      process.env.OPENCLAW_GIT_DIR = tempDir;
+      process.env.PENGUINS_GIT_DIR = tempDir;
 
       vi.mocked(checkUpdateStatus).mockResolvedValue({
         root: "/test/path",

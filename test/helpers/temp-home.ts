@@ -19,8 +19,8 @@ function snapshotEnv(): EnvSnapshot {
     userProfile: process.env.USERPROFILE,
     homeDrive: process.env.HOMEDRIVE,
     homePath: process.env.HOMEPATH,
-    penguinsHome: process.env.OPENCLAW_HOME,
-    stateDir: process.env.OPENCLAW_STATE_DIR,
+    penguinsHome: process.env.PENGUINS_HOME,
+    stateDir: process.env.PENGUINS_STATE_DIR,
   };
 }
 
@@ -36,8 +36,8 @@ function restoreEnv(snapshot: EnvSnapshot) {
   restoreKey("USERPROFILE", snapshot.userProfile);
   restoreKey("HOMEDRIVE", snapshot.homeDrive);
   restoreKey("HOMEPATH", snapshot.homePath);
-  restoreKey("OPENCLAW_HOME", snapshot.penguinsHome);
-  restoreKey("OPENCLAW_STATE_DIR", snapshot.stateDir);
+  restoreKey("PENGUINS_HOME", snapshot.penguinsHome);
+  restoreKey("PENGUINS_STATE_DIR", snapshot.stateDir);
 }
 
 function snapshotExtraEnv(keys: string[]): Record<string, string | undefined> {
@@ -61,9 +61,9 @@ function restoreExtraEnv(snapshot: Record<string, string | undefined>) {
 function setTempHome(base: string) {
   process.env.HOME = base;
   process.env.USERPROFILE = base;
-  // Ensure tests using HOME isolation aren't affected by leaked OPENCLAW_HOME.
-  delete process.env.OPENCLAW_HOME;
-  process.env.OPENCLAW_STATE_DIR = path.join(base, ".penguins");
+  // Ensure tests using HOME isolation aren't affected by leaked PENGUINS_HOME.
+  delete process.env.PENGUINS_HOME;
+  process.env.PENGUINS_STATE_DIR = path.join(base, ".penguins");
 
   if (process.platform !== "win32") {
     return;

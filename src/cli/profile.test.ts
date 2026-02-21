@@ -62,30 +62,30 @@ describe("applyCliProfileEnv", () => {
       homedir: () => "/home/peter",
     });
     const expectedStateDir = path.join(path.resolve("/home/peter"), ".penguins-dev");
-    expect(env.OPENCLAW_PROFILE).toBe("dev");
-    expect(env.OPENCLAW_STATE_DIR).toBe(expectedStateDir);
-    expect(env.OPENCLAW_CONFIG_PATH).toBe(path.join(expectedStateDir, "penguins.json"));
-    expect(env.OPENCLAW_GATEWAY_PORT).toBe("19001");
+    expect(env.PENGUINS_PROFILE).toBe("dev");
+    expect(env.PENGUINS_STATE_DIR).toBe(expectedStateDir);
+    expect(env.PENGUINS_CONFIG_PATH).toBe(path.join(expectedStateDir, "penguins.json"));
+    expect(env.PENGUINS_GATEWAY_PORT).toBe("19001");
   });
 
   it("does not override explicit env values", () => {
     const env: Record<string, string | undefined> = {
-      OPENCLAW_STATE_DIR: "/custom",
-      OPENCLAW_GATEWAY_PORT: "19099",
+      PENGUINS_STATE_DIR: "/custom",
+      PENGUINS_GATEWAY_PORT: "19099",
     };
     applyCliProfileEnv({
       profile: "dev",
       env,
       homedir: () => "/home/peter",
     });
-    expect(env.OPENCLAW_STATE_DIR).toBe("/custom");
-    expect(env.OPENCLAW_GATEWAY_PORT).toBe("19099");
-    expect(env.OPENCLAW_CONFIG_PATH).toBe(path.join("/custom", "penguins.json"));
+    expect(env.PENGUINS_STATE_DIR).toBe("/custom");
+    expect(env.PENGUINS_GATEWAY_PORT).toBe("19099");
+    expect(env.PENGUINS_CONFIG_PATH).toBe(path.join("/custom", "penguins.json"));
   });
 
-  it("uses OPENCLAW_HOME when deriving profile state dir", () => {
+  it("uses PENGUINS_HOME when deriving profile state dir", () => {
     const env: Record<string, string | undefined> = {
-      OPENCLAW_HOME: "/srv/penguins-home",
+      PENGUINS_HOME: "/srv/penguins-home",
       HOME: "/home/other",
     };
     applyCliProfileEnv({
@@ -95,8 +95,8 @@ describe("applyCliProfileEnv", () => {
     });
 
     const resolvedHome = path.resolve("/srv/penguins-home");
-    expect(env.OPENCLAW_STATE_DIR).toBe(path.join(resolvedHome, ".penguins-work"));
-    expect(env.OPENCLAW_CONFIG_PATH).toBe(
+    expect(env.PENGUINS_STATE_DIR).toBe(path.join(resolvedHome, ".penguins-work"));
+    expect(env.PENGUINS_CONFIG_PATH).toBe(
       path.join(resolvedHome, ".penguins-work", "penguins.json"),
     );
   });
@@ -108,55 +108,55 @@ describe("formatCliCommand", () => {
   });
 
   it("returns command unchanged when profile is default", () => {
-    expect(formatCliCommand("penguins doctor --fix", { OPENCLAW_PROFILE: "default" })).toBe(
+    expect(formatCliCommand("penguins doctor --fix", { PENGUINS_PROFILE: "default" })).toBe(
       "penguins doctor --fix",
     );
   });
 
   it("returns command unchanged when profile is Default (case-insensitive)", () => {
-    expect(formatCliCommand("penguins doctor --fix", { OPENCLAW_PROFILE: "Default" })).toBe(
+    expect(formatCliCommand("penguins doctor --fix", { PENGUINS_PROFILE: "Default" })).toBe(
       "penguins doctor --fix",
     );
   });
 
   it("returns command unchanged when profile is invalid", () => {
-    expect(formatCliCommand("penguins doctor --fix", { OPENCLAW_PROFILE: "bad profile" })).toBe(
+    expect(formatCliCommand("penguins doctor --fix", { PENGUINS_PROFILE: "bad profile" })).toBe(
       "penguins doctor --fix",
     );
   });
 
   it("returns command unchanged when --profile is already present", () => {
     expect(
-      formatCliCommand("penguins --profile work doctor --fix", { OPENCLAW_PROFILE: "work" }),
+      formatCliCommand("penguins --profile work doctor --fix", { PENGUINS_PROFILE: "work" }),
     ).toBe("penguins --profile work doctor --fix");
   });
 
   it("returns command unchanged when --dev is already present", () => {
-    expect(formatCliCommand("penguins --dev doctor", { OPENCLAW_PROFILE: "dev" })).toBe(
+    expect(formatCliCommand("penguins --dev doctor", { PENGUINS_PROFILE: "dev" })).toBe(
       "penguins --dev doctor",
     );
   });
 
   it("inserts --profile flag when profile is set", () => {
-    expect(formatCliCommand("penguins doctor --fix", { OPENCLAW_PROFILE: "work" })).toBe(
+    expect(formatCliCommand("penguins doctor --fix", { PENGUINS_PROFILE: "work" })).toBe(
       "penguins --profile work doctor --fix",
     );
   });
 
   it("trims whitespace from profile", () => {
-    expect(formatCliCommand("penguins doctor --fix", { OPENCLAW_PROFILE: "  jbpenguins  " })).toBe(
+    expect(formatCliCommand("penguins doctor --fix", { PENGUINS_PROFILE: "  jbpenguins  " })).toBe(
       "penguins --profile jbpenguins doctor --fix",
     );
   });
 
   it("handles command with no args after penguins", () => {
-    expect(formatCliCommand("penguins", { OPENCLAW_PROFILE: "test" })).toBe(
+    expect(formatCliCommand("penguins", { PENGUINS_PROFILE: "test" })).toBe(
       "penguins --profile test",
     );
   });
 
   it("handles pnpm wrapper", () => {
-    expect(formatCliCommand("pnpm penguins doctor", { OPENCLAW_PROFILE: "work" })).toBe(
+    expect(formatCliCommand("pnpm penguins doctor", { PENGUINS_PROFILE: "work" })).toBe(
       "pnpm penguins --profile work doctor",
     );
   });

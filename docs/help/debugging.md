@@ -60,7 +60,7 @@ Recommended flow (dev profile + dev bootstrap):
 
 ```bash
 pnpm gateway:dev
-OPENCLAW_PROFILE=dev penguins tui
+PENGUINS_PROFILE=dev penguins tui
 ```
 
 If you don’t have a global install yet, run the CLI via `pnpm penguins ...`.
@@ -68,10 +68,10 @@ If you don’t have a global install yet, run the CLI via `pnpm penguins ...`.
 What this does:
 
 1. **Profile isolation** (global `--dev`)
-   - `OPENCLAW_PROFILE=dev`
-   - `OPENCLAW_STATE_DIR=~/.penguins-dev`
-   - `OPENCLAW_CONFIG_PATH=~/.penguins-dev/penguins.json`
-   - `OPENCLAW_GATEWAY_PORT=19001` (browser/canvas shift accordingly)
+   - `PENGUINS_PROFILE=dev`
+   - `PENGUINS_STATE_DIR=~/.penguins-dev`
+   - `PENGUINS_CONFIG_PATH=~/.penguins-dev/penguins.json`
+   - `PENGUINS_GATEWAY_PORT=19001` (browser/canvas shift accordingly)
 
 2. **Dev bootstrap** (`gateway --dev`)
    - Writes a minimal config if missing (`gateway.mode=local`, bind loopback).
@@ -80,7 +80,7 @@ What this does:
    - Seeds the workspace files if missing:
      `AGENTS.md`, `SOUL.md`, `TOOLS.md`, `IDENTITY.md`, `USER.md`, `HEARTBEAT.md`.
    - Default identity: **C3‑PO** (protocol droid).
-   - Skips channel providers in dev mode (`OPENCLAW_SKIP_CHANNELS=1`).
+   - Skips channel providers in dev mode (`PENGUINS_SKIP_CHANNELS=1`).
 
 Reset flow (fresh start):
 
@@ -92,7 +92,7 @@ Note: `--dev` is a **global** profile flag and gets eaten by some runners.
 If you need to spell it out, use the env var form:
 
 ```bash
-OPENCLAW_PROFILE=dev penguins gateway --dev --reset
+PENGUINS_PROFILE=dev penguins gateway --dev --reset
 ```
 
 `--reset` wipes config, credentials, sessions, and the dev workspace (using
@@ -125,8 +125,8 @@ pnpm gateway:watch --force --raw-stream --raw-stream-path ~/.penguins/logs/raw-s
 Equivalent env vars:
 
 ```bash
-OPENCLAW_RAW_STREAM=1
-OPENCLAW_RAW_STREAM_PATH=~/.penguins/logs/raw-stream.jsonl
+PENGUINS_RAW_STREAM=1
+PENGUINS_RAW_STREAM_PATH=~/.penguins/logs/raw-stream.jsonl
 ```
 
 Default file:

@@ -43,7 +43,7 @@ describe("sandbox skill mirroring", () => {
     const bundledDir = await fs.mkdtemp(path.join(os.tmpdir(), "penguins-bundled-skills-"));
     await fs.mkdir(bundledDir, { recursive: true });
 
-    process.env.OPENCLAW_BUNDLED_SKILLS_DIR = bundledDir;
+    process.env.PENGUINS_BUNDLED_SKILLS_DIR = bundledDir;
 
     const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "penguins-workspace-"));
     await writeSkill({

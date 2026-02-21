@@ -1,6 +1,6 @@
 import type { PenguinsConfig } from "../config/config.js";
 
-const DIAGNOSTICS_ENV = "OPENCLAW_DIAGNOSTICS";
+const DIAGNOSTICS_ENV = "PENGUINS_DIAGNOSTICS";
 
 function normalizeFlag(value: string): string {
   return value.trim().toLowerCase();

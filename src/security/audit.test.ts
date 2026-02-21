@@ -116,10 +116,10 @@ describe("security audit", () => {
 
   it("flags non-loopback bind without auth as critical", async () => {
     // Clear env tokens so resolveGatewayAuth defaults to mode=none
-    const prevToken = process.env.OPENCLAW_GATEWAY_TOKEN;
-    const prevPassword = process.env.OPENCLAW_GATEWAY_PASSWORD;
-    delete process.env.OPENCLAW_GATEWAY_TOKEN;
-    delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+    const prevToken = process.env.PENGUINS_GATEWAY_TOKEN;
+    const prevPassword = process.env.PENGUINS_GATEWAY_PASSWORD;
+    delete process.env.PENGUINS_GATEWAY_TOKEN;
+    delete process.env.PENGUINS_GATEWAY_PASSWORD;
 
     try {
       const cfg: PenguinsConfig = {
@@ -141,14 +141,14 @@ describe("security audit", () => {
     } finally {
       // Restore env
       if (prevToken === undefined) {
-        delete process.env.OPENCLAW_GATEWAY_TOKEN;
+        delete process.env.PENGUINS_GATEWAY_TOKEN;
       } else {
-        process.env.OPENCLAW_GATEWAY_TOKEN = prevToken;
+        process.env.PENGUINS_GATEWAY_TOKEN = prevToken;
       }
       if (prevPassword === undefined) {
-        delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+        delete process.env.PENGUINS_GATEWAY_PASSWORD;
       } else {
-        process.env.OPENCLAW_GATEWAY_PASSWORD = prevPassword;
+        process.env.PENGUINS_GATEWAY_PASSWORD = prevPassword;
       }
     }
   });
@@ -892,9 +892,9 @@ describe("security audit", () => {
   });
 
   it("flags Discord native commands without a guild user allowlist", async () => {
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const tmp = await makeTmpDir("discord");
-    process.env.OPENCLAW_STATE_DIR = tmp;
+    process.env.PENGUINS_STATE_DIR = tmp;
     await fs.mkdir(path.join(tmp, "credentials"), { recursive: true, mode: 0o700 });
     try {
       const cfg: PenguinsConfig = {
@@ -931,17 +931,17 @@ describe("security audit", () => {
       );
     } finally {
       if (prevStateDir == null) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
     }
   });
 
   it("does not flag Discord slash commands when dm.allowFrom includes a Discord snowflake id", async () => {
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const tmp = await makeTmpDir("discord-allowfrom-snowflake");
-    process.env.OPENCLAW_STATE_DIR = tmp;
+    process.env.PENGUINS_STATE_DIR = tmp;
     await fs.mkdir(path.join(tmp, "credentials"), { recursive: true, mode: 0o700 });
     try {
       const cfg: PenguinsConfig = {
@@ -978,17 +978,17 @@ describe("security audit", () => {
       );
     } finally {
       if (prevStateDir == null) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
     }
   });
 
   it("flags Discord slash commands when access-group enforcement is disabled and no users allowlist exists", async () => {
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const tmp = await makeTmpDir("discord-open");
-    process.env.OPENCLAW_STATE_DIR = tmp;
+    process.env.PENGUINS_STATE_DIR = tmp;
     await fs.mkdir(path.join(tmp, "credentials"), { recursive: true, mode: 0o700 });
     try {
       const cfg: PenguinsConfig = {
@@ -1026,17 +1026,17 @@ describe("security audit", () => {
       );
     } finally {
       if (prevStateDir == null) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
     }
   });
 
   it("flags Slack slash commands without a channel users allowlist", async () => {
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const tmp = await makeTmpDir("slack");
-    process.env.OPENCLAW_STATE_DIR = tmp;
+    process.env.PENGUINS_STATE_DIR = tmp;
     await fs.mkdir(path.join(tmp, "credentials"), { recursive: true, mode: 0o700 });
     try {
       const cfg: PenguinsConfig = {
@@ -1068,17 +1068,17 @@ describe("security audit", () => {
       );
     } finally {
       if (prevStateDir == null) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
     }
   });
 
   it("flags Slack slash commands when access-group enforcement is disabled", async () => {
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const tmp = await makeTmpDir("slack-open");
-    process.env.OPENCLAW_STATE_DIR = tmp;
+    process.env.PENGUINS_STATE_DIR = tmp;
     await fs.mkdir(path.join(tmp, "credentials"), { recursive: true, mode: 0o700 });
     try {
       const cfg: PenguinsConfig = {
@@ -1111,17 +1111,17 @@ describe("security audit", () => {
       );
     } finally {
       if (prevStateDir == null) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
     }
   });
 
   it("flags Telegram group commands without a sender allowlist", async () => {
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const tmp = await makeTmpDir("telegram");
-    process.env.OPENCLAW_STATE_DIR = tmp;
+    process.env.PENGUINS_STATE_DIR = tmp;
     await fs.mkdir(path.join(tmp, "credentials"), { recursive: true, mode: 0o700 });
     try {
       const cfg: PenguinsConfig = {
@@ -1152,17 +1152,17 @@ describe("security audit", () => {
       );
     } finally {
       if (prevStateDir == null) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
     }
   });
 
   it("warns when Telegram allowFrom entries are non-numeric (legacy @username configs)", async () => {
-    const prevStateDir = process.env.OPENCLAW_STATE_DIR;
+    const prevStateDir = process.env.PENGUINS_STATE_DIR;
     const tmp = await makeTmpDir("telegram-invalid-allowfrom");
-    process.env.OPENCLAW_STATE_DIR = tmp;
+    process.env.PENGUINS_STATE_DIR = tmp;
     await fs.mkdir(path.join(tmp, "credentials"), { recursive: true, mode: 0o700 });
     try {
       const cfg: PenguinsConfig = {
@@ -1194,9 +1194,9 @@ describe("security audit", () => {
       );
     } finally {
       if (prevStateDir == null) {
-        delete process.env.OPENCLAW_STATE_DIR;
+        delete process.env.PENGUINS_STATE_DIR;
       } else {
-        process.env.OPENCLAW_STATE_DIR = prevStateDir;
+        process.env.PENGUINS_STATE_DIR = prevStateDir;
       }
     }
   });
@@ -1325,8 +1325,8 @@ describe("security audit", () => {
   });
 
   it("warns when hooks token reuses the gateway env token", async () => {
-    const prevToken = process.env.OPENCLAW_GATEWAY_TOKEN;
-    process.env.OPENCLAW_GATEWAY_TOKEN = "shared-gateway-token-1234567890";
+    const prevToken = process.env.PENGUINS_GATEWAY_TOKEN;
+    process.env.PENGUINS_GATEWAY_TOKEN = "shared-gateway-token-1234567890";
     const cfg: PenguinsConfig = {
       hooks: { enabled: true, token: "shared-gateway-token-1234567890" },
     };
@@ -1345,9 +1345,9 @@ describe("security audit", () => {
       );
     } finally {
       if (prevToken === undefined) {
-        delete process.env.OPENCLAW_GATEWAY_TOKEN;
+        delete process.env.PENGUINS_GATEWAY_TOKEN;
       } else {
-        process.env.OPENCLAW_GATEWAY_TOKEN = prevToken;
+        process.env.PENGUINS_GATEWAY_TOKEN = prevToken;
       }
     }
   });
@@ -1853,24 +1853,24 @@ description: test skill
   });
 
   describe("maybeProbeGateway auth selection", () => {
-    const originalEnvToken = process.env.OPENCLAW_GATEWAY_TOKEN;
-    const originalEnvPassword = process.env.OPENCLAW_GATEWAY_PASSWORD;
+    const originalEnvToken = process.env.PENGUINS_GATEWAY_TOKEN;
+    const originalEnvPassword = process.env.PENGUINS_GATEWAY_PASSWORD;
 
     beforeEach(() => {
-      delete process.env.OPENCLAW_GATEWAY_TOKEN;
-      delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+      delete process.env.PENGUINS_GATEWAY_TOKEN;
+      delete process.env.PENGUINS_GATEWAY_PASSWORD;
     });
 
     afterEach(() => {
       if (originalEnvToken == null) {
-        delete process.env.OPENCLAW_GATEWAY_TOKEN;
+        delete process.env.PENGUINS_GATEWAY_TOKEN;
       } else {
-        process.env.OPENCLAW_GATEWAY_TOKEN = originalEnvToken;
+        process.env.PENGUINS_GATEWAY_TOKEN = originalEnvToken;
       }
       if (originalEnvPassword == null) {
-        delete process.env.OPENCLAW_GATEWAY_PASSWORD;
+        delete process.env.PENGUINS_GATEWAY_PASSWORD;
       } else {
-        process.env.OPENCLAW_GATEWAY_PASSWORD = originalEnvPassword;
+        process.env.PENGUINS_GATEWAY_PASSWORD = originalEnvPassword;
       }
     });
 
@@ -1909,7 +1909,7 @@ description: test skill
     });
 
     it("prefers env token over local config token", async () => {
-      process.env.OPENCLAW_GATEWAY_TOKEN = "env-token";
+      process.env.PENGUINS_GATEWAY_TOKEN = "env-token";
       let capturedAuth: { token?: string; password?: string } | undefined;
       const cfg: PenguinsConfig = {
         gateway: {
@@ -2015,7 +2015,7 @@ description: test skill
     });
 
     it("ignores env token when gateway.mode is remote", async () => {
-      process.env.OPENCLAW_GATEWAY_TOKEN = "env-token";
+      process.env.PENGUINS_GATEWAY_TOKEN = "env-token";
       let capturedAuth: { token?: string; password?: string } | undefined;
       const cfg: PenguinsConfig = {
         gateway: {
@@ -2091,7 +2091,7 @@ description: test skill
     });
 
     it("prefers env password over remote password", async () => {
-      process.env.OPENCLAW_GATEWAY_PASSWORD = "env-pass";
+      process.env.PENGUINS_GATEWAY_PASSWORD = "env-pass";
       let capturedAuth: { token?: string; password?: string } | undefined;
       const cfg: PenguinsConfig = {
         gateway: {
