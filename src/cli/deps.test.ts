@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createDefaultDeps } from "./deps.js";
+import { createDefaultDeps, createOutboundSendDeps } from "./deps.js";
 
 const moduleLoads = vi.hoisted(() => ({
   whatsapp: vi.fn(),
@@ -89,5 +89,20 @@ describe("createDefaultDeps", () => {
 
     expect(moduleLoads.discord).toHaveBeenCalledTimes(1);
     expect(sendFns.discord).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("createOutboundSendDeps", () => {
+  it("maps CLI send deps onto outbound send deps", () => {
+    const deps = createDefaultDeps();
+
+    expect(createOutboundSendDeps(deps)).toEqual({
+      sendWhatsApp: deps.sendMessageWhatsApp,
+      sendTelegram: deps.sendMessageTelegram,
+      sendDiscord: deps.sendMessageDiscord,
+      sendSlack: deps.sendMessageSlack,
+      sendSignal: deps.sendMessageSignal,
+      sendIMessage: deps.sendMessageIMessage,
+    });
   });
 });

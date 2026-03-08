@@ -1,3 +1,8 @@
+# Historical Rebrand Plan
+
+> This file is stale historical planning material.
+> Use `TASKS2.md` as the current source of truth.
+
 # Penguins Rebrand Implementation Plan
 
 ## Overview

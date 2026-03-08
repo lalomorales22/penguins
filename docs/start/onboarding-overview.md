@@ -9,13 +9,15 @@ sidebarTitle: "Onboarding Overview"
 
 # Onboarding Overview
 
-Penguins supports multiple onboarding paths depending on where the Gateway runs
-and how you prefer to configure providers.
+Penguins currently has one recommended onboarding path: the CLI wizard. It
+works on macOS, Linux, and Windows via WSL2, and it sets up the supported
+web/CLI-first product surface.
 
-## Choose your onboarding path
+## Recommended path
 
 - **CLI wizard** for macOS, Linux, and Windows (via WSL2).
-- **macOS app** for a guided first run on Apple silicon or Intel Macs.
+- After onboarding, use the local browser Control UI or put it behind a
+  private tunnel such as Cloudflare Tunnel + Access.
 
 ## CLI onboarding wizard
 
@@ -25,17 +27,11 @@ Run the wizard in a terminal:
 penguins onboard
 ```
 
-Use the CLI wizard when you want full control of the Gateway, workspace,
-channels, and skills. Docs:
+Use the CLI wizard when you want full control of the Gateway, workspace, auth,
+remote access, and skills. Docs:
 
 - [Onboarding Wizard (CLI)](/start/wizard)
 - [`penguins onboard` command](/cli/onboard)
-
-## macOS app onboarding
-
-Use the Penguins app when you want a fully guided setup on macOS. Docs:
-
-- [Onboarding (macOS App)](/start/onboarding)
 
 ## Custom Provider
 

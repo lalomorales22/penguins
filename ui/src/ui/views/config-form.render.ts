@@ -246,8 +246,8 @@ export const SECTION_META: Record<string, { label: string; description: string }
   agents: { label: "Agents", description: "Agent configurations, models, and identities" },
   auth: { label: "Authentication", description: "API keys and authentication profiles" },
   channels: {
-    label: "Channels",
-    description: "Messaging channels (Telegram, Discord, Slack, etc.)",
+    label: "Legacy Channels",
+    description: "Historical messaging integrations retained for compatibility",
   },
   messages: { label: "Messages", description: "Message handling and routing settings" },
   commands: { label: "Commands", description: "Custom slash commands" },

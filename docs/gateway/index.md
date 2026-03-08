@@ -45,10 +45,10 @@ Healthy baseline: `Runtime: running` and `RPC probe: ok`.
 
   </Step>
 
-  <Step title="Validate channel readiness">
+  <Step title="Open the Control UI">
 
 ```bash
-penguins channels status --probe
+penguins dashboard --no-open
 ```
 
   </Step>
@@ -100,7 +100,8 @@ penguins doctor
 
 ## Remote access
 
-Preferred: Tailscale/VPN.
+Preferred for public browser access: Cloudflare Tunnel + Access.
+Preferred for private access: Tailscale/VPN.
 Fallback: SSH tunnel.
 
 ```bash
@@ -113,7 +114,7 @@ Then connect clients to `ws://127.0.0.1:18789` locally.
 If gateway auth is configured, clients still must send auth (`token`/`password`) even over SSH tunnels.
 </Warning>
 
-See: [Remote Gateway](/gateway/remote), [Authentication](/gateway/authentication), [Tailscale](/gateway/tailscale).
+See: [Remote Gateway](/gateway/remote), [Cloudflare Tunnel](/gateway/cloudflare-tunnel), [Authentication](/gateway/authentication), [Tailscale](/gateway/tailscale).
 
 ## Supervision and service lifecycle
 
@@ -217,7 +218,7 @@ See full protocol docs: [Gateway Protocol](/gateway/protocol).
 
 ```bash
 penguins gateway status
-penguins channels status --probe
+penguins gateway status --deep
 penguins health
 ```
 

@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { PluginHttpRouteRegistration, PluginRegistry } from "./registry.js";
-import { normalizePluginHttpPath } from "./http-path.js";
+import type { PluginHttpAuthMode } from "./types.js";
+import { isReservedPluginHttpPath, normalizePluginHttpPath } from "./http-path.js";
 import { requireActivePluginRegistry } from "./runtime.js";
 
 export type PluginHttpRouteHandler = (
@@ -12,6 +13,7 @@ export function registerPluginHttpRoute(params: {
   path?: string | null;
   fallbackPath?: string | null;
   handler: PluginHttpRouteHandler;
+  auth?: PluginHttpAuthMode;
   pluginId?: string;
   source?: string;
   accountId?: string;
@@ -28,6 +30,10 @@ export function registerPluginHttpRoute(params: {
     params.log?.(`plugin: webhook path missing${suffix}`);
     return () => {};
   }
+  if (isReservedPluginHttpPath(normalizedPath)) {
+    params.log?.(`plugin: webhook path ${normalizedPath} is reserved${suffix}`);
+    return () => {};
+  }
 
   if (routes.some((entry) => entry.path === normalizedPath)) {
     const pluginHint = params.pluginId ? ` (${params.pluginId})` : "";
@@ -38,6 +44,7 @@ export function registerPluginHttpRoute(params: {
   const entry: PluginHttpRouteRegistration = {
     path: normalizedPath,
     handler: params.handler,
+    auth: params.auth ?? "gateway",
     pluginId: params.pluginId,
     source: params.source,
   };

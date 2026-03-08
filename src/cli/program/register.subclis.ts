@@ -89,30 +89,6 @@ const entries: SubCliEntry[] = [
     },
   },
   {
-    name: "nodes",
-    description: "Node commands",
-    register: async (program) => {
-      const mod = await import("../nodes-cli.js");
-      mod.registerNodesCli(program);
-    },
-  },
-  {
-    name: "devices",
-    description: "Device pairing + token management",
-    register: async (program) => {
-      const mod = await import("../devices-cli.js");
-      mod.registerDevicesCli(program);
-    },
-  },
-  {
-    name: "node",
-    description: "Node control",
-    register: async (program) => {
-      const mod = await import("../node-cli.js");
-      mod.registerNodeCli(program);
-    },
-  },
-  {
     name: "sandbox",
     description: "Sandbox tools",
     register: async (program) => {
@@ -169,19 +145,6 @@ const entries: SubCliEntry[] = [
     },
   },
   {
-    name: "pairing",
-    description: "Pairing helpers",
-    register: async (program) => {
-      // Initialize plugins before registering pairing CLI.
-      // The pairing CLI calls listPairingChannels() at registration time,
-      // which requires the plugin registry to be populated with channel plugins.
-      const { registerPluginCliCommands } = await import("../../plugins/cli.js");
-      registerPluginCliCommands(program, await loadConfig());
-      const mod = await import("../pairing-cli.js");
-      mod.registerPairingCli(program);
-    },
-  },
-  {
     name: "plugins",
     description: "Plugin management",
     register: async (program) => {
@@ -189,14 +152,6 @@ const entries: SubCliEntry[] = [
       mod.registerPluginsCli(program);
       const { registerPluginCliCommands } = await import("../../plugins/cli.js");
       registerPluginCliCommands(program, await loadConfig());
-    },
-  },
-  {
-    name: "channels",
-    description: "Channel management",
-    register: async (program) => {
-      const mod = await import("../channels-cli.js");
-      mod.registerChannelsCli(program);
     },
   },
   {

@@ -1,7 +1,6 @@
 import type { ChannelId } from "../../channels/plugins/types.js";
 import type { PenguinsConfig } from "../../config/config.js";
 import type { OutboundChannel } from "../../infra/outbound/targets.js";
-import { DEFAULT_CHAT_CHANNEL } from "../../channels/registry.js";
 import {
   loadSessionStore,
   resolveAgentMainSessionKey,
@@ -12,6 +11,7 @@ import {
   resolveOutboundTarget,
   resolveSessionDeliveryTarget,
 } from "../../infra/outbound/targets.js";
+import { isDeliverableMessageChannel } from "../../utils/message-channel.js";
 
 export async function resolveDeliveryTarget(
   cfg: PenguinsConfig,
@@ -21,7 +21,7 @@ export async function resolveDeliveryTarget(
     to?: string;
   },
 ): Promise<{
-  channel: Exclude<OutboundChannel, "none">;
+  channel?: Exclude<OutboundChannel, "none">;
   to?: string;
   accountId?: string;
   threadId?: string | number;
@@ -47,11 +47,16 @@ export async function resolveDeliveryTarget(
 
   let fallbackChannel: Exclude<OutboundChannel, "none"> | undefined;
   if (!preliminary.channel) {
+    fallbackChannel = isDeliverableMessageChannel(preliminary.lastChannel ?? "")
+      ? preliminary.lastChannel
+      : undefined;
+  }
+  if (!fallbackChannel && !preliminary.channel) {
     try {
       const selection = await resolveMessageChannelSelection({ cfg });
       fallbackChannel = selection.channel;
     } catch {
-      fallbackChannel = preliminary.lastChannel ?? DEFAULT_CHAT_CHANNEL;
+      fallbackChannel = undefined;
     }
   }
 
@@ -66,7 +71,7 @@ export async function resolveDeliveryTarget(
       })
     : preliminary;
 
-  const channel = resolved.channel ?? fallbackChannel ?? DEFAULT_CHAT_CHANNEL;
+  const channel = resolved.channel ?? fallbackChannel;
   const mode = resolved.mode as "explicit" | "implicit";
   const toCandidate = resolved.to;
 
@@ -78,6 +83,19 @@ export async function resolveDeliveryTarget(
     resolved.threadId && resolved.to && resolved.to === resolved.lastTo
       ? resolved.threadId
       : undefined;
+
+  if (!channel) {
+    return {
+      channel: undefined,
+      to: undefined,
+      accountId: resolved.accountId,
+      threadId,
+      mode,
+      error: new Error(
+        "cron delivery requires an existing external route or an explicit custom integration channel",
+      ),
+    };
+  }
 
   if (!toCandidate) {
     return {

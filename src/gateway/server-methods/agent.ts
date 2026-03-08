@@ -470,7 +470,6 @@ export const agentHandlers: GatewayRequestHandlers = {
       }
     }
 
-    const wantsDelivery = request.deliver === true;
     const explicitTo =
       typeof request.replyTo === "string" && request.replyTo.trim()
         ? request.replyTo.trim()
@@ -487,7 +486,6 @@ export const agentHandlers: GatewayRequestHandlers = {
       explicitTo,
       explicitThreadId,
       accountId: request.replyAccountId ?? request.accountId,
-      wantsDelivery,
     });
 
     const resolvedChannel = deliveryPlan.resolvedChannel;

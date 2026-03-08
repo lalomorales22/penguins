@@ -8,7 +8,6 @@ import { loadAgentFileContent, loadAgentFiles, saveAgentFile } from "./controlle
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
 import { loadAgentSkills } from "./controllers/agent-skills.ts";
 import { loadAgents } from "./controllers/agents.ts";
-import { loadChannels } from "./controllers/channels.ts";
 import { loadChatHistory } from "./controllers/chat.ts";
 import {
   applyConfig,
@@ -53,7 +52,6 @@ import {
 import { icons } from "./icons.ts";
 import { normalizeBasePath, TAB_GROUPS, subtitleForTab, titleForTab } from "./navigation.ts";
 import { renderAgents } from "./views/agents.ts";
-import { renderChannels } from "./views/channels.ts";
 import { renderChat } from "./views/chat.ts";
 import { renderConfig } from "./views/config.ts";
 import { renderCron } from "./views/cron.ts";
@@ -69,6 +67,37 @@ import { renderSkills } from "./views/skills.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
 const AVATAR_HTTP_RE = /^https?:\/\//i;
+
+function readCronChannelCatalog(state: AppViewState): {
+  ids: string[];
+  labels: Record<string, string>;
+} {
+  const schema =
+    state.configSchema && typeof state.configSchema === "object"
+      ? (state.configSchema as Record<string, unknown>)
+      : null;
+  const properties =
+    schema?.properties && typeof schema.properties === "object"
+      ? (schema.properties as Record<string, unknown>)
+      : null;
+  const channelsNode =
+    properties?.channels && typeof properties.channels === "object"
+      ? (properties.channels as Record<string, unknown>)
+      : null;
+  const channelProperties =
+    channelsNode?.properties && typeof channelsNode.properties === "object"
+      ? (channelsNode.properties as Record<string, unknown>)
+      : null;
+  const ids = Object.keys(channelProperties ?? {}).filter(Boolean);
+  const labels = Object.fromEntries(
+    ids.map((id) => {
+      const hint = state.configUiHints?.[`channels.${id}`];
+      const label = typeof hint?.label === "string" && hint.label.trim() ? hint.label.trim() : id;
+      return [id, label];
+    }),
+  );
+  return { ids, labels };
+}
 
 function resolveAssistantAvatarUrl(state: AppViewState): string | undefined {
   const list = state.agentsList?.agents ?? [];
@@ -104,6 +133,7 @@ export function renderApp(state: AppViewState) {
     state.agentsList?.defaultId ??
     state.agentsList?.agents?.[0]?.id ??
     null;
+  const cronChannelCatalog = readCronChannelCatalog(state);
 
   return html`
     <div class="shell ${isChat ? "shell--chat" : ""} ${chatFocus ? "shell--chat-focus" : ""} ${state.settings.navCollapsed ? "shell--nav-collapsed" : ""} ${state.onboarding ? "shell--onboarding" : ""}">
@@ -209,7 +239,6 @@ export function renderApp(state: AppViewState) {
                 sessionsCount,
                 cronEnabled: state.cronStatus?.enabled ?? null,
                 cronNext,
-                lastChannelsRefresh: state.channelsLastSuccess,
                 onSettingsChange: (next) => state.applySettings(next),
                 onPasswordChange: (next) => (state.password = next),
                 onSessionKeyChange: (next) => {
@@ -225,45 +254,6 @@ export function renderApp(state: AppViewState) {
                 },
                 onConnect: () => state.connect(),
                 onRefresh: () => state.loadOverview(),
-              })
-            : nothing
-        }
-
-        ${
-          state.tab === "channels"
-            ? renderChannels({
-                connected: state.connected,
-                loading: state.channelsLoading,
-                snapshot: state.channelsSnapshot,
-                lastError: state.channelsError,
-                lastSuccessAt: state.channelsLastSuccess,
-                whatsappMessage: state.whatsappLoginMessage,
-                whatsappQrDataUrl: state.whatsappLoginQrDataUrl,
-                whatsappConnected: state.whatsappLoginConnected,
-                whatsappBusy: state.whatsappBusy,
-                configSchema: state.configSchema,
-                configSchemaLoading: state.configSchemaLoading,
-                configForm: state.configForm,
-                configUiHints: state.configUiHints,
-                configSaving: state.configSaving,
-                configFormDirty: state.configFormDirty,
-                nostrProfileFormState: state.nostrProfileFormState,
-                nostrProfileAccountId: state.nostrProfileAccountId,
-                onRefresh: (probe) => loadChannels(state, probe),
-                onWhatsAppStart: (force) => state.handleWhatsAppStart(force),
-                onWhatsAppWait: () => state.handleWhatsAppWait(),
-                onWhatsAppLogout: () => state.handleWhatsAppLogout(),
-                onConfigPatch: (path, value) => updateConfigFormValue(state, path, value),
-                onConfigSave: () => state.handleChannelConfigSave(),
-                onConfigReload: () => state.handleChannelConfigReload(),
-                onNostrProfileEdit: (accountId, profile) =>
-                  state.handleNostrProfileEdit(accountId, profile),
-                onNostrProfileCancel: () => state.handleNostrProfileCancel(),
-                onNostrProfileFieldChange: (field, value) =>
-                  state.handleNostrProfileFieldChange(field, value),
-                onNostrProfileSave: () => state.handleNostrProfileSave(),
-                onNostrProfileImport: () => state.handleNostrProfileImport(),
-                onNostrProfileToggleAdvanced: () => state.handleNostrProfileToggleAdvanced(),
               })
             : nothing
         }
@@ -316,11 +306,8 @@ export function renderApp(state: AppViewState) {
                 error: state.cronError,
                 busy: state.cronBusy,
                 form: state.cronForm,
-                channels: state.channelsSnapshot?.channelMeta?.length
-                  ? state.channelsSnapshot.channelMeta.map((entry) => entry.id)
-                  : (state.channelsSnapshot?.channelOrder ?? []),
-                channelLabels: state.channelsSnapshot?.channelLabels ?? {},
-                channelMeta: state.channelsSnapshot?.channelMeta ?? [],
+                channels: cronChannelCatalog.ids,
+                channelLabels: cronChannelCatalog.labels,
                 runsJobId: state.cronRunsJobId,
                 runs: state.cronRuns,
                 onFormChange: (patch) => (state.cronForm = { ...state.cronForm, ...patch }),
@@ -346,10 +333,6 @@ export function renderApp(state: AppViewState) {
                 configLoading: state.configLoading,
                 configSaving: state.configSaving,
                 configDirty: state.configFormDirty,
-                channelsLoading: state.channelsLoading,
-                channelsError: state.channelsError,
-                channelsSnapshot: state.channelsSnapshot,
-                channelsLastSuccess: state.channelsLastSuccess,
                 cronLoading: state.cronLoading,
                 cronStatus: state.cronStatus,
                 cronJobs: state.cronJobs,
@@ -414,9 +397,6 @@ export function renderApp(state: AppViewState) {
                     if (resolvedAgentId) {
                       void loadAgentSkills(state, resolvedAgentId);
                     }
-                  }
-                  if (panel === "channels") {
-                    void loadChannels(state, false);
                   }
                   if (panel === "cron") {
                     void state.loadCron();
@@ -505,7 +485,6 @@ export function renderApp(state: AppViewState) {
                 },
                 onConfigReload: () => loadConfig(state),
                 onConfigSave: () => saveConfig(state),
-                onChannelsRefresh: () => loadChannels(state, false),
                 onCronRefresh: () => state.loadCron(),
                 onSkillsFilterChange: (next) => (state.skillsFilter = next),
                 onSkillsRefresh: () => {

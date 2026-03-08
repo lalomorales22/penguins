@@ -1,638 +1,438 @@
-# Penguins — Developer Handoff
-
-_Exact implementation guide for the 5 next tasks. Written for a fresh Claude instance
-that has not seen the codebase. Read WHAT_I_THINK.md first for context and motivation._
-
----
-
-## Codebase at a Glance
-
-```
-src/
-  memory/          ← Hybrid vector + BM25 search, embedding providers, sync
-  gateway/         ← Core server, agent loop, auth, boot, prompt assembly
-  agents/          ← Agent execution
-  auto-reply/      ← Tool/command registry, message dispatch
-  cron/            ← Scheduled job system
-  plugins/         ← Plugin lifecycle hooks and types
-  config/          ← Config types and schema (Zod)
-
-extensions/
-  memory-lancedb/  ← LanceDB vector store plugin (has memory_store/recall/forget tools)
-  memory-core/     ← Builtin memory search tools (memory_search, memory_get)
-
-ui/
-  src/ui/          ← WebChat frontend (Lit/TypeScript, no framework)
-  public/          ← Static assets served with the build
-  vite.config.ts   ← Vite build config (no PWA plugin yet)
-
-skills/            ← Slash-command skills (github, notion, weather, etc.)
-```
-
-**Stack:** TypeScript (ESM), Node.js ≥ 22, pnpm, Lit (UI), Zod (config), sqlite-vec (vector),
-LanceDB (optional), Vitest (tests).
-
----
-
-## Task 1 — Local Embeddings
-
-**Goal:** Let embeddings run locally via `node-llama-cpp` instead of calling OpenAI.
-Zero API calls for memory indexing and search.
-
-### What already exists
-
-`src/memory/embeddings.ts` already has a `"local"` provider path:
-
-```typescript
-// src/memory/embeddings.ts
-export type EmbeddingProviderId = "openai" | "local" | "gemini" | "voyage";
-export type EmbeddingProviderRequest = EmbeddingProviderId | "auto";
-
-export async function createEmbeddingProvider(
-  options: EmbeddingProviderOptions,
-): Promise<EmbeddingProviderResult>
-```
-
-The `"auto"` path tries local first (if a model file exists), then falls back to OpenAI.
-The local path calls `createLocalEmbeddingProvider()` in the same file (lines ~89–135),
-which lazy-imports `node-llama-cpp` via:
-
-```typescript
-// src/memory/node-llama.ts  ← stub file, only does:
-export async function importNodeLlamaCpp() {
-  return import("node-llama-cpp");
-}
-```
-
-The local provider is **already implemented** — it creates a `LlamaEmbeddingContext` and
-exposes `embedQuery(text)` and `embedBatch(texts)`. The default model path:
-
-```typescript
-const DEFAULT_LOCAL_MODEL =
-  "hf:ggml-org/embeddinggemma-300m-qat-q8_0-GGUF/embeddinggemma-300m-qat-Q8_0.gguf";
-```
-
-### What's missing
-
-There's no config knob to explicitly select the local provider without hacking the "auto"
-path. The embedding provider is resolved deep in `src/memory/manager.ts` using:
-
-```typescript
-cfg.agents?.defaults?.memorySearch?.provider  // or the global config
-```
-
-### What to build
-
-**Option A (Easiest — 2 hours):** Add `PENGUINS_EMBEDDING_BACKEND` env var support in
-`src/memory/embeddings.ts` inside `createEmbeddingProvider()`:
-
-```typescript
-// Before the existing provider selection logic, add:
-const envOverride = process.env.PENGUINS_EMBEDDING_BACKEND?.trim();
-if (envOverride === "local") {
-  return createLocalEmbeddingProvider(options);
-}
-if (envOverride === "openai") {
-  return createOpenAiEmbeddingProvider(options);
-}
-// fall through to existing "auto" logic
-```
-
-**Option B (Proper — 1 day):** Add `embedding.backend` to the config schema:
-
-```typescript
-// src/config/types.memory.ts — add to MemoryConfig:
-export type MemoryConfig = {
-  backend?: MemoryBackend;
-  citations?: MemoryCitationsMode;
-  embedding?: {
-    backend?: "auto" | "local" | "openai";
-    localModelPath?: string;   // optional override
-    localModelDims?: number;   // 768 for nomic-embed-text
-  };
-  qmd?: MemoryQmdConfig;
-};
-```
-
-Then thread `cfg.memory?.embedding` through `src/memory/manager.ts` into
-`createEmbeddingProvider(options)`.
-
-### Recommended local model
-
-For CPU, no GPU required:
-```
-nomic-embed-text-v1.5.Q8_0.gguf   — 768 dims, excellent quality, ~300MB
-```
-
-Download from HuggingFace: `nomic-ai/nomic-embed-text-v1.5-GGUF`
-
-Set `localModelPath` to the absolute path to the `.gguf` file.
-
-### Verification
-
-After wiring:
-```bash
-PENGUINS_EMBEDDING_BACKEND=local penguins memory sync
-# Should sync without any OpenAI API calls
-```
-
-Check `src/memory/status-format.ts` — the status output shows which provider is active.
-
----
-
-## Task 2 — SELF.md Self-Journal
-
-**Goal:** The agent writes a persistent self-model after meaningful conversations.
-It gets injected into the system prompt at session start.
-
-### How the system prompt is assembled today
-
-Boot sequence in `src/gateway/boot.ts`:
-1. `runBootOnce(params)` is called at gateway startup
-2. It loads `BOOT.md` from the workspace root
-3. Runs the agent with a boot prompt: "Follow BOOT.md instructions"
-4. BOOT.md is a markdown file the user writes, e.g. "Check if there are any reminders"
-
-Memory injection happens separately — the memory system indexes all `.md` files under
-`~/.penguins/memory/` (or workspace root `MEMORY.md`). Before each agent response,
-relevant memory snippets are retrieved and injected as context.
-
-The `before_agent_start` lifecycle hook is the injection point for custom context.
-
-### Lifecycle hooks
-
-Defined in `src/plugins/types.ts`:
-
-```typescript
-// Hook: called before the agent runs — inject context here
-"before_agent_start": (event: PluginHookBeforeAgentStartEvent, ctx: PluginHookAgentContext)
-  => Promise<void> | void
-
-// Hook: called after the agent completes — write self-reflection here
-"agent_end": (event: PluginHookAgentEndEvent, ctx: PluginHookAgentContext)
-  => Promise<void> | void
-```
-
-`agent_end` event:
-```typescript
-type PluginHookAgentEndEvent = {
-  messages: unknown[];   // full conversation
-  success: boolean;
-  error?: string;
-  durationMs?: number;
-};
-```
-
-`ctx`:
-```typescript
-type PluginHookAgentContext = {
-  agentId?: string;
-  sessionKey?: string;
-  sessionId?: string;
-  workspaceDir?: string;     // ← use this to find ~/.penguins/
-  messageProvider?: string;
-};
-```
-
-### What to build
-
-**Step 1:** Create a new extension `extensions/self-journal/` with:
-
-```typescript
-// extensions/self-journal/index.ts
-import fs from "node:fs/promises";
-import path from "node:path";
-import type { PenguinsPluginApi } from "penguins/plugin-sdk";
-
-let turnsSinceReflect = 0;
-const REFLECT_EVERY_N_TURNS = 10; // configurable
-
-export default {
-  id: "self-journal",
-  name: "Self Journal",
-  register(api: PenguinsPluginApi) {
-
-    // Inject SELF.md into context before each session
-    api.on("before_agent_start", async (_event, ctx) => {
-      if (!ctx.workspaceDir) return;
-      const selfPath = path.join(ctx.workspaceDir, "memory", "SELF.md");
-      try {
-        const content = await fs.readFile(selfPath, "utf-8");
-        // Memory system will pick this up automatically if it's in the memory dir
-        // Alternatively, inject via api.injectContext() if that API exists
-      } catch {
-        // File doesn't exist yet — that's fine
-      }
-    });
-
-    // After a turn, maybe write a reflection
-    api.on("agent_end", async (event, ctx) => {
-      if (!event.success || !ctx.workspaceDir) return;
-      turnsSinceReflect++;
-      if (turnsSinceReflect < REFLECT_EVERY_N_TURNS) return;
-      turnsSinceReflect = 0;
-
-      const selfPath = path.join(ctx.workspaceDir, "memory", "SELF.md");
-      // Ask the agent to reflect on what it learned about itself
-      // Write the output to selfPath
-      // The memory indexer will pick it up on next sync
-    });
-  },
-};
-```
-
-**Step 2:** Since `SELF.md` lives in `~/.penguins/memory/`, the memory system already
-indexes it as part of normal memory search. No extra wiring needed for recall.
-
-**Step 3:** For the reflection call, use the cron system (Task 5) to schedule a
-weekly `agentTurn` that says:
-> "Review SELF.md and update it with what you've learned about yourself, your preferences,
-> and your patterns in the past week. Be specific and honest."
-
-This is simpler than triggering mid-session because it runs in an isolated context.
-
-### SELF.md format (suggested)
-
-```markdown
-# Self
-
-Last updated: 2026-02-18
-
-## What I know about myself
-- I prefer concise answers when helping with code
-- I tend to ask clarifying questions before large changes
-
-## What I know about the user
-- Prefers TypeScript over JavaScript
-- Works late evenings (UTC-5)
-- Currently building a local AI assistant called Penguins
-
-## What I've been working on
-- Completed rebrand from OpenClaw → Penguins (2026-02-17)
-- Removed iOS/Android/macOS native apps
-```
-
----
-
-## Task 3 — memory:save Tool
-
-**Goal:** The agent can call a tool mid-conversation to deliberately store a memory.
-
-### The pattern already exists — look here first
-
-`extensions/memory-lancedb/index.ts` already has `memory_store` (lines ~354–415):
-
-```typescript
-api.registerTool(
-  {
-    name: "memory_store",
-    description: "Save important information in long-term memory",
-    parameters: Type.Object({
-      text: Type.String({ description: "Information to remember" }),
-      importance: Type.Optional(Type.Number()),  // 0-1, default 0.7
-      category: Type.Optional(Type.Unsafe<MemoryCategory>({
-        type: "string",
-        enum: ["fact", "preference", "event", "relationship", "skill", "context", "other"],
-      })),
-    }),
-    async execute(_toolCallId, params) {
-      const vector = await embeddings.embed(params.text);
-      const entry = await db.store({
-        text: params.text,
-        vector,
-        importance: params.importance ?? 0.7,
-        category: params.category ?? "other",
-      });
-      return {
-        content: [{ type: "text", text: `Stored: "${params.text.slice(0, 100)}..."` }],
-        details: { action: "created", id: entry.id },
-      };
-    },
-  },
-  { name: "memory_store" },
-);
-```
-
-**This tool already exists in the LanceDB extension.** The issue is that it's only
-available when `memory-lancedb` is installed, and it requires the LanceDB backend.
-
-### What to build for the builtin memory system
-
-The builtin memory system (`extensions/memory-core/`) uses file-based markdown memory.
-To add a `memory:save` tool there:
-
-```typescript
-// In extensions/memory-core/index.ts, add:
-api.registerTool(
-  async (ctx) => {
-    const workspaceDir = ctx.config?.workspaceDir ?? process.env.HOME + "/.penguins";
-    const memDir = path.join(workspaceDir, "memory");
-
-    return {
-      name: "memory_save",
-      label: "Save to Memory",
-      description:
-        "Permanently save a piece of information to your long-term memory file. " +
-        "Use for things the user explicitly wants remembered, or that are clearly important.",
-      parameters: Type.Object({
-        content: Type.String({ description: "What to remember" }),
-        category: Type.Optional(
-          Type.Enum({ fact: "fact", preference: "preference", note: "note" })
-        ),
-      }),
-      async execute(_id, params) {
-        const date = new Date().toISOString().split("T")[0];
-        const line = `- [${params.category ?? "note"}] ${params.content} (${date})\n`;
-
-        // Append to MEMORY.md — the memory watcher picks it up automatically
-        const memFile = path.join(memDir, "MEMORY.md");
-        await fs.appendFile(memFile, line, "utf-8");
-
-        return {
-          content: [{ type: "text", text: `Saved to memory: "${params.content}"` }],
-        };
-      },
-    };
-  },
-  { names: ["memory_save"] },
-);
-```
-
-The memory watcher in `src/memory/manager.ts` watches `~/.penguins/memory/*.md`
-and re-indexes on file changes. The write-back loop closes automatically.
-
----
-
-## Task 4 — PWA (Progressive Web App)
-
-**Goal:** The WebChat UI becomes installable on any device from your Cloudflare URL.
-No App Store. Works offline. Push notifications possible.
-
-### Current UI setup
-
-- **Framework:** Lit/TypeScript, no React/Vue
-- **Build:** Vite (config at `ui/vite.config.ts`)
-- **Output:** `dist/control-ui/` — served statically by the gateway
-- **Entry:** `ui/index.html` → `ui/src/main.ts` → `ui/src/ui/app.ts`
-- **Icons already exist:** `ui/public/` has `favicon.svg`, `apple-touch-icon.png`, `favicon-32.png`
-
-### Step 1: Install vite-plugin-pwa
+# Penguins Handoff
+
+Date: 2026-03-08
+
+This file is the resume point for a fresh chat.
+Read this first, then inspect the current worktree.
+
+Truth order for the next chat:
+
+1. `handoff.md`
+2. current git worktree
+3. `TASKS2.md`
+4. older review/planning docs only as historical context
+
+## Locked product decisions
+
+These were explicitly decided during the current cleanup:
+
+- Penguins is now **web + CLI only**.
+- Native apps are out.
+- Public remote access path is **Cloudflare Tunnel + Access**.
+- No public API exposure is desired.
+- No machine-to-machine access is needed.
+- Each user is expected to set up their own Cloudflare tunnel and subdomain.
+- `openclaw` / `clawdock` are not supposed to remain as active user-facing product names.
+- Old integrations are not the long-term direction.
+- If an old integration still exists in code, treat it as legacy debt to remove, not as a supported product surface.
+
+## What was completed before this handoff
+
+### Security + deployment hardening
+
+This landed earlier in the current worktree:
+
+- Privileged HTTP endpoints now require shared-secret auth even when Tailscale identity auth exists:
+  - `POST /tools/invoke`
+  - `POST /v1/chat/completions`
+  - `POST /v1/responses`
+- Added `gateway.auth.tailscaleAllowUsers`.
+- Tailscale Serve startup now requires either:
+  - password auth, or
+  - an explicit Tailscale allowlist.
+- Plugin HTTP registration was moved toward secure-by-default:
+  - routes/handlers carry explicit auth metadata
+  - default is gateway auth
+  - public webhooks must opt in
+- Plugin HTTP routes are blocked under reserved prefixes:
+  - `/tools`
+  - `/v1`
+- Cloudflare Tunnel was added as a first-class deployment path.
+
+Main files in that area:
+
+- `src/gateway/auth.ts`
+- `src/gateway/http-auth-helpers.ts`
+- `src/gateway/server-http.ts`
+- `src/gateway/server-runtime-config.ts`
+- `src/gateway/tools-invoke-http.ts`
+- `src/gateway/server/plugins-http.ts`
+- `src/commands/configure.gateway.ts`
+- `docs/gateway/cloudflare-tunnel.md`
+- `docs/gateway/tailscale.md`
+- `docs/gateway/remote.md`
+
+### Rebrand and repo cleanup already landed
+
+- `README.md` was rewritten as a real getting-started doc.
+- Cloudflare deployment docs were added.
+- `apps/` was removed.
+- empty legacy `packages/` workspace residue was removed
+- `pnpm-workspace.yaml` was reconciled
+- user-facing `openclaw` / `clawdock` shims were removed from primary surfaces
+- stale planning files were marked historical
+
+### Legacy channel / extension cleanup already landed
+
+This is the biggest repo-shape change in the current worktree:
+
+- Deleted the entire `docs/channels/` tree.
+- Deleted legacy CLI docs:
+  - `docs/cli/channels.md`
+  - `docs/cli/devices.md`
+  - `docs/cli/node.md`
+  - `docs/cli/nodes.md`
+  - `docs/cli/pairing.md`
+- Deleted `docs/gateway/pairing.md`.
+- Removed top-level CLI registration for:
+  - `channels`
+  - `pairing`
+  - `node`
+  - `nodes`
+  - `devices`
+- Deleted legacy CLI wrapper files:
+  - `src/cli/channels-cli.ts`
+  - `src/cli/channel-auth.ts`
+  - `src/cli/devices-cli.ts`
+  - `src/cli/node-cli.ts`
+  - `src/cli/nodes-cli.ts`
+  - `src/cli/pairing-cli.ts`
+  - related register files
+- Deleted legacy extension packages:
+  - `extensions/bluebubbles`
+  - `extensions/discord`
+  - `extensions/googlechat`
+  - `extensions/imessage`
+  - `extensions/matrix`
+  - `extensions/msteams`
+  - `extensions/slack`
+  - `extensions/telegram`
+  - `extensions/whatsapp`
+- Deleted many old tests that only existed for those removed surfaces.
+
+### Control UI cleanup that landed in the latest pass
+
+This was the most recent completed work:
+
+- Removed the visible `Channels` tab from the Control UI.
+- Removed the agent-level `Channels` panel.
+- Deleted dead channel-management UI files.
+- Kept the internal `channels.status` snapshot fetch only where other surfaces still depend on it.
+- Changed docs/help copy so users are no longer told to use removed `channels` commands.
+
+Main files changed in this latest pass:
+
+- `ui/src/ui/navigation.ts`
+- `ui/src/ui/app-render.ts`
+- `ui/src/ui/app-settings.ts`
+- `ui/src/ui/app.ts`
+- `ui/src/ui/app-view-state.ts`
+- `ui/src/ui/views/agents.ts`
+- `ui/src/ui/views/overview.ts`
+- `ui/src/ui/views/config.ts`
+- `ui/src/ui/views/config-form.render.ts`
+- `ui/src/ui/controllers/channels.ts`
+- `ui/src/ui/controllers/channels.types.ts`
+- `ui/src/ui/views/agents-panels-status-files.ts`
+- deleted:
+  - `ui/src/ui/app-channels.ts`
+  - `ui/src/ui/views/channels.ts`
+  - all `ui/src/ui/views/channels.*.ts`
+
+Docs / CLI copy changed in this pass:
+
+- `src/commands/agents.commands.list.ts`
+- `docs/gateway/index.md`
+- `docs/gateway/troubleshooting.md`
+- `docs/help/troubleshooting.md`
+- `docs/automation/troubleshooting.md`
+- `docs/help/faq.md`
+- `docs/logging.md`
+- `docs/plugins/zalouser.md`
+
+## Current worktree state
+
+The worktree is intentionally dirty.
+Do not reset it and do not restore deleted legacy files unless the user explicitly asks.
+
+Important current-state facts:
+
+- Many legacy docs are deleted on purpose.
+- Many legacy extension packages are deleted on purpose.
+- Many UI channel-management files are deleted on purpose.
+- There are also unrelated modified files already present in the repo.
+- `docs/gateway/cloudflare-tunnel.md` exists as a new file and is intentional.
+
+### Important unresolved worktree issue
+
+`pnpm-lock.yaml` is stale relative to the deleted extension workspaces.
+
+Evidence:
+
+- `pnpm-lock.yaml` still contains importer entries for:
+  - `extensions/bluebubbles`
+  - `extensions/discord`
+  - `extensions/googlechat`
+  - `extensions/imessage`
+  - `extensions/matrix`
+  - `extensions/msteams`
+  - `extensions/slack`
+  - `extensions/telegram`
+  - `extensions/whatsapp`
+
+Why it is stale:
+
+- an earlier `pnpm install --lockfile-only --ignore-scripts` attempt failed because registry access was blocked in this environment
+- the reported failure was a registry DNS/network failure
+
+This means the next chat should refresh `pnpm-lock.yaml` once network access is available.
+
+## Verification already run
+
+These checks passed in the current worktree:
 
 ```bash
-cd ui
-pnpm add -D vite-plugin-pwa
+git diff --check
+pnpm format:docs:check
+pnpm docs:check-links
+pnpm exec oxfmt --check <targeted files>
 ```
 
-### Step 2: Update vite.config.ts
+Docs link audit result at last run:
 
-```typescript
-// ui/vite.config.ts
-import { defineConfig } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
-import path from "node:path";
+- `checked_internal_links=1211`
+- `broken_links=0`
 
-const here = path.dirname(new URL(import.meta.url).pathname);
-
-export default defineConfig(() => {
-  const envBase = process.env.PENGUINS_CONTROL_UI_BASE_PATH?.trim();
-  const base = envBase ? normalizeBase(envBase) : "./";
-  return {
-    base,
-    publicDir: path.resolve(here, "public"),
-    plugins: [
-      VitePWA({
-        registerType: "autoUpdate",
-        includeAssets: ["favicon.svg", "favicon-32.png", "apple-touch-icon.png"],
-        manifest: {
-          name: "Penguins",
-          short_name: "Penguins",
-          description: "Your personal AI assistant",
-          theme_color: "#000000",
-          background_color: "#000000",
-          display: "standalone",
-          orientation: "portrait",
-          start_url: "/",
-          scope: "/",
-          icons: [
-            { src: "favicon-32.png", sizes: "32x32", type: "image/png" },
-            { src: "apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-            // Add a 512x512 icon for full PWA compliance
-            { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
-          ],
-        },
-        workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
-          // Don't cache API calls
-          navigateFallback: null,
-        },
-      }),
-    ],
-    build: {
-      outDir: path.resolve(here, "../dist/control-ui"),
-      emptyOutDir: true,
-      sourcemap: true,
-    },
-    server: {
-      host: true,
-      port: 5173,
-      strictPort: true,
-    },
-  };
-});
-```
-
-### Step 3: Add 512x512 icon
-
-The PWA spec requires a 512x512 icon for installation. Add `ui/public/icon-512.png`.
-Use the existing penguin/logo artwork, or generate one from `favicon.svg`:
+UI verification that passed:
 
 ```bash
-# If you have sharp installed:
-node -e "require('sharp')('ui/public/favicon.svg').resize(512,512).png().toFile('ui/public/icon-512.png')"
+pnpm --dir ui test -- src/ui/navigation.test.ts src/ui/navigation.browser.test.ts src/ui/focus-mode.browser.test.ts
 ```
 
-### Step 4: Register service worker in main.ts
+Result at last run:
 
-`vite-plugin-pwa` auto-generates the service worker and injects the registration script.
-No manual changes to `main.ts` needed when using `registerType: "autoUpdate"`.
+- 26 UI test files passed
+- 242 UI tests passed
 
-### Step 5: Test
+Important note:
+
+- running the `ui/` browser tests inside the sandbox initially failed with a local listen `EPERM`
+- rerunning with escalation worked
+- if that happens again, it is an environment restriction, not necessarily an app failure
+
+Earlier targeted tests from the previous cleanup pass also passed:
 
 ```bash
-pnpm ui:build
-# Open dist/control-ui/index.html
-# Chrome DevTools → Application → Service Workers → should show registered
-# Chrome → address bar → install icon should appear
+pnpm exec vitest run --config vitest.e2e.config.ts \
+  src/cli/program/register.subclis.e2e.test.ts \
+  src/cli/program.smoke.e2e.test.ts \
+  src/commands/agent.e2e.test.ts \
+  src/commands/configure.wizard.e2e.test.ts
+
+pnpm exec vitest run \
+  src/wizard/onboarding.test.ts \
+  src/plugins/source-display.test.ts
 ```
 
-### Push notifications (bonus, after basic PWA works)
+## What is still not done
 
-Push notifications require a VAPID key pair and a push endpoint on the gateway.
-See: https://web.dev/notifications/ — defer this until after basic PWA is working.
+The biggest remaining work is **backend removal of legacy messaging/runtime surfaces**.
 
----
+### 1. Remove the backend `channels.*` RPC surface
 
-## Task 5 — Memory Compression Job
+This is the next most logical hard cleanup step.
 
-**Goal:** A weekly cron job that finds near-duplicate memories, synthesizes them,
-and removes the redundant ones. Keeps memory lean and useful long-term.
+Still active:
 
-### Cron job system
+- `src/gateway/server-methods/channels.ts`
+- `src/gateway/server-methods.ts`
+- `src/gateway/server-methods-list.ts`
+- `src/gateway/protocol/schema/channels.ts`
+- tests around `channels.status` / `channels.logout`
 
-Jobs are stored persistently and run by `src/cron/service.ts`.
+Still referencing `channels.status` directly:
 
-**Create a job:**
-```typescript
-import { CronService } from "src/cron/service.js";
+- `src/commands/doctor-gateway-health.ts`
+- `src/commands/status.scan.ts`
+- `src/commands/status-all.ts`
+- `src/gateway/server.health.e2e.test.ts`
+- `src/gateway/server.channels.e2e.test.ts`
+- `src/commands/channels/status.ts`
 
-const job = await cronService.add({
-  name: "Memory Compression",
-  description: "Deduplicate and compress long-term memories",
-  enabled: true,
-  notify: false,
-  sessionTarget: { kind: "isolated" },  // isolated session, no user context
-  wakeMode: "next-heartbeat",
-  schedule: { kind: "every", everyMs: 7 * 24 * 60 * 60 * 1000 }, // weekly
-  payload: {
-    kind: "agentTurn",
-    message: `You are running a memory maintenance task.
+If this is removed, the next chat must decide what replaces those health/status paths.
 
-1. Call memory_search with query "similar" to find groups of related memories
-2. For any group of 3+ memories that are clearly about the same topic:
-   a. Call memory_store to save one synthesized, comprehensive fact
-   b. Call memory_forget for each of the originals (use their IDs)
-3. For any memory with importance < 0.3 and age > 90 days, call memory_forget
-4. Report how many memories were merged and deleted.
+### 2. Remove the legacy runtime modules themselves
 
-Be conservative. Only merge when you're confident the memories are truly redundant.`,
-    timeoutSeconds: 120,
-    deliver: false,  // don't send output to any channel
-  },
-  delivery: { mode: "none" },
-});
-```
+Still present:
 
-### Register the job at gateway startup
+- `src/channels`
+- `src/telegram`
+- `src/discord`
+- `src/slack`
+- `src/signal`
+- `src/imessage`
+- `src/pairing`
 
-Find where other startup tasks are registered — look in `src/gateway/boot.ts` or
-`src/gateway/call.ts` for the initialization sequence. Add:
+This is the true remaining legacy backend footprint.
 
-```typescript
-// After gateway initializes, register the compression job if not already present
-const existingJobs = await cronService.list();
-const hasCompressionJob = existingJobs.some(j => j.name === "Memory Compression");
-if (!hasCompressionJob) {
-  await cronService.add(compressionJobDefinition);
-}
-```
+### 3. Decide the new delivery model
 
-### Memory search API (for manual/programmatic use)
+This is the most important product question hidden inside the cleanup.
 
-```typescript
-import { getMemorySearchManager } from "src/memory/search-manager.js";
+Right now the codebase still assumes replies can be delivered to third-party messaging channels.
+If Penguins is really web chat + CLI only, these areas need to be rewritten or removed:
 
-const result = await getMemorySearchManager({
-  cfg,
-  agentId: "compression-agent",
-});
+- `src/cli/deps.ts`
+- `docs/cli/message.md`
+- `docs/gateway/heartbeat.md`
+- `src/infra/outbound/*`
+- `src/commands/message-format.ts`
+- `src/commands/agent-via-gateway.ts`
 
-if (result.ok) {
-  const manager = result.manager;
-  // Search for similar memories
-  const results = await manager.search("duplicate similar redundant", {
-    maxResults: 50,
-    minScore: 0.7,
-  });
-  // results: Array<{ path, startLine, endLine, score, snippet, source, citation }>
-}
-```
+The next chat should not start deleting randomly until this is answered:
 
-### Cosine similarity clustering (for direct LanceDB access)
+- Are replies only supposed to go to:
+  - web chat sessions
+  - control UI
+  - CLI users
+  - node/device surfaces
+  - or some new Penguins-native integration?
 
-If using LanceDB backend, you can query the table directly for vector clustering.
-See `extensions/memory-lancedb/index.ts` — the `db` object has a `table` property
-(LanceDB Table) that supports direct queries:
+### 4. Do the large remaining docs purge
 
-```typescript
-// Get all memories ordered by vector similarity to a centroid
-const allEntries = await db.table.query().toArray();
-// Then cluster by cosine similarity > 0.92 in JS
-```
+The docs are much cleaner than before, but there is still a lot of historical messaging content.
 
----
+Most obvious remaining docs to rewrite or reduce:
 
-## How to Add a New Extension
+- `docs/help/faq.md`
+- `docs/gateway/configuration.md`
+- `docs/gateway/security/index.md`
+- `docs/gateway/health.md`
+- `docs/gateway/network-model.md`
+- `docs/gateway/configuration-examples.md`
+- `docs/cli/message.md`
+- `docs/gateway/heartbeat.md`
 
-For Tasks 2 and 3 (self-journal, memory-save), if building as extensions:
+These still contain many references to:
 
-1. Create `extensions/your-name/`
-2. Add `package.json`:
-```json
-{
-  "name": "@penguins/your-name",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "index.js"
-}
-```
-3. Add `penguins.plugin.json`:
-```json
-{
-  "id": "your-name",
-  "name": "Your Extension Name",
-  "kind": "utility",
-  "entry": "./index.js"
-}
-```
-4. Add `index.ts` implementing the plugin API (see `memory-lancedb/index.ts` for a full example)
-5. The catalog (`src/channels/plugins/catalog.ts`) auto-discovers extensions in `extensions/`
+- WhatsApp
+- Telegram
+- Discord
+- Slack
+- Signal
+- iMessage
+- BlueBubbles
+- `/channels/*` docs links
 
----
+### 5. Clean remaining old helper scripts / install docs
 
-## Key Config Paths
+Still visibly old-integration-oriented:
 
-| What | Where |
-|---|---|
-| Memory config | `~/.penguins/config.json` → `memory.*` |
-| Memory files (indexed) | `~/.penguins/memory/*.md` |
-| Session files (indexed) | `~/.penguins/sessions/` |
-| BOOT.md | `~/.penguins/BOOT.md` or workspace root |
-| SELF.md (proposed) | `~/.penguins/memory/SELF.md` |
-| Gateway state | `~/.penguins/state.json` |
-| Cron jobs | `~/.penguins/cron/jobs.json` |
+- `scripts/shell-helpers/README.md`
+- `scripts/shell-helpers/penguins-docker-helpers.sh`
 
----
+They still talk about WhatsApp setup and similar legacy flows.
 
-## Key Types to Know
+### 6. Reconcile `TASKS2.md`
 
-```typescript
-// Plugin registration
-import type { PenguinsPluginApi } from "penguins/plugin-sdk";
+`TASKS2.md` is helpful, but it is now partially stale again.
 
-// Tool definition
-api.registerTool({ name, description, parameters, execute }, opts)
+Examples:
 
-// Lifecycle hooks
-api.on("agent_end", handler)
-api.on("before_agent_start", handler)
+- it still says `pnpm-workspace.yaml` includes `packages/*`, which has already been fixed
+- it does not yet reflect the latest Control UI channel-surface removal
+- it does not yet reflect the latest docs/help cleanup
 
-// Memory search
-import { getMemorySearchManager } from "src/memory/search-manager.js";
+The next chat should update `TASKS2.md` after the next real deletion pass, not before.
 
-// Cron
-import { CronService } from "src/cron/service.js";
-```
+### 7. Re-evaluate remaining extensions one by one
 
----
+Open extension cleanup items still listed in `TASKS2.md`:
 
-## What NOT to touch
+- `extensions/copilot-proxy`
+- `extensions/feishu`
+- `extensions/irc`
+- `extensions/line`
+- `extensions/lobster`
+- `extensions/mattermost`
+- `extensions/nextcloud-talk`
+- `extensions/nostr`
+- `extensions/signal`
+- `extensions/tlon`
+- `extensions/twitch`
+- `extensions/voice-call`
+- `extensions/zalo`
+- `extensions/zalouser`
 
-- `src/memory/manager.ts` — complex, has many edge cases, avoid unless necessary
-- `src/gateway/auth.ts` — auth is working, don't break it
-- `pnpm-lock.yaml` — auto-generated, never edit manually
-- `dist/` — build output, never edit
+If the rule is "only our new integrations", most of these probably need deletion, not just doc cleanup.
 
----
+### 8. Optional but important: decide whether nodes/devices stay
 
-_Handoff written 2026-02-18. Read WHAT_I_THINK.md for the strategic context._
-_Codebase: /Users/minibrain/Desktop/penguins_
+These are still first-class:
+
+- `src/gateway/server-methods/nodes.ts`
+- `src/gateway/server-methods/devices.ts`
+- `ui/src/ui/views/nodes.ts`
+- `src/infra/node-pairing.ts`
+- `src/infra/device-pairing.ts`
+
+If the product is:
+
+- private Cloudflare-hosted web chat
+- CLI
+- personal use
+
+then nodes/devices may still make sense.
+But they are now one of the largest remaining product-surface areas after channels.
+
+## Recommended next work order
+
+This is the best next sequence from here:
+
+1. Remove backend `channels.status` / `channels.logout` and related CLI/status usage.
+2. Decide and implement the replacement delivery model for `message` / heartbeat / session delivery.
+3. Delete or rewrite the large remaining channel-heavy docs.
+4. Remove old helper script messaging setup flows.
+5. Reconcile `TASKS2.md`.
+6. Refresh `pnpm-lock.yaml` when network access is available.
+7. Then evaluate remaining extensions and optional node/device scope.
+
+## Suggested starting files for the next chat
+
+If the next chat starts the backend removal:
+
+- `src/gateway/server-methods/channels.ts`
+- `src/gateway/server-methods.ts`
+- `src/gateway/server-methods-list.ts`
+- `src/gateway/protocol/schema/channels.ts`
+- `src/commands/status-all.ts`
+- `src/commands/status.scan.ts`
+- `src/commands/doctor-gateway-health.ts`
+- `src/commands/channels/status.ts`
+
+If the next chat starts the docs purge:
+
+- `docs/help/faq.md`
+- `docs/gateway/configuration.md`
+- `docs/gateway/security/index.md`
+- `docs/gateway/health.md`
+- `docs/gateway/network-model.md`
+- `docs/cli/message.md`
+- `docs/gateway/heartbeat.md`
+
+## Constraints / gotchas
+
+- Do not revert unrelated changes.
+- Do not restore deleted legacy docs/extensions/UI files unless explicitly asked.
+- Do not switch branches unless explicitly asked.
+- The current UI no longer exposes channel management; keep that direction.
+- The backend still contains legacy channel runtime, so deleting docs/UI was only the first half.
+- `channelsSnapshot` is still being fetched for remaining internal UI consumers like cron metadata.
+- If removing the backend channel subsystem, watch for cron/status/help flows that still expect channel labels/order.
+- `TASKS2.md` is useful, but this handoff is more current.
+
+## Suggested first prompt for a fresh chat
+
+Use something like:
+
+> Read `handoff.md` and continue the Penguins cleanup from the current worktree. Keep the new web/CLI-only and Cloudflare-first product direction. Start with removing the backend `channels.*` RPC/status surface, then identify what must replace legacy message delivery assumptions before deleting more runtime code.

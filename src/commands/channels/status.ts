@@ -1,4 +1,5 @@
 import type { ChannelAccountSnapshot } from "../../channels/plugins/types.js";
+import type { HealthSummary } from "../health.js";
 import { listChannelPlugins } from "../../channels/plugins/index.js";
 import { buildChannelAccountSnapshot } from "../../channels/plugins/status.js";
 import { formatCliCommand } from "../../cli/command-format.js";
@@ -176,6 +177,33 @@ export function formatGatewayChannelsStatusLines(payload: Record<string, unknown
   return lines;
 }
 
+function buildChannelsStatusPayloadFromHealthSummary(
+  summary: HealthSummary,
+): Record<string, unknown> {
+  const channelAccounts: Record<string, ChannelAccountSnapshot[]> = {};
+  const channelDefaultAccountId: Record<string, string> = {};
+  for (const channelId of summary.channelOrder ?? Object.keys(summary.channels ?? {})) {
+    const entry = summary.channels?.[channelId];
+    const accounts = Object.values(entry?.accounts ?? {}) as ChannelAccountSnapshot[];
+    if (accounts.length > 0) {
+      channelAccounts[channelId] = accounts;
+      channelDefaultAccountId[channelId] =
+        entry?.accountId ??
+        accounts[0]?.accountId ??
+        channelDefaultAccountId[channelId] ??
+        "default";
+    }
+  }
+  return {
+    ts: summary.ts,
+    channelOrder: summary.channelOrder,
+    channelLabels: summary.channelLabels,
+    channels: summary.channels,
+    channelAccounts,
+    channelDefaultAccountId,
+  };
+}
+
 async function formatConfigChannelsStatusLines(
   cfg: PenguinsConfig,
   meta: { path?: string; mode?: "local" | "remote" },
@@ -247,19 +275,20 @@ export async function channelsStatusCommand(
     runtime.log(statusLabel);
   }
   try {
-    const payload = await withProgress(
+    const health = await withProgress(
       {
         label: statusLabel,
         indeterminate: true,
         enabled: opts.json !== true,
       },
       async () =>
-        await callGateway({
-          method: "channels.status",
-          params: { probe: Boolean(opts.probe), timeoutMs },
+        await callGateway<HealthSummary>({
+          method: "health",
+          params: opts.probe ? { probe: true } : undefined,
           timeoutMs,
         }),
     );
+    const payload = buildChannelsStatusPayloadFromHealthSummary(health);
     if (opts.json) {
       runtime.log(JSON.stringify(payload, null, 2));
       return;

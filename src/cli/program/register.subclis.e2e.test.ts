@@ -9,17 +9,17 @@ const { acpAction, registerAcpCli } = vi.hoisted(() => {
   return { acpAction: action, registerAcpCli: register };
 });
 
-const { nodesAction, registerNodesCli } = vi.hoisted(() => {
+const { gatewayAction, registerGatewayCli } = vi.hoisted(() => {
   const action = vi.fn();
   const register = vi.fn((program: Command) => {
-    const nodes = program.command("nodes");
-    nodes.command("list").action(action);
+    const gateway = program.command("gateway");
+    gateway.command("status").action(action);
   });
-  return { nodesAction: action, registerNodesCli: register };
+  return { gatewayAction: action, registerGatewayCli: register };
 });
 
 vi.mock("../acp-cli.js", () => ({ registerAcpCli }));
-vi.mock("../nodes-cli.js", () => ({ registerNodesCli }));
+vi.mock("../gateway-cli.js", () => ({ registerGatewayCli }));
 
 const { registerSubCliByName, registerSubCliCommands } = await import("./register.subclis.js");
 
@@ -32,8 +32,8 @@ describe("registerSubCliCommands", () => {
     delete process.env.PENGUINS_DISABLE_LAZY_SUBCOMMANDS;
     registerAcpCli.mockClear();
     acpAction.mockClear();
-    registerNodesCli.mockClear();
-    nodesAction.mockClear();
+    registerGatewayCli.mockClear();
+    gatewayAction.mockClear();
   });
 
   afterEach(() => {
@@ -66,17 +66,17 @@ describe("registerSubCliCommands", () => {
   });
 
   it("re-parses argv for lazy subcommands", async () => {
-    process.argv = ["node", "penguins", "nodes", "list"];
+    process.argv = ["node", "penguins", "gateway", "status"];
     const program = new Command();
     program.name("penguins");
     registerSubCliCommands(program, process.argv);
 
-    expect(program.commands.map((cmd) => cmd.name())).toEqual(["nodes"]);
+    expect(program.commands.map((cmd) => cmd.name())).toEqual(["gateway"]);
 
-    await program.parseAsync(["nodes", "list"], { from: "user" });
+    await program.parseAsync(["gateway", "status"], { from: "user" });
 
-    expect(registerNodesCli).toHaveBeenCalledTimes(1);
-    expect(nodesAction).toHaveBeenCalledTimes(1);
+    expect(registerGatewayCli).toHaveBeenCalledTimes(1);
+    expect(gatewayAction).toHaveBeenCalledTimes(1);
   });
 
   it("replaces placeholder when registering a subcommand by name", async () => {
@@ -90,7 +90,7 @@ describe("registerSubCliCommands", () => {
     const names = program.commands.map((cmd) => cmd.name());
     expect(names.filter((name) => name === "acp")).toHaveLength(1);
 
-    await program.parseAsync(["node", "penguins", "acp"], { from: "user" });
+    await program.parseAsync(["acp"], { from: "user" });
     expect(registerAcpCli).toHaveBeenCalledTimes(1);
     expect(acpAction).toHaveBeenCalledTimes(1);
   });

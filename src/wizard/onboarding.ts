@@ -258,14 +258,14 @@ export async function runOnboardingWizard(
             : []),
           `Gateway auth: ${formatAuth(quickstartGateway.authMode)}`,
           `Tailscale exposure: ${formatTailscale(quickstartGateway.tailscaleMode)}`,
-          "Direct to chat channels.",
+          "Open in the browser Control UI.",
         ]
       : [
           `Gateway port: ${DEFAULT_GATEWAY_PORT}`,
           "Gateway bind: Loopback (127.0.0.1)",
           "Gateway auth: Token (default)",
           "Tailscale exposure: Off",
-          "Direct to chat channels.",
+          "Open in the browser Control UI.",
         ];
     await prompter.note(quickstartLines.join("\n"), "QuickStart");
   }
@@ -409,25 +409,14 @@ export async function runOnboardingWizard(
   nextConfig = gateway.nextConfig;
   const settings = gateway.settings;
 
-  if (opts.skipChannels ?? opts.skipProviders) {
-    await prompter.note("Skipping channel setup.", "Channels");
-  } else {
-    const { listChannelPlugins } = await import("../channels/plugins/index.js");
-    const { setupChannels } = await import("../commands/onboard-channels.js");
-    const quickstartAllowFromChannels =
-      flow === "quickstart"
-        ? listChannelPlugins()
-            .filter((plugin) => plugin.meta.quickstartAllowFrom)
-            .map((plugin) => plugin.id)
-        : [];
-    nextConfig = await setupChannels(nextConfig, runtime, prompter, {
-      allowSignalInstall: true,
-      forceAllowFromChannels: quickstartAllowFromChannels,
-      skipDmPolicyPrompt: flow === "quickstart",
-      skipConfirm: flow === "quickstart",
-      quickstartDefaults: flow === "quickstart",
-    });
-  }
+  await prompter.note(
+    [
+      "Legacy messaging integrations are no longer part of onboarding.",
+      "Use the browser Control UI after the gateway starts.",
+      "Docs: https://docs.penguins.ai/web/control-ui",
+    ].join("\n"),
+    "Browser access",
+  );
 
   await writeConfigFile(nextConfig);
   const { logConfigUpdated } = await import("../config/logging.js");

@@ -26,6 +26,7 @@ Notes:
 
 - When `gateway.auth.mode="token"`, use `gateway.auth.token` (or `PENGUINS_GATEWAY_TOKEN`).
 - When `gateway.auth.mode="password"`, use `gateway.auth.password` (or `PENGUINS_GATEWAY_PASSWORD`).
+- Tailscale Serve identity headers are intentionally **not** accepted on this endpoint. Even if the Control UI works tokenless over Serve, send `Authorization: Bearer <token-or-password>`.
 - If `gateway.auth.rateLimit` is configured and too many auth failures occur, the endpoint returns `429` with `Retry-After`.
 
 ## Choosing an agent

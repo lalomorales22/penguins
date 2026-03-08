@@ -1972,11 +1972,12 @@ See [Plugins](/tools/plugin).
 - `port`: single multiplexed port for WS + HTTP. Precedence: `--port` > `PENGUINS_GATEWAY_PORT` > `gateway.port` > `18789`.
 - `bind`: `auto`, `loopback` (default), `lan` (`0.0.0.0`), `tailnet` (Tailscale IP only), or `custom`.
 - **Auth**: required by default. Non-loopback binds require a shared token/password. Onboarding wizard generates a token by default.
-- `auth.mode: "trusted-proxy"`: delegate auth to an identity-aware reverse proxy and trust identity headers from `gateway.trustedProxies` (see [Trusted Proxy Auth](/gateway/trusted-proxy-auth)).
-- `auth.allowTailscale`: when `true`, Tailscale Serve identity headers satisfy auth (verified via `tailscale whois`). Defaults to `true` when `tailscale.mode = "serve"`.
+- `auth.mode: "trusted-proxy"`: delegate auth to an identity-aware reverse proxy and trust identity headers from `gateway.trustedProxies` (see [Trusted Proxy Auth](/gateway/trusted-proxy-auth)). This can stay on loopback when the proxy runs on the same host (for example `cloudflared` -> `127.0.0.1`).
+- `auth.allowTailscale`: when `true`, verified Tailscale Serve identity headers can satisfy the Gateway WebSocket / Control UI handshake (via `tailscale whois`). Defaults to `true` when `tailscale.mode = "serve"` and auth mode is not `password` / `trusted-proxy`. It does not replace bearer auth for privileged HTTP endpoints.
+- `auth.tailscaleAllowUsers`: allowlist of Tailscale logins permitted to use Serve identity auth. Required when Serve identity auth is enabled without `auth.mode: "password"`.
 - `auth.rateLimit`: optional failed-auth limiter. Applies per client IP and per auth scope (shared-secret and device-token are tracked independently). Blocked attempts return `429` + `Retry-After`.
   - `auth.rateLimit.exemptLoopback` defaults to `true`; set `false` when you intentionally want localhost traffic rate-limited too (for test setups or strict proxy deployments).
-- `tailscale.mode`: `serve` (tailnet only, loopback bind) or `funnel` (public, requires auth).
+- `tailscale.mode`: `serve` (tailnet only, loopback bind) or `funnel` (public, requires auth). Serve refuses to start if Serve identity auth is enabled but neither `auth.password` nor `auth.tailscaleAllowUsers` is configured.
 - `remote.transport`: `ssh` (default) or `direct` (ws/wss). For `direct`, `remote.url` must be `ws://` or `wss://`.
 - `gateway.remote.token` is for remote CLI calls only; does not enable local gateway auth.
 - `trustedProxies`: reverse proxy IPs that terminate TLS. Only list proxies you control.

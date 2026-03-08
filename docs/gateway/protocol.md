@@ -9,10 +9,9 @@ title: "Gateway Protocol"
 
 # Gateway protocol (WebSocket)
 
-The Gateway WS protocol is the **single control plane + node transport** for
-Penguins. All clients (CLI, web UI, macOS app, iOS/Android nodes, headless
-nodes) connect over WebSocket and declare their **role** + **scope** at
-handshake time.
+The Gateway WS protocol is the **single control plane** for Penguins. Operator
+clients such as the CLI, web UI, and other RPC consumers connect over WebSocket
+and declare their **role** + **scope** at handshake time.
 
 ## Transport
 
@@ -181,7 +180,6 @@ The Gateway treats these as **claims** and enforces server-side allowlists.
 - Clients send `minProtocol` + `maxProtocol`; the server rejects mismatches.
 - Schemas + models are generated from TypeBox definitions:
   - `pnpm protocol:gen`
-  - `pnpm protocol:gen:swift`
   - `pnpm protocol:check`
 
 ## Auth

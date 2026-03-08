@@ -16,8 +16,8 @@
 
 import type { PenguinsPluginApi } from "penguins/plugin-sdk";
 import { Type } from "@sinclair/typebox";
-import fs from "node:fs/promises";
 import fsSync from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -223,6 +223,12 @@ const selfJournalPlugin = {
                     text: `Saved to SELF.md (section: ${label}): "${(params.reflection as string).slice(0, 80)}..."`,
                   },
                 ],
+                details: {
+                  action: "saved",
+                  section,
+                  label,
+                  path: selfPath,
+                },
               };
             } catch (err) {
               return {
@@ -232,6 +238,11 @@ const selfJournalPlugin = {
                     text: `Failed to write reflection: ${String(err)}`,
                   },
                 ],
+                details: {
+                  action: "error",
+                  path: selfPath,
+                  error: String(err),
+                },
                 isError: true,
               };
             }

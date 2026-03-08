@@ -1,206 +1,367 @@
 # Penguins
 
-A self-hosted personal AI assistant gateway. Run one process on your own server or machine and
-reach your AI from WhatsApp, Telegram, Discord, Slack, Google Chat, Teams, Matrix, BlueBubbles —
-or the built-in WebChat interface.
+Penguins is a self-hosted AI gateway with built-in browser chat, a private
+browser Control UI, and a CLI. Run one Gateway process on your machine or
+server, then reach it locally or through a private tunnel such as Cloudflare
+Tunnel + Access, SSH, or Tailscale.
 
----
+Full docs: [docs.penguins.ai](https://docs.penguins.ai)
 
-## What it does
+## What Penguins gives you
 
-- **WebChat** — first-class browser UI, no third-party messaging required
-- **8 messaging channels** — connect the platforms you actually use
-- **Gateway server** — one process, all channels, persistent sessions
-- **AI agent loop** — tool use, multi-agent, memory, session management
-- **Skills** — extend with GitHub, Notion, Obsidian, Apple Notes, and more
-- **CLI** — manage everything from the terminal
+- One always-on Gateway process for browser chat, the Control UI, the CLI, sessions, tools, automations, and HTTP APIs
+- A built-in browser chat and Control UI at `http://127.0.0.1:18789/`
+- Agent tools, memory, skills, multi-agent support, and persistent sessions
+- A single place to manage config, logs, sessions, cron, skills, and health checks
+- Local, Cloudflare Tunnel, SSH-tunneled, Tailscale, and containerized deployment paths
+- Optional APIs, webhooks, nodes, and custom integrations around the core app surfaces
 
----
+## Built-in app surfaces
 
-## Supported channels
+The core Penguins app ships with three built-in surfaces:
 
-| Channel | Status |
-|---|---|
-| WhatsApp | ✅ Supported |
-| Telegram | ✅ Supported |
-| Discord | ✅ Supported |
-| Slack | ✅ Supported |
-| Google Chat | ✅ Supported |
-| Microsoft Teams | ✅ Supported |
-| Matrix | ✅ Supported |
-| BlueBubbles | ✅ Supported |
-| WebChat (built-in) | ✅ Primary surface |
+- Browser chat for day-to-day conversations with your agent
+- Control UI for config, logs, sessions, cron, skills, and operator workflows
+- CLI for setup, scripting, status, and automation tasks
 
----
+Everything else should be treated as an optional integration layer you build on
+top of the Gateway.
 
-## Quick start
+## Fastest way to get Penguins running
+
+This is the shortest path from zero to a working local chat.
 
 ### Requirements
 
-- Node.js ≥ 22.12.0
-- pnpm ≥ 10
-- An Anthropic or OpenAI API key
+- Node.js 22 or newer
+- macOS, Linux, or Windows via WSL2
+- Credentials for at least one model provider
+
+If you already have Node installed, check it with:
+
+```bash
+node --version
+```
 
 ### Install
 
-```bash
-npm install -g penguins
-```
-
-Or run directly:
+Recommended installer:
 
 ```bash
-npx penguins setup
+curl -fsSL https://penguins.ai/install.sh | bash
 ```
 
-### First run
+Windows PowerShell:
+
+```powershell
+iwr -useb https://penguins.ai/install.ps1 | iex
+```
+
+Alternative global install:
 
 ```bash
-penguins setup        # interactive onboarding wizard
-penguins gateway      # start the gateway server
-penguins             # open the TUI / WebChat
+npm install -g penguins@latest
 ```
 
----
+More install methods: [Install guide](https://docs.penguins.ai/install)
 
-## Remote access
-
-To reach your gateway from anywhere without a static IP:
-
-**Cloudflare Tunnel** (free, recommended):
+### Run onboarding
 
 ```bash
-# Install cloudflared, then:
-cloudflared tunnel --url http://localhost:4000
+penguins onboard --install-daemon
 ```
 
-Cloudflare gives you a public HTTPS URL pointing to your local gateway. No port forwarding,
-no VPN, no cost.
+This guided flow sets up:
 
----
+- your config file
+- your workspace
+- gateway auth
+- model/provider auth
+- optional remote access and skills
+- a managed Gateway service
 
-## Supported AI providers
+Wizard details: [Getting started](https://docs.penguins.ai/start/getting-started) and [CLI onboard](https://docs.penguins.ai/cli/onboard)
 
-- Anthropic (Claude)
-- OpenAI (GPT-4, etc.)
-- Ollama (local models)
-- OpenRouter
-- AWS Bedrock
-- Vercel AI Gateway
-- And more — see `penguins models`
+### Check that the Gateway is running
 
----
+```bash
+penguins gateway status
+penguins status
+```
 
-## Skills
+Healthy baseline: the gateway is running and the RPC probe succeeds.
 
-Extend your assistant with built-in skills:
+### Open Penguins
 
-| Skill | What it does |
-|---|---|
-| `github` | Search repos, open issues, read PRs |
-| `notion` | Read and write Notion pages |
-| `obsidian` | Read and search your Obsidian vault |
-| `apple-notes` | Read and create Apple Notes |
-| `apple-reminders` | Manage Apple Reminders |
-| `weather` | Current weather via Open-Meteo |
-| `himalaya` | Read and send email via Himalaya |
-| `1password` | Fetch secrets from 1Password |
-| `nano-pdf` | Read PDFs |
-| `coding-agent` | Launch a sub-agent for coding tasks |
-| `skill-creator` | Create new skills from the chat |
-| `model-usage` | Track API usage and costs |
-| `session-logs` | Browse session history |
-| `health-check` | Check gateway health |
+```bash
+penguins dashboard
+```
 
----
+That opens the browser Control UI. You can also print the URL without launching a browser:
+
+```bash
+penguins dashboard --no-open
+```
+
+Default local URL:
+
+```text
+http://127.0.0.1:18789/
+```
+
+If the Control UI asks for auth, get the current token with:
+
+```bash
+penguins config get gateway.auth.token
+```
+
+Control UI docs: [Dashboard](https://docs.penguins.ai/web/dashboard) and [Control UI](https://docs.penguins.ai/web/control-ui)
+
+## The commands you will use most
+
+| Command                   | What it does                                  |
+| ------------------------- | --------------------------------------------- |
+| `penguins onboard`        | Full guided first-run setup                   |
+| `penguins setup`          | Minimal config and workspace bootstrap        |
+| `penguins configure`      | Re-open the config wizard later               |
+| `penguins gateway`        | Run the Gateway in the foreground             |
+| `penguins gateway status` | Check the Gateway service                     |
+| `penguins dashboard`      | Open the browser Control UI                   |
+| `penguins status`         | Show current gateway/runtime status           |
+| `penguins logs --follow`  | Tail logs                                     |
+| `penguins doctor`         | Diagnose config, auth, and environment issues |
+
+CLI reference: [CLI index](https://docs.penguins.ai/cli)
+
+## Manual local run in the foreground
+
+If you do not want the managed service yet, you can run Penguins directly in one terminal and open
+the UI from another.
+
+### 1. Onboard without relying on the daemon
+
+```bash
+penguins onboard
+```
+
+### 2. Start the Gateway
+
+```bash
+penguins gateway --port 18789
+```
+
+Useful variants:
+
+```bash
+penguins gateway --verbose
+penguins gateway --force
+```
+
+### 3. Verify it
+
+```bash
+penguins status
+penguins gateway status
+penguins logs --follow
+```
+
+### 4. Open the app
+
+```bash
+penguins dashboard
+```
+
+Or open the local URL manually:
+
+```text
+http://127.0.0.1:18789/
+```
+
+Gateway operations guide: [Gateway runbook](https://docs.penguins.ai/gateway)
+
+## How Penguins is laid out
+
+- The Gateway is the always-on service.
+- The browser chat and Control UI talk directly to the Gateway on the same port.
+- The CLI talks to the same Gateway for status, config, and automation tasks.
+- Config lives on the gateway host.
+- Session history and state also live on the gateway host.
+
+The default Gateway port is `18789`.
+
+## Private remote access
+
+Secure default:
+
+- keep the Gateway bound to loopback
+- keep gateway auth enabled
+- expose it through Cloudflare Tunnel + Access, Tailscale Serve, or an SSH tunnel
+
+### Cloudflare Tunnel note
+
+If you want a public HTTPS hostname for the browser UI, use Cloudflare Tunnel +
+Cloudflare Access with `gateway.auth.mode="trusted-proxy"`. The clean same-host
+shape is:
+
+- `gateway.bind: "loopback"`
+- `gateway.trustedProxies: ["127.0.0.1", "::1"]`
+- `gateway.auth.trustedProxy.userHeader: "cf-access-authenticated-user-email"`
+
+Full guide: [Cloudflare Tunnel](https://docs.penguins.ai/gateway/cloudflare-tunnel)
+
+### SSH tunnel example
+
+```bash
+ssh -N -L 18789:127.0.0.1:18789 user@host
+```
+
+Then open:
+
+```text
+http://127.0.0.1:18789/
+```
+
+and authenticate with the gateway token or password.
+
+### Tailscale note
+
+Tailscale Serve can satisfy the Control UI and Gateway WebSocket handshake for allowed users, but
+privileged HTTP endpoints such as `/tools/invoke`, `/v1/chat/completions`, and `/v1/responses`
+still require bearer auth.
+
+Remote docs:
+
+- [Remote access](https://docs.penguins.ai/gateway/remote)
+- [Cloudflare Tunnel](https://docs.penguins.ai/gateway/cloudflare-tunnel)
+- [Tailscale](https://docs.penguins.ai/gateway/tailscale)
+- [Security](https://docs.penguins.ai/gateway/security)
 
 ## Docker
 
-```bash
-docker pull ghcr.io/penguins/penguins:latest
-docker run -p 4000:4000 -v ~/.penguins:/home/node/.penguins ghcr.io/penguins/penguins:latest
-```
+If you want a containerized deployment, the repo includes a Docker setup flow.
 
----
-
-## Configuration
-
-Config lives at `~/.penguins/config.json` by default. Use the interactive wizard:
+From the repo root:
 
 ```bash
-penguins setup
+./docker-setup.sh
 ```
 
-Or edit manually — see `penguins configure --help` for all options.
+That script builds the image, runs onboarding, starts Docker Compose, and generates a gateway token.
 
-**Key env vars:**
-
-| Variable | Description |
-|---|---|
-| `PENGUINS_STATE_DIR` | Override state/data directory (default: `~/.penguins`) |
-| `PENGUINS_CONFIG_PATH` | Override config file path (default: `~/.penguins/penguins.json`) |
-| `PENGUINS_GATEWAY_TOKEN` | Gateway auth token |
-| `PENGUINS_GATEWAY_PASSWORD` | Gateway auth password |
-| `PENGUINS_LOAD_SHELL_ENV` | Load env from login shell (`1` to enable) |
-| `PENGUINS_EMBEDDING_BACKEND` | Force embedding backend: `local` or `openai` |
-
----
-
-## CLI reference
-
-```
-penguins             Start the agent / TUI
-penguins gateway     Start the gateway server
-penguins setup       Interactive onboarding wizard
-penguins configure   Edit configuration
-penguins channels    Manage channel connections
-penguins skills      List and manage skills
-penguins doctor      Diagnose configuration issues
-penguins status      Show gateway status
-penguins logs        View gateway logs
-penguins update      Update to latest version
-penguins --help      Full command list
-```
-
----
-
-## Development
+After startup:
 
 ```bash
-git clone https://github.com/lalopenguin/penguins
+docker compose run --rm penguins-cli dashboard --no-open
+```
+
+Then open the printed URL and paste the token into the Control UI if needed.
+
+Docker guide: [Docker install](https://docs.penguins.ai/install/docker)
+
+## From source
+
+For contributors or anyone running from a local checkout:
+
+```bash
+git clone https://github.com/penguins/penguins.git
 cd penguins
+corepack enable
 pnpm install
-pnpm dev            # run in dev mode
-pnpm build          # build all packages
-pnpm test           # run tests
-pnpm check          # lint + types + format check
+pnpm ui:build
+pnpm build
 ```
 
----
+Notes:
 
-## Migrating from OpenClaw
-
-If you were using the old `openclaw` CLI:
+- `pnpm ui:build` builds the browser Control UI assets from the `ui/` workspace.
+- `pnpm build` builds the CLI, Gateway, plugin SDK, and bundled runtime assets.
+- On a fresh checkout, a quick smoke test is:
 
 ```bash
-# Both commands work — openclaw shows a deprecation warning
-openclaw     # works, warns: use "penguins" instead
-penguins     # preferred
+pnpm penguins --help
 ```
 
-**Env vars:** Rename any `OPENCLAW_*` variables in your shell profile or `.env` files to `PENGUINS_*`:
+Run from source without a global install:
 
 ```bash
-# Old                          New
-OPENCLAW_GATEWAY_TOKEN      → PENGUINS_GATEWAY_TOKEN
-OPENCLAW_GATEWAY_PASSWORD   → PENGUINS_GATEWAY_PASSWORD
-OPENCLAW_STATE_DIR          → PENGUINS_STATE_DIR
-OPENCLAW_CONFIG_PATH        → PENGUINS_CONFIG_PATH
+pnpm penguins --help
+pnpm penguins onboard
+pnpm penguins gateway --port 18789
+pnpm penguins dashboard --no-open
 ```
 
-**Config and state directories** are unchanged — no data migration needed. Your existing `~/.penguins/` directory and config work as-is.
+Or link the CLI globally:
 
----
+```bash
+pnpm link --global
+```
+
+Development commands:
+
+```bash
+pnpm dev
+pnpm ui:build
+pnpm build
+pnpm test
+pnpm check
+pnpm tsgo
+```
+
+Contributor docs: [Install from source](https://docs.penguins.ai/install) and [Development setup](https://docs.penguins.ai/start/setup)
+
+## Config, state, and workspace
+
+Default locations:
+
+- Config: `~/.penguins/penguins.json`
+- State: `~/.penguins/`
+- Workspace: `~/.penguins/workspace`
+
+Useful environment variables:
+
+| Variable                    | What it controls                                 |
+| --------------------------- | ------------------------------------------------ |
+| `PENGUINS_HOME`             | Base home directory for Penguins path resolution |
+| `PENGUINS_STATE_DIR`        | Override mutable state directory                 |
+| `PENGUINS_CONFIG_PATH`      | Override config file path                        |
+| `PENGUINS_GATEWAY_TOKEN`    | Gateway shared token                             |
+| `PENGUINS_GATEWAY_PASSWORD` | Gateway shared password                          |
+
+Configuration docs: [Gateway configuration](https://docs.penguins.ai/gateway/configuration)
+
+## Troubleshooting
+
+Start with these:
+
+```bash
+penguins doctor
+penguins status
+penguins gateway status
+penguins logs --follow
+```
+
+If `penguins` is not found after install, check your Node install and PATH:
+
+- [Node setup](https://docs.penguins.ai/install/node)
+- [Install troubleshooting](https://docs.penguins.ai/install)
+
+If the Control UI says `unauthorized`:
+
+```bash
+penguins config get gateway.auth.token
+```
+
+Then paste that token into the Control UI settings and reconnect.
+
+## Docs worth bookmarking
+
+- [Getting started](https://docs.penguins.ai/start/getting-started)
+- [Install](https://docs.penguins.ai/install)
+- [Gateway runbook](https://docs.penguins.ai/gateway)
+- [Dashboard](https://docs.penguins.ai/web/dashboard)
+- [Remote access](https://docs.penguins.ai/gateway/remote)
+- [Docker](https://docs.penguins.ai/install/docker)
+- [CLI reference](https://docs.penguins.ai/cli)
 
 ## License
 

@@ -1,5 +1,6 @@
 import type { GatewayService } from "../daemon/service.js";
 import type { RuntimeEnv } from "../runtime.js";
+import type { HealthSummary } from "./health.js";
 import { buildWorkspaceSkillStatus } from "../agents/skills-status.js";
 import { formatCliCommand } from "../cli/command-format.js";
 import { withProgress } from "../cli/progress.js";
@@ -11,7 +12,7 @@ import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
 import { normalizeControlUiBasePath } from "../gateway/control-ui-shared.js";
 import { resolveGatewayProbeAuth } from "../gateway/probe-auth.js";
 import { probeGateway } from "../gateway/probe.js";
-import { collectChannelStatusIssues } from "../infra/channels-status-issues.js";
+import { collectHealthChannelIssues } from "../infra/channels-status-issues.js";
 import { resolveOsSummary } from "../infra/os-summary.js";
 import { resolvePenguinsPackageRoot } from "../infra/penguins-root.js";
 import { inspectPortUsage } from "../infra/ports.js";
@@ -197,15 +198,11 @@ export async function statusAllCommand(
         }).catch((err) => ({ error: String(err) }))
       : { error: gatewayProbe?.error ?? "gateway unreachable" };
 
-    const channelsStatus = gatewayReachable
-      ? await callGateway({
-          method: "channels.status",
-          params: { probe: false, timeoutMs: opts?.timeoutMs ?? 10_000 },
-          timeoutMs: Math.min(8000, opts?.timeoutMs ?? 10_000),
-          ...callOverrides,
-        }).catch(() => null)
-      : null;
-    const channelIssues = channelsStatus ? collectChannelStatusIssues(channelsStatus) : [];
+    const channelIssues =
+      gatewayReachable && !("error" in health)
+        ? collectHealthChannelIssues(health as HealthSummary)
+        : [];
+    const channelsStatus = gatewayReachable && !("error" in health);
     progress.tick();
 
     progress.setLabel("Checking local state…");

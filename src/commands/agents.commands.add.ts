@@ -16,17 +16,11 @@ import { defaultRuntime } from "../runtime.js";
 import { resolveUserPath, shortenHomePath } from "../utils.js";
 import { createClackPrompter } from "../wizard/clack-prompter.js";
 import { WizardCancelledError } from "../wizard/prompts.js";
-import {
-  applyAgentBindings,
-  buildChannelBindings,
-  describeBinding,
-  parseBindingSpecs,
-} from "./agents.bindings.js";
+import { applyAgentBindings, describeBinding, parseBindingSpecs } from "./agents.bindings.js";
 import { createQuietRuntime, requireValidConfig } from "./agents.command-shared.js";
 import { applyAgentConfig, findAgentEntryIndex, listAgentEntries } from "./agents.config.js";
 import { promptAuthChoiceGrouped } from "./auth-choice-prompt.js";
 import { applyAuthChoice, warnIfModelConfigLooksOff } from "./auth-choice.js";
-import { setupChannels } from "./onboard-channels.js";
 import { ensureWorkspaceAndSessions } from "./onboard-helpers.js";
 
 type AgentsAddOptions = {
@@ -290,55 +284,14 @@ export async function agentsAddCommand(
       agentDir,
     });
 
-    let selection: ChannelChoice[] = [];
-    const channelAccountIds: Partial<Record<ChannelChoice, string>> = {};
-    nextConfig = await setupChannels(nextConfig, runtime, prompter, {
-      allowSignalInstall: true,
-      onSelection: (value) => {
-        selection = value;
-      },
-      promptAccountIds: true,
-      onAccountId: (channel, accountId) => {
-        channelAccountIds[channel] = accountId;
-      },
-    });
-
-    if (selection.length > 0) {
-      const wantsBindings = await prompter.confirm({
-        message: "Route selected channels to this agent now? (bindings)",
-        initialValue: false,
-      });
-      if (wantsBindings) {
-        const desiredBindings = buildChannelBindings({
-          agentId,
-          selection,
-          config: nextConfig,
-          accountIds: channelAccountIds,
-        });
-        const result = applyAgentBindings(nextConfig, desiredBindings);
-        nextConfig = result.config;
-        if (result.conflicts.length > 0) {
-          await prompter.note(
-            [
-              "Skipped bindings already claimed by another agent:",
-              ...result.conflicts.map(
-                (conflict) =>
-                  `- ${describeBinding(conflict.binding)} (agent=${conflict.existingAgentId})`,
-              ),
-            ].join("\n"),
-            "Routing bindings",
-          );
-        }
-      } else {
-        await prompter.note(
-          [
-            "Routing unchanged. Add bindings when you're ready.",
-            "Docs: https://docs.penguins.ai/concepts/multi-agent",
-          ].join("\n"),
-          "Routing",
-        );
-      }
-    }
+    await prompter.note(
+      [
+        "Legacy messaging/channel bindings are no longer part of agent setup.",
+        "This agent will be available in the browser Control UI once the gateway is running.",
+        "Docs: https://docs.penguins.ai/web/control-ui",
+      ].join("\n"),
+      "Browser access",
+    );
 
     await writeConfigFile(nextConfig);
     logConfigUpdated(runtime);

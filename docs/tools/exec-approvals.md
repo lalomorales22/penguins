@@ -9,13 +9,13 @@ title: "Exec Approvals"
 
 # Exec approvals
 
-Exec approvals are the **companion app / node host guardrail** for letting a sandboxed agent run
+Exec approvals are the **node host guardrail** for letting a sandboxed agent run
 commands on a real host (`gateway` or `node`). Think of it like a safety interlock:
 commands are allowed only when policy + allowlist + (optional) user approval all agree.
 Exec approvals are **in addition** to tool policy and elevated gating (unless elevated is set to `full`, which skips approvals).
 Effective policy is the **stricter** of `tools.exec.*` and approvals defaults; if an approvals field is omitted, the `tools.exec` value is used.
 
-If the companion app UI is **not available**, any request that requires a prompt is
+If the node host UI is **not available**, any request that requires a prompt is
 resolved by the **ask fallback** (default: deny).
 
 ## Where it applies
@@ -23,7 +23,7 @@ resolved by the **ask fallback** (default: deny).
 Exec approvals are enforced locally on the execution host:
 
 - **gateway host** → `penguins` process on the gateway machine
-- **node host** → node runner (macOS companion app or headless node host)
+- **node host** → node runner
 
 macOS split:
 

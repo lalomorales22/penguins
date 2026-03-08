@@ -24,7 +24,6 @@ describe("agent delivery helpers", () => {
       requestedChannel: "last",
       explicitTo: undefined,
       accountId: undefined,
-      wantsDelivery: true,
     });
 
     expect(plan.resolvedChannel).toBe("whatsapp");
@@ -41,7 +40,6 @@ describe("agent delivery helpers", () => {
       requestedChannel: "last",
       explicitTo: undefined,
       accountId: undefined,
-      wantsDelivery: true,
     });
 
     const resolved = resolveAgentOutboundTarget({
@@ -63,7 +61,6 @@ describe("agent delivery helpers", () => {
       requestedChannel: "last",
       explicitTo: "+1555",
       accountId: undefined,
-      wantsDelivery: true,
     });
 
     mocks.resolveOutboundTarget.mockClear();
@@ -76,5 +73,17 @@ describe("agent delivery helpers", () => {
 
     expect(mocks.resolveOutboundTarget).not.toHaveBeenCalled();
     expect(resolved.resolvedTo).toBe("+1555");
+  });
+
+  it("does not fall back to a legacy default delivery channel", () => {
+    const plan = resolveAgentDeliveryPlan({
+      sessionEntry: undefined,
+      requestedChannel: "last",
+      explicitTo: undefined,
+      accountId: undefined,
+    });
+
+    expect(plan.resolvedChannel).toBe("webchat");
+    expect(plan.resolvedTo).toBeUndefined();
   });
 });

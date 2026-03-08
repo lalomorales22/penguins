@@ -75,13 +75,21 @@ describe("control UI routing", () => {
     const app = mountApp("/chat");
     await app.updateComplete;
 
-    const link = app.querySelector<HTMLAnchorElement>('a.nav-item[href="/channels"]');
+    const link = app.querySelector<HTMLAnchorElement>('a.nav-item[href="/overview"]');
     expect(link).not.toBeNull();
     link?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
 
     await app.updateComplete;
-    expect(app.tab).toBe("channels");
-    expect(window.location.pathname).toBe("/channels");
+    expect(app.tab).toBe("overview");
+    expect(window.location.pathname).toBe("/overview");
+  });
+
+  it("maps legacy channels routes to overview", async () => {
+    const app = mountApp("/channels");
+    await app.updateComplete;
+
+    expect(app.tab).toBe("overview");
+    expect(window.location.pathname).toBe("/overview");
   });
 
   it("resets to the main session when opening chat from sidebar navigation", async () => {

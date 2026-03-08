@@ -337,7 +337,7 @@ export const signalOnboardingAdapter: ChannelOnboardingAdapter = {
       [
         'Link device with: signal-cli link -n "Penguins"',
         "Scan QR in Signal → Linked Devices",
-        `Then run: ${formatCliCommand("penguins gateway call channels.status --params '{\"probe\":true}'")}`,
+        `Then run: ${formatCliCommand("penguins gateway call health --params '{\"probe\":true}'")}`,
         `Docs: ${formatDocsLink("/signal", "signal")}`,
       ].join("\n"),
       "Signal next steps",

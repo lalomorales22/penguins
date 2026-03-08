@@ -20,8 +20,11 @@ export const FIELD_HELP: Record<string, string> = {
   "discovery.mdns.mode":
     'mDNS broadcast mode ("minimal" default, "full" includes cliPath/sshPort, "off" disables mDNS).',
   "gateway.auth.token":
-    "Required by default for gateway access (unless using Tailscale Serve identity); required for non-loopback binds.",
-  "gateway.auth.password": "Required for Tailscale funnel.",
+    "Shared token for gateway auth. Recommended for CLI/API access and still required for privileged HTTP APIs.",
+  "gateway.auth.password":
+    "Shared password for gateway auth. Required for Tailscale funnel; recommended for browser-first deployments.",
+  "gateway.auth.tailscaleAllowUsers":
+    "Optional allowlist of Tailscale user logins that may satisfy gateway auth in serve mode.",
   "gateway.controlUi.basePath":
     "Optional URL prefix where the Control UI is served (e.g. /penguins).",
   "gateway.controlUi.root":

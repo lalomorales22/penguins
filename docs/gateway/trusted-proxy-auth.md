@@ -1,8 +1,8 @@
 ---
-summary: "Delegate gateway authentication to a trusted reverse proxy (Pomerium, Caddy, nginx + OAuth)"
+summary: "Delegate gateway authentication to a trusted reverse proxy (Cloudflare Access, Pomerium, Caddy, nginx + OAuth)"
 read_when:
   - Running Penguins behind an identity-aware proxy
-  - Setting up Pomerium, Caddy, or nginx with OAuth in front of Penguins
+  - Setting up Cloudflare Access, Pomerium, Caddy, or nginx with OAuth in front of Penguins
   - Fixing WebSocket 1008 unauthorized errors with reverse proxy setups
 ---
 
@@ -14,6 +14,7 @@ read_when:
 
 Use `trusted-proxy` auth mode when:
 
+- You run Penguins behind **Cloudflare Tunnel + Cloudflare Access**
 - You run Penguins behind an **identity-aware proxy** (Pomerium, Caddy + OAuth, nginx + oauth2-proxy, Traefik + forward auth)
 - Your proxy handles all authentication and passes user identity via headers
 - You're in a Kubernetes or container environment where the proxy is the only path to the Gateway
@@ -24,7 +25,7 @@ Use `trusted-proxy` auth mode when:
 - If your proxy doesn't authenticate users (just a TLS terminator or load balancer)
 - If there's any path to the Gateway that bypasses the proxy (firewall holes, internal network access)
 - If you're unsure whether your proxy correctly strips/overwrites forwarded headers
-- If you only need personal single-user access (consider Tailscale Serve + loopback for simpler setup)
+- If you only need private single-user access (consider Tailscale Serve or SSH for simpler setup)
 
 ## How It Works
 
@@ -39,11 +40,11 @@ Use `trusted-proxy` auth mode when:
 ```json5
 {
   gateway: {
-    // Must bind to network interface (not loopback)
-    bind: "lan",
+    // Loopback is fine when the proxy runs on the same host.
+    bind: "loopback",
 
     // CRITICAL: Only add your proxy's IP(s) here
-    trustedProxies: ["10.0.0.1", "172.17.0.1"],
+    trustedProxies: ["127.0.0.1", "::1"],
 
     auth: {
       mode: "trusted-proxy",
@@ -72,7 +73,39 @@ Use `trusted-proxy` auth mode when:
 | `gateway.auth.trustedProxy.requiredHeaders` | No       | Additional headers that must be present for the request to be trusted       |
 | `gateway.auth.trustedProxy.allowUsers`      | No       | Allowlist of user identities. Empty means allow all authenticated users.    |
 
+`bind: "loopback"` is valid when the trusted proxy runs on the same host. Use
+`lan` or `custom` only when the proxy is elsewhere and still the only path to
+the Gateway.
+
 ## Proxy Setup Examples
+
+### Cloudflare Access
+
+Cloudflare Access passes the authenticated email in
+`cf-access-authenticated-user-email`. When `cloudflared` runs on the same host
+as Penguins, loopback bind is fine and the trusted proxy IP is loopback.
+
+```json5
+{
+  gateway: {
+    bind: "loopback",
+    trustedProxies: ["127.0.0.1", "::1"],
+    auth: {
+      mode: "trusted-proxy",
+      trustedProxy: {
+        userHeader: "cf-access-authenticated-user-email",
+        requiredHeaders: ["cf-access-jwt-assertion", "x-forwarded-proto", "x-forwarded-host"],
+        allowUsers: ["you@example.com"],
+      },
+    },
+  },
+}
+```
+
+If `cloudflared` runs in another container or on another host, trust that proxy
+IP instead of loopback.
+
+Dedicated runbook: [Cloudflare Tunnel](/gateway/cloudflare-tunnel).
 
 ### Pomerium
 
@@ -263,5 +296,6 @@ If you're moving from token auth to trusted-proxy:
 
 - [Security](/gateway/security) — full security guide
 - [Configuration](/gateway/configuration) — config reference
+- [Cloudflare Tunnel](/gateway/cloudflare-tunnel) — public HTTPS hostname with Cloudflare Access
 - [Remote Access](/gateway/remote) — other remote access patterns
 - [Tailscale](/gateway/tailscale) — simpler alternative for tailnet-only access

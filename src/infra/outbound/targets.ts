@@ -128,7 +128,7 @@ export function resolveOutboundTarget(params: {
     return {
       ok: false,
       error: new Error(
-        `Delivering to WebChat is not supported via \`${formatCliCommand("penguins agent")}\`; use WhatsApp/Telegram or run with --deliver=false.`,
+        `Delivering to WebChat is internal-only. Open browser chat or the Control UI for built-in replies, or use \`${formatCliCommand("penguins agent")} --reply-channel <custom-integration> --reply-to <target>\` for external delivery.`,
       ),
     };
   }

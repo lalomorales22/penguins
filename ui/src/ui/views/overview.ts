@@ -1,7 +1,7 @@
 import { html } from "lit";
 import type { GatewayHelloOk } from "../gateway.ts";
 import type { UiSettings } from "../storage.ts";
-import { formatRelativeTimestamp, formatDurationHuman } from "../format.ts";
+import { formatDurationHuman } from "../format.ts";
 import { formatNextRun } from "../presenter.ts";
 
 export type OverviewProps = {
@@ -14,7 +14,6 @@ export type OverviewProps = {
   sessionsCount: number | null;
   cronEnabled: boolean | null;
   cronNext: number | null;
-  lastChannelsRefresh: number | null;
   onSettingsChange: (next: UiSettings) => void;
   onPasswordChange: (next: string) => void;
   onSessionKeyChange: (next: string) => void;
@@ -208,10 +207,8 @@ export function renderOverview(props: OverviewProps) {
             <div class="stat-value">${tick}</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Last Channels Refresh</div>
-            <div class="stat-value">
-              ${props.lastChannelsRefresh ? formatRelativeTimestamp(props.lastChannelsRefresh) : "n/a"}
-            </div>
+            <div class="stat-label">Auth Mode</div>
+            <div class="stat-value">${authMode ?? "n/a"}</div>
           </div>
         </div>
         ${
@@ -223,7 +220,7 @@ export function renderOverview(props: OverviewProps) {
             </div>`
             : html`
                 <div class="callout" style="margin-top: 14px">
-                  Use Channels to link WhatsApp, Telegram, Discord, Signal, or iMessage.
+                  Use Chat for direct runs, Config for safe edits, and Nodes for paired device access.
                 </div>
               `
         }

@@ -1,9 +1,10 @@
+import type { ChannelId } from "../../channels/plugins/types.js";
 import type { GatewayRequestContext, GatewayRequestHandlers } from "./types.js";
 import { resolveSessionAgentId } from "../../agents/agent-scope.js";
-import { getChannelPlugin, normalizeChannelId } from "../../channels/plugins/index.js";
-import { DEFAULT_CHAT_CHANNEL } from "../../channels/registry.js";
+import { getChannelPlugin } from "../../channels/plugins/index.js";
 import { createOutboundSendDeps } from "../../cli/deps.js";
 import { loadConfig } from "../../config/config.js";
+import { resolveMessageChannelSelection } from "../../infra/outbound/channel-selection.js";
 import { deliverOutboundPayloads } from "../../infra/outbound/deliver.js";
 import {
   ensureOutboundSessionEntry,
@@ -12,6 +13,7 @@ import {
 import { normalizeReplyPayloadsForDelivery } from "../../infra/outbound/payloads.js";
 import { resolveOutboundTarget } from "../../infra/outbound/targets.js";
 import { normalizePollInput } from "../../polls.js";
+import { INTERNAL_MESSAGE_CHANNEL, normalizeMessageChannel } from "../../utils/message-channel.js";
 import {
   ErrorCodes,
   errorShape,
@@ -103,34 +105,35 @@ export const sendHandlers: GatewayRequestHandlers = {
       );
       return;
     }
-    const channelInput = typeof request.channel === "string" ? request.channel : undefined;
-    const normalizedChannel = channelInput ? normalizeChannelId(channelInput) : null;
-    if (channelInput && !normalizedChannel) {
-      const normalizedInput = channelInput.trim().toLowerCase();
-      if (normalizedInput === "webchat") {
-        respond(
-          false,
-          undefined,
-          errorShape(
-            ErrorCodes.INVALID_REQUEST,
-            "unsupported channel: webchat (internal-only). Use `chat.send` for WebChat UI messages or choose a deliverable channel.",
-          ),
-        );
-        return;
-      }
+    const channelInput =
+      typeof request.channel === "string" && request.channel.trim().length > 0
+        ? request.channel.trim()
+        : undefined;
+    const normalizedInput = normalizeMessageChannel(channelInput);
+    if (normalizedInput === INTERNAL_MESSAGE_CHANNEL) {
       respond(
         false,
         undefined,
-        errorShape(ErrorCodes.INVALID_REQUEST, `unsupported channel: ${channelInput}`),
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "unsupported channel: webchat (internal-only). Use `chat.send` for WebChat UI messages or choose a custom integration channel.",
+        ),
       );
       return;
     }
-    const channel = normalizedChannel ?? DEFAULT_CHAT_CHANNEL;
-    const accountId =
-      typeof request.accountId === "string" && request.accountId.trim().length
-        ? request.accountId.trim()
-        : undefined;
-    const outboundChannel = channel;
+    const cfg = loadConfig();
+    let channel: ChannelId;
+    try {
+      channel = (
+        await resolveMessageChannelSelection({
+          cfg,
+          channel: channelInput,
+        })
+      ).channel;
+    } catch (err) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, String(err)));
+      return;
+    }
     const plugin = getChannelPlugin(channel);
     if (!plugin) {
       respond(
@@ -140,10 +143,14 @@ export const sendHandlers: GatewayRequestHandlers = {
       );
       return;
     }
+    const accountId =
+      typeof request.accountId === "string" && request.accountId.trim().length
+        ? request.accountId.trim()
+        : undefined;
+    const outboundChannel = channel;
 
     const work = (async (): Promise<InflightResult> => {
       try {
-        const cfg = loadConfig();
         const resolved = resolveOutboundTarget({
           channel: outboundChannel,
           to,
@@ -307,17 +314,35 @@ export const sendHandlers: GatewayRequestHandlers = {
       return;
     }
     const to = request.to.trim();
-    const channelInput = typeof request.channel === "string" ? request.channel : undefined;
-    const normalizedChannel = channelInput ? normalizeChannelId(channelInput) : null;
-    if (channelInput && !normalizedChannel) {
+    const channelInput =
+      typeof request.channel === "string" && request.channel.trim().length > 0
+        ? request.channel.trim()
+        : undefined;
+    const normalizedInput = normalizeMessageChannel(channelInput);
+    if (normalizedInput === INTERNAL_MESSAGE_CHANNEL) {
       respond(
         false,
         undefined,
-        errorShape(ErrorCodes.INVALID_REQUEST, `unsupported poll channel: ${channelInput}`),
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "unsupported poll channel: webchat (internal-only). Use browser chat for built-in polling UX or choose a custom integration channel.",
+        ),
       );
       return;
     }
-    const channel = normalizedChannel ?? DEFAULT_CHAT_CHANNEL;
+    const cfg = loadConfig();
+    let channel: ChannelId;
+    try {
+      channel = (
+        await resolveMessageChannelSelection({
+          cfg,
+          channel: channelInput,
+        })
+      ).channel;
+    } catch (err) {
+      respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, String(err)));
+      return;
+    }
     if (typeof request.durationSeconds === "number" && channel !== "telegram") {
       respond(
         false,
@@ -363,7 +388,6 @@ export const sendHandlers: GatewayRequestHandlers = {
         );
         return;
       }
-      const cfg = loadConfig();
       const resolved = resolveOutboundTarget({
         channel: channel,
         to,

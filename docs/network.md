@@ -1,16 +1,16 @@
 ---
-summary: "Network hub: gateway surfaces, pairing, discovery, and security"
+summary: "Network hub: gateway surfaces, discovery, remote access, and security"
 read_when:
   - You need the network architecture + security overview
-  - You are debugging local vs tailnet access or pairing
+  - You are debugging local vs tailnet or Cloudflare access
   - You want the canonical list of networking docs
 title: "Network"
 ---
 
 # Network hub
 
-This hub links the core docs for how Penguins connects, pairs, and secures
-devices across localhost, LAN, and tailnet.
+This hub links the core docs for how Penguins connects, tunnels, and secures
+operator access across localhost, LAN, and tailnet.
 
 ## Core model
 
@@ -19,18 +19,12 @@ devices across localhost, LAN, and tailnet.
 - [Gateway runbook](/gateway)
 - [Web surfaces + bind modes](/web)
 
-## Pairing + identity
+## Identity + access
 
-- [Pairing overview (DM + nodes)](/channels/pairing)
-- [Gateway-owned node pairing](/gateway/pairing)
-- [Devices CLI (pairing + token rotation)](/cli/devices)
-- [Pairing CLI (DM approvals)](/cli/pairing)
-
-Local trust:
-
-- Local connections (loopback or the gateway host’s own tailnet address) can be
-  auto‑approved for pairing to keep same‑host UX smooth.
-- Non‑local tailnet/LAN clients still require explicit pairing approval.
+- [Gateway security](/gateway/security)
+- [Remote access](/gateway/remote)
+- [Cloudflare Tunnel](/gateway/cloudflare-tunnel)
+- [Trusted proxy auth](/gateway/trusted-proxy-auth)
 
 ## Discovery + transports
 
@@ -38,13 +32,7 @@ Local trust:
 - [Bonjour / mDNS](/gateway/bonjour)
 - [Remote access (SSH)](/gateway/remote)
 - [Tailscale](/gateway/tailscale)
-
-## Nodes + transports
-
-- [Nodes overview](/nodes)
-- [Bridge protocol (legacy nodes)](/gateway/bridge-protocol)
-- [Node runbook: iOS](/platforms/ios)
-- [Node runbook: Android](/platforms/android)
+- [Cloudflare Tunnel](/gateway/cloudflare-tunnel)
 
 ## Security
 

@@ -63,8 +63,11 @@ export type { ChannelConfigSchema, ChannelPlugin } from "../channels/plugins/typ
 export type {
   AnyAgentTool,
   PenguinsPluginApi,
+  PenguinsPluginHttpHandlerOptions,
+  PenguinsPluginHttpRouteOptions,
   PenguinsPluginService,
   PenguinsPluginServiceContext,
+  PluginHttpAuthMode,
   ProviderAuthContext,
   ProviderAuthResult,
 } from "../plugins/types.js";
@@ -78,9 +81,6 @@ export { normalizePluginHttpPath } from "../plugins/http-path.js";
 export { registerPluginHttpRoute } from "../plugins/http-registry.js";
 export { emptyPluginConfigSchema } from "../plugins/config-schema.js";
 export type { PenguinsConfig } from "../config/config.js";
-/** @deprecated Use PenguinsConfig instead */
-/** @deprecated Use PenguinsConfig instead */
-export type { PenguinsConfig as ClawdbotConfig } from "../config/config.js";
 
 export type { FileLockHandle, FileLockOptions } from "./file-lock.js";
 export { acquireFileLock, withFileLock } from "./file-lock.js";

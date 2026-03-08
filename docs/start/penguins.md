@@ -8,7 +8,9 @@ title: "Personal Assistant Setup"
 
 # Building a personal assistant with Penguins
 
-Penguins is a WhatsApp + Telegram + Discord + iMessage gateway for **Pi** agents. Plugins add Mattermost. This guide is the "personal assistant" setup: one dedicated WhatsApp number that behaves like your always-on agent.
+Penguins works best as a **private browser-first assistant**: one Gateway on
+your machine or server, one Control UI in the browser, and optional private
+remote access through Cloudflare Tunnel + Access, SSH, or Tailscale.
 
 ## ⚠️ Safety first
 
@@ -16,56 +18,65 @@ You’re putting an agent in a position to:
 
 - run commands on your machine (depending on your Pi tool setup)
 - read/write files in your workspace
-- send messages back out via WhatsApp/Telegram/Discord/Mattermost (plugin)
 
 Start conservative:
 
-- Always set `channels.whatsapp.allowFrom` (never run open-to-the-world on your personal Mac).
-- Use a dedicated WhatsApp number for the assistant.
+- Keep `gateway.bind="loopback"` unless you fully understand the exposure.
+- Keep gateway auth enabled.
+- Put remote browser access behind [Cloudflare Tunnel](/gateway/cloudflare-tunnel), SSH, or Tailscale instead of binding publicly.
 - Heartbeats now default to every 30 minutes. Disable until you trust the setup by setting `agents.defaults.heartbeat.every: "0m"`.
 
 ## Prerequisites
 
 - Penguins installed and onboarded — see [Getting Started](/start/getting-started) if you haven't done this yet
-- A second phone number (SIM/eSIM/prepaid) for the assistant
+- Credentials for at least one model provider
+- A host where the Gateway will run
+- A private hostname and Cloudflare Tunnel if you want browser access away from the host
 
-## The two-phone setup (recommended)
+## Recommended shape
 
 You want this:
 
 ```mermaid
 flowchart TB
-    A["<b>Your Phone (personal)<br></b><br>Your WhatsApp<br>+1-555-YOU"] -- message --> B["<b>Second Phone (assistant)<br></b><br>Assistant WA<br>+1-555-ASSIST"]
-    B -- linked via QR --> C["<b>Your Mac (penguins)<br></b><br>Pi agent"]
+    A["<b>Your browser<br></b><br>Control UI"] --> B["<b>Cloudflare Access<br></b><br>optional"]
+    B --> C["<b>Cloudflare Tunnel<br></b><br>optional"]
+    C --> D["<b>Gateway host<br></b><br>penguins gateway"]
+    D --> E["<b>Agent workspace<br></b><br>~/.penguins/workspace"]
 ```
 
-If you link your personal WhatsApp to Penguins, every message to you becomes “agent input”. That’s rarely what you want.
+Local-only is even simpler: open `http://127.0.0.1:18789/` directly on the
+gateway host and skip the tunnel.
 
 ## 5-minute quick start
 
-1. Pair WhatsApp Web (shows QR; scan with the assistant phone):
+1. Onboard and install the service:
 
 ```bash
-penguins channels login
+penguins onboard --install-daemon
 ```
 
-2. Start the Gateway (leave it running):
+2. Check the Gateway:
 
 ```bash
-penguins gateway --port 18789
+penguins gateway status
 ```
 
-3. Put a minimal config in `~/.penguins/penguins.json`:
+3. Open the local Control UI:
 
-```json5
-{
-  channels: { whatsapp: { allowFrom: ["+15555550123"] } },
-}
+```bash
+penguins dashboard
 ```
 
-Now message the assistant number from your allowlisted phone.
+4. Add private remote access if you want it:
 
-When onboarding finishes, we auto-open the dashboard and print a clean (non-tokenized) link. If it prompts for auth, paste the token from `gateway.auth.token` into Control UI settings. To reopen later: `penguins dashboard`.
+- [Cloudflare Tunnel](/gateway/cloudflare-tunnel) for private HTTPS
+- [Remote access](/gateway/remote) for SSH or Tailscale patterns
+
+When onboarding finishes, Penguins can auto-open the dashboard and print a
+clean (non-tokenized) link. If the Control UI prompts for auth, paste the token
+from `gateway.auth.token` into Control UI settings. To reopen later, run
+`penguins dashboard`.
 
 ## Give the agent a workspace (AGENTS)
 
@@ -86,8 +97,10 @@ Optional: choose a different workspace with `agents.defaults.workspace` (support
 
 ```json5
 {
-  agent: {
-    workspace: "~/.penguins/workspace",
+  agents: {
+    defaults: {
+      workspace: "~/.penguins/workspace",
+    },
   },
 }
 ```
@@ -96,17 +109,21 @@ If you already ship your own workspace files from a repo, you can disable bootst
 
 ```json5
 {
-  agent: {
-    skipBootstrap: true,
+  agents: {
+    defaults: {
+      skipBootstrap: true,
+    },
   },
 }
 ```
 
 ## The config that turns it into “an assistant”
 
-Penguins defaults to a good assistant setup, but you’ll usually want to tune:
+Penguins defaults to a good browser-first assistant setup, but you’ll usually
+want to tune:
 
 - persona/instructions in `SOUL.md`
+- gateway auth and remote access
 - thinking defaults (if desired)
 - heartbeats (once you trust it)
 
@@ -114,39 +131,31 @@ Example:
 
 ```json5
 {
-  logging: { level: "info" },
-  agent: {
-    model: "anthropic/claude-opus-4-6",
-    workspace: "~/.penguins/workspace",
-    thinkingDefault: "high",
-    timeoutSeconds: 1800,
-    // Start with 0; enable later.
-    heartbeat: { every: "0m" },
-  },
-  channels: {
-    whatsapp: {
-      allowFrom: ["+15555550123"],
-      groups: {
-        "*": { requireMention: true },
+  gateway: {
+    bind: "loopback",
+    trustedProxies: ["127.0.0.1", "::1"],
+    auth: {
+      mode: "trusted-proxy",
+      trustedProxy: {
+        userHeader: "cf-access-authenticated-user-email",
       },
     },
   },
-  routing: {
-    groupChat: {
-      mentionPatterns: ["@penguins", "penguins"],
-    },
-  },
-  session: {
-    scope: "per-sender",
-    resetTriggers: ["/new", "/reset"],
-    reset: {
-      mode: "daily",
-      atHour: 4,
-      idleMinutes: 10080,
+  agents: {
+    defaults: {
+      model: "anthropic/claude-opus-4-6",
+      workspace: "~/.penguins/workspace",
+      thinkingDefault: "high",
+      timeoutSeconds: 1800,
+      heartbeat: { every: "0m" },
     },
   },
 }
 ```
+
+If you are not using Cloudflare Access, keep `gateway.auth.mode` on token or
+password auth instead. The safest baseline is still: loopback bind plus strong
+gateway auth.
 
 ## Sessions and memory
 
@@ -168,35 +177,20 @@ Set `agents.defaults.heartbeat.every: "0m"` to disable.
 
 ```json5
 {
-  agent: {
-    heartbeat: { every: "30m" },
+  agents: {
+    defaults: {
+      heartbeat: { every: "30m" },
+    },
   },
 }
 ```
-
-## Media in and out
-
-Inbound attachments (images/audio/docs) can be surfaced to your command via templates:
-
-- `{{MediaPath}}` (local temp file path)
-- `{{MediaUrl}}` (pseudo-URL)
-- `{{Transcript}}` (if audio transcription is enabled)
-
-Outbound attachments from the agent: include `MEDIA:<path-or-url>` on its own line (no spaces). Example:
-
-```
-Here’s the screenshot.
-MEDIA:https://example.com/screenshot.png
-```
-
-Penguins extracts these and sends them as media alongside the text.
 
 ## Operations checklist
 
 ```bash
 penguins status          # local status (creds, sessions, queued events)
 penguins status --all    # full diagnosis (read-only, pasteable)
-penguins status --deep   # adds gateway health probes (Telegram + Discord)
+penguins status --deep   # adds gateway health probes
 penguins health --json   # gateway health snapshot (WS)
 ```
 
@@ -204,12 +198,11 @@ Logs live under `/tmp/penguins/` (default: `penguins-YYYY-MM-DD.log`).
 
 ## Next steps
 
-- WebChat: [WebChat](/web/webchat)
+- Dashboard: [Dashboard](/web/dashboard)
+- Control UI: [Control UI](/web/control-ui)
+- Private HTTPS: [Cloudflare Tunnel](/gateway/cloudflare-tunnel)
 - Gateway ops: [Gateway runbook](/gateway)
 - Cron + wakeups: [Cron jobs](/automation/cron-jobs)
-- macOS menu bar companion: [Penguins macOS app](/platforms/macos)
-- iOS node app: [iOS app](/platforms/ios)
-- Android node app: [Android app](/platforms/android)
 - Windows status: [Windows (WSL2)](/platforms/windows)
-- Linux status: [Linux app](/platforms/linux)
+- Linux status: [Linux](/platforms/linux)
 - Security: [Security](/gateway/security)

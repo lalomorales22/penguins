@@ -268,7 +268,6 @@ const SECTIONS: Array<{ key: string; label: string }> = [
   { key: "update", label: "Updates" },
   { key: "agents", label: "Agents" },
   { key: "auth", label: "Authentication" },
-  { key: "channels", label: "Channels" },
   { key: "messages", label: "Messages" },
   { key: "commands", label: "Commands" },
   { key: "hooks", label: "Hooks" },

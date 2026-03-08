@@ -37,8 +37,6 @@ export default defineConfig({
     setupFiles: ["test/setup.ts"],
     exclude: [
       "dist/**",
-      "apps/macos/**",
-      "apps/macos/.build/**",
       "**/node_modules/**",
       "**/vendor/**",
       "dist/Penguins.app/**",
@@ -58,12 +56,11 @@ export default defineConfig({
         statements: 70,
       },
       // Anchor to repo-root `src/` only. Without this, coverage globs can
-      // unintentionally match nested `*/src/**` folders (extensions, apps, etc).
+      // unintentionally match nested `*/src/**` folders (extensions, ui, etc).
       include: ["./src/**/*.ts"],
       exclude: [
-        // Never count workspace packages/apps toward core coverage thresholds.
+        // Never count workspace packages toward core coverage thresholds.
         "extensions/**",
-        "apps/**",
         "ui/**",
         "test/**",
         "src/**/*.test.ts",

@@ -13,13 +13,17 @@ For a complete map of the docs, see [Docs hubs](/start/hubs).
 ## Start here
 
 - [Docs hubs (all pages linked)](/start/hubs)
+- [Getting Started](/start/getting-started)
+- [Onboarding Wizard](/start/wizard)
+- [Setup](/start/setup)
+- [Dashboard](/web/dashboard)
+- [Control UI](/web/control-ui)
+- [Cloudflare Tunnel](/gateway/cloudflare-tunnel)
+- [Remote access](/gateway/remote)
 - [Help](/help)
 - [Configuration](/gateway/configuration)
 - [Configuration examples](/gateway/configuration-examples)
-- [Slash commands](/tools/slash-commands)
-- [Multi-agent routing](/concepts/multi-agent)
 - [Updating and rollback](/install/updating)
-- [Pairing (DM and nodes)](/channels/pairing)
 - [Nix mode](/install/nix)
 - [Penguins assistant setup](/start/penguins)
 - [Skills](/tools/skills)
@@ -27,32 +31,17 @@ For a complete map of the docs, see [Docs hubs](/start/hubs).
 - [Workspace templates](/reference/templates/AGENTS)
 - [RPC adapters](/reference/rpc)
 - [Gateway runbook](/gateway)
-- [Nodes (iOS and Android)](/nodes)
 - [Web surfaces (Control UI)](/web)
-- [Discovery and transports](/gateway/discovery)
-- [Remote access](/gateway/remote)
 
-## Providers and UX
+## Runtime and deployment
 
-- [WebChat](/web/webchat)
 - [Control UI (browser)](/web/control-ui)
-- [Telegram](/channels/telegram)
-- [Discord](/channels/discord)
-- [Mattermost (plugin)](/channels/mattermost)
-- [BlueBubbles (iMessage)](/channels/bluebubbles)
-- [iMessage (legacy)](/channels/imessage)
-- [Groups](/channels/groups)
-- [WhatsApp group messages](/channels/group-messages)
-- [Media images](/nodes/images)
-- [Media audio](/nodes/audio)
-
-## Companion apps
-
-- [macOS app](/platforms/macos)
-- [iOS app](/platforms/ios)
-- [Android app](/platforms/android)
+- [Gateway security](/gateway/security)
+- [Platforms overview](/platforms)
 - [Windows (WSL2)](/platforms/windows)
-- [Linux app](/platforms/linux)
+- [Linux](/platforms/linux)
+- [Raspberry Pi](/platforms/raspberry-pi)
+- [Docker](/install/docker)
 
 ## Operations and safety
 

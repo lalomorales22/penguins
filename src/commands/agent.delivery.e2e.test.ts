@@ -259,6 +259,36 @@ describe("deliverAgentCommandResult", () => {
     );
   });
 
+  it("does not attempt external delivery when no external route exists", async () => {
+    const cfg = {} as PenguinsConfig;
+    const deps = {} as CliDeps;
+    const runtime = {
+      log: vi.fn(),
+      error: vi.fn(),
+    } as unknown as RuntimeEnv;
+    const result = {
+      payloads: [{ text: "hi" }],
+      meta: {},
+    };
+
+    const { deliverAgentCommandResult } = await import("./agent/delivery.js");
+    await deliverAgentCommandResult({
+      cfg,
+      deps,
+      runtime,
+      opts: {
+        message: "hello",
+        deliver: true,
+      },
+      sessionEntry: undefined,
+      result,
+      payloads: result.payloads,
+    });
+
+    expect(mocks.deliverOutboundPayloads).not.toHaveBeenCalled();
+    expect(mocks.resolveOutboundTarget).not.toHaveBeenCalled();
+  });
+
   it("prefixes nested agent outputs with context", async () => {
     const cfg = {} as PenguinsConfig;
     const deps = {} as CliDeps;

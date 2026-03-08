@@ -112,6 +112,11 @@ export type GatewayAuthConfig = {
   password?: string;
   /** Allow Tailscale identity headers when serve mode is enabled. */
   allowTailscale?: boolean;
+  /**
+   * Optional allowlist of Tailscale user logins that may satisfy gateway auth.
+   * If omitted, Tailscale identity auth is broad; prefer setting this when using serve mode.
+   */
+  tailscaleAllowUsers?: string[];
   /** Rate-limit configuration for failed authentication attempts. */
   rateLimit?: GatewayAuthRateLimitConfig;
   /**

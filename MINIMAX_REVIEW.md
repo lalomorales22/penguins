@@ -1,3 +1,8 @@
+# Historical Rebrand Review
+
+> This file is a stale review snapshot from February 2026.
+> Use `TASKS2.md` for the current rebrand cleanup status.
+
 # Penguins Technical Review - Rebrand Analysis
 
 **Date:** February 21, 2026  
@@ -68,6 +73,7 @@ The following files reference a non-existent `node-host` module:
 - `src/cli/node-cli/register.ts:2-3` - imports `loadNodeHostConfig` and `runNodeHost` from `../../node-host/`
 
 **Status:** FIXED - Created stub modules:
+
 - `src/node-host/config.ts` - provides `loadNodeHostConfig` function
 - `src/node-host/runner.ts` - provides `runNodeHost` function (throws error - needs implementation)
 
@@ -96,6 +102,7 @@ The LINE channel was deleted (extensions/line) but type definitions remained:
 The following issues were found and fixed during this review:
 
 ### Rebrand-Related Fixes:
+
 1. **Fixed** syntax error in `src/plugin-sdk/index.ts:82` (comment in export)
 2. **Fixed** circular exports in `src/infra/penguins-root.ts`
 3. **Fixed** circular exports in `src/infra/tmp-penguins-dir.ts`
@@ -104,6 +111,7 @@ The following issues were found and fixed during this review:
 6. **Fixed** import path in `src/agents/pi-embedded-runner/compaction-safety-timeout.ts`
 
 ### Pre-existing Bugs Fixed:
+
 7. **Fixed** created stub `src/node-host/config.ts` and `src/node-host/runner.ts` for missing module
 8. **Fixed** removed dead LINE type definitions from `src/plugins/runtime/types.ts`
 9. **Fixed** removed LINE test from `src/channels/plugins/plugins-core.test.ts`
@@ -134,6 +142,7 @@ There are 18+ test files in `src/agents/` that still use "openclaw" in their fil
 The plugin SDK import paths may still reference `openclaw/plugin-sdk` in some extensions.
 
 **Location:** `tasks.md` line 118-120
+
 ```
 - [ ] Update plugin SDK import paths in all extensions
 - [ ] Update `openclaw/plugin-sdk` → `penguins/plugin-sdk`
@@ -159,6 +168,7 @@ The plugin SDK import paths may still reference `openclaw/plugin-sdk` in some ex
 ## Completed Successfully ✅
 
 ### Core Rebrand
+
 - ✅ Package name changed to `penguins`
 - ✅ CLI responds to `penguins` command
 - ✅ `openclaw` alias works with deprecation warning
@@ -166,31 +176,37 @@ The plugin SDK import paths may still reference `openclaw/plugin-sdk` in some ex
 - ✅ Config filename now `penguins.json`
 
 ### Extensions/Plugins
+
 - ✅ All 36+ extensions updated with `penguins.plugin.json`
 - ✅ All extension package names changed from `@openclaw/*` to `@penguins/*`
 - ✅ All extension `package.json` files updated
 
 ### Mobile Apps
+
 - ✅ iOS bundle ID: `ai.openclaw.ios` → `ai.penguins.ios`
 - ✅ Android package: `ai.openclaw.android` → `ai.penguins.android`
 - ✅ macOS bundle ID: `ai.openclaw.mac` → `ai.penguins.mac`
 - ✅ Bonjour service: `_openclaw-gw._tcp` → `_penguins-gw._tcp`
 
 ### Documentation
+
 - ✅ All docs updated (0 openclaw references remaining)
 - ✅ README fully updated
 - ✅ Appcast.xml updated
 
 ### Environment Variables
+
 - ✅ Backward compatibility for `OPENCLAW_*` env vars (intentional - documented in README)
 - ✅ `OPENCLAW_PLUGIN_CATALOG_PATHS` → `PENGUINS_PLUGIN_CATALOG_PATHS` (with fallback)
 - ✅ Shell completion scripts updated
 
 ### Docker/Infra
+
 - ✅ Fly.toml updated
 - ✅ All shell scripts renamed (no openclaw references in scripts/)
 
 ### URLs (Internal Code)
+
 - ✅ All internal URLs updated to `penguins.ai`, `docs.penguins.ai`
 
 ---
@@ -199,15 +215,15 @@ The plugin SDK import paths may still reference `openclaw/plugin-sdk` in some ex
 
 The following are **intentionally kept** for backward compatibility:
 
-| Legacy Name | Purpose |
-|-------------|---------|
-| `openclaw` CLI command | Shows deprecation warning, redirects to `penguins` |
-| `clawdbot` CLI command | Shows deprecation warning, redirects to `penguins` |
-| `OPENCLAW_GATEWAY_TOKEN` | Falls back to `PENGUINS_GATEWAY_TOKEN` |
-| `OPENCLAW_GATEWAY_PASSWORD` | Falls back to `PENGUINS_GATEWAY_PASSWORD` |
-| `OPENCLAW_STATE_DIR` | Falls back to `PENGUINS_STATE_DIR` |
-| `OPENCLAW_CONFIG_PATH` | Falls back to `PENGUINS_CONFIG_PATH` |
-| `OPENCLAW_PLUGIN_CATALOG_PATHS` | Falls back to `PENGUINS_PLUGIN_CATALOG_PATHS` |
+| Legacy Name                     | Purpose                                            |
+| ------------------------------- | -------------------------------------------------- |
+| `openclaw` CLI command          | Shows deprecation warning, redirects to `penguins` |
+| `clawdbot` CLI command          | Shows deprecation warning, redirects to `penguins` |
+| `OPENCLAW_GATEWAY_TOKEN`        | Falls back to `PENGUINS_GATEWAY_TOKEN`             |
+| `OPENCLAW_GATEWAY_PASSWORD`     | Falls back to `PENGUINS_GATEWAY_PASSWORD`          |
+| `OPENCLAW_STATE_DIR`            | Falls back to `PENGUINS_STATE_DIR`                 |
+| `OPENCLAW_CONFIG_PATH`          | Falls back to `PENGUINS_CONFIG_PATH`               |
+| `OPENCLAW_PLUGIN_CATALOG_PATHS` | Falls back to `PENGUINS_PLUGIN_CATALOG_PATHS`      |
 
 ---
 
@@ -226,18 +242,22 @@ From `tasks.md`, the following major items remain incomplete:
 ## Recommendations
 
 ### Immediate Action Required
+
 1. **Fix the syntax error in `src/plugin-sdk/index.ts:82`** - This blocks the build completely
 
 ### High Priority
+
 2. Rename test files in `src/agents/openclaw-*.ts` to `penguins-*.ts`
 3. Verify plugin SDK import paths work across all extensions
 4. Complete the shell completion path updates
 
 ### Medium Priority
+
 5. Complete the macOS icon rename (design team)
 6. Verify the npm packages are published correctly
 
 ### Low Priority (Future)
+
 7. Monitor for user migration issues
 8. Plan removal of backward compatibility (when ready)
 

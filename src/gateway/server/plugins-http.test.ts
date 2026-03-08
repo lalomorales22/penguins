@@ -39,8 +39,8 @@ describe("createGatewayPluginRequestHandler", () => {
     const handler = createGatewayPluginRequestHandler({
       registry: createTestRegistry({
         httpHandlers: [
-          { pluginId: "first", handler: first, source: "first" },
-          { pluginId: "second", handler: second, source: "second" },
+          { pluginId: "first", handler: first, source: "first", auth: "public" },
+          { pluginId: "second", handler: second, source: "second", auth: "public" },
         ],
       }),
       log: { warn: vi.fn() } as unknown as Parameters<
@@ -68,9 +68,12 @@ describe("createGatewayPluginRequestHandler", () => {
             path: "/demo",
             handler: routeHandler,
             source: "route",
+            auth: "gateway",
           },
         ],
-        httpHandlers: [{ pluginId: "fallback", handler: fallback, source: "fallback" }],
+        httpHandlers: [
+          { pluginId: "fallback", handler: fallback, source: "fallback", auth: "public" },
+        ],
       }),
       log: { warn: vi.fn() } as unknown as Parameters<
         typeof createGatewayPluginRequestHandler
@@ -78,7 +81,9 @@ describe("createGatewayPluginRequestHandler", () => {
     });
 
     const { res } = makeResponse();
-    const handled = await handler({ url: "/demo" } as IncomingMessage, res);
+    const handled = await handler({ url: "/demo" } as IncomingMessage, res, {
+      authorizeGatewayRequest: async () => true,
+    });
     expect(handled).toBe(true);
     expect(routeHandler).toHaveBeenCalledTimes(1);
     expect(fallback).not.toHaveBeenCalled();
@@ -97,6 +102,7 @@ describe("createGatewayPluginRequestHandler", () => {
               throw new Error("boom");
             },
             source: "boom",
+            auth: "public",
           },
         ],
       }),
@@ -110,5 +116,61 @@ describe("createGatewayPluginRequestHandler", () => {
     expect(res.statusCode).toBe(500);
     expect(setHeader).toHaveBeenCalledWith("Content-Type", "text/plain; charset=utf-8");
     expect(end).toHaveBeenCalledWith("Internal Server Error");
+  });
+
+  it("requires auth for protected routes and handlers while allowing explicit public ones", async () => {
+    const authorizeGatewayRequest = vi.fn(async () => false);
+    const protectedHandler = vi.fn(async () => true);
+    const publicHandler = vi.fn(async () => true);
+    const handler = createGatewayPluginRequestHandler({
+      registry: createTestRegistry({
+        httpRoutes: [
+          {
+            pluginId: "private-route",
+            path: "/private",
+            handler: async (_req, res) => {
+              res.statusCode = 204;
+            },
+            source: "private-route",
+            auth: "gateway",
+          },
+        ],
+        httpHandlers: [
+          {
+            pluginId: "public-handler",
+            handler: publicHandler,
+            source: "public-handler",
+            auth: "public",
+            paths: ["/public"],
+          },
+          {
+            pluginId: "private-handler",
+            handler: protectedHandler,
+            source: "private-handler",
+            auth: "gateway",
+            paths: ["/private-handler"],
+          },
+        ],
+      }),
+      log: { warn: vi.fn() } as unknown as Parameters<
+        typeof createGatewayPluginRequestHandler
+      >[0]["log"],
+    });
+
+    const publicRes = makeResponse();
+    const publicHandled = await handler({ url: "/public" } as IncomingMessage, publicRes.res, {
+      authorizeGatewayRequest,
+    });
+    expect(publicHandled).toBe(true);
+    expect(publicHandler).toHaveBeenCalledTimes(1);
+    expect(authorizeGatewayRequest).not.toHaveBeenCalled();
+
+    const privateRes = makeResponse();
+    const privateHandled = await handler({ url: "/private" } as IncomingMessage, privateRes.res, {
+      authorizeGatewayRequest,
+    });
+    expect(privateHandled).toBe(true);
+    expect(authorizeGatewayRequest).toHaveBeenCalledTimes(1);
+    expect(protectedHandler).not.toHaveBeenCalled();
   });
 });

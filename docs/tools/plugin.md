@@ -40,15 +40,12 @@ See [Voice Call](/plugins/voice-call) for a concrete example plugin.
 
 ## Available plugins (official)
 
-- Microsoft Teams is plugin-only as of 2026.1.15; install `@penguins/msteams` if you use Teams.
 - Memory (Core) — bundled memory search plugin (enabled by default via `plugins.slots.memory`)
 - Memory (LanceDB) — bundled long-term memory plugin (auto-recall/capture; set `plugins.slots.memory = "memory-lancedb"`)
 - [Voice Call](/plugins/voice-call) — `@penguins/voice-call`
 - [Zalo Personal](/plugins/zalouser) — `@penguins/zalouser`
-- [Matrix](/channels/matrix) — `@penguins/matrix`
 - [Nostr](/channels/nostr) — `@penguins/nostr`
 - [Zalo](/channels/zalo) — `@penguins/zalo`
-- [Microsoft Teams](/channels/msteams) — `@penguins/msteams`
 - Google Antigravity OAuth (provider auth) — bundled as `google-antigravity-auth` (disabled by default)
 - Gemini CLI OAuth (provider auth) — bundled as `google-gemini-cli-auth` (disabled by default)
 - Qwen OAuth (provider auth) — bundled as `qwen-portal-auth` (disabled by default)
@@ -387,9 +384,9 @@ Notes:
 
 ### Register a messaging channel
 
-Plugins can register **channel plugins** that behave like built‑in channels
-(WhatsApp, Telegram, etc.). Channel config lives under `channels.<id>` and is
-validated by your channel plugin code.
+Plugins can register **channel-style integrations**. These are now entirely
+plugin-defined rather than treated as part of the supported core product.
+Channel config lives under `channels.<id>` and is validated by your plugin code.
 
 ```ts
 const myChannel = {

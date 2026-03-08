@@ -30,7 +30,7 @@ describe("resolveGatewayRuntimeConfig", () => {
       expect(result.bindHost).toBe("0.0.0.0");
     });
 
-    it("should reject loopback binding with trusted-proxy auth mode", async () => {
+    it("should allow loopback binding with trusted-proxy auth mode", async () => {
       const cfg = {
         gateway: {
           bind: "loopback" as const,
@@ -44,12 +44,14 @@ describe("resolveGatewayRuntimeConfig", () => {
         },
       };
 
-      await expect(
-        resolveGatewayRuntimeConfig({
-          cfg,
-          port: 18789,
-        }),
-      ).rejects.toThrow("gateway auth mode=trusted-proxy makes no sense with bind=loopback");
+      const result = await resolveGatewayRuntimeConfig({
+        cfg,
+        port: 18789,
+        host: "127.0.0.1",
+      });
+
+      expect(result.authMode).toBe("trusted-proxy");
+      expect(result.bindHost).toBe("127.0.0.1");
     });
 
     it("should reject trusted-proxy without trustedProxies configured", async () => {
@@ -114,6 +116,57 @@ describe("resolveGatewayRuntimeConfig", () => {
 
       expect(result.authMode).toBe("token");
       expect(result.bindHost).toBe("0.0.0.0");
+    });
+  });
+
+  describe("tailscale serve auth guard", () => {
+    it("should reject serve mode without password or tailscale allowlist", async () => {
+      const cfg = {
+        gateway: {
+          bind: "loopback" as const,
+          auth: {
+            mode: "token" as const,
+            token: "test-token-123",
+          },
+          tailscale: {
+            mode: "serve" as const,
+          },
+        },
+      };
+
+      await expect(
+        resolveGatewayRuntimeConfig({
+          cfg,
+          port: 18789,
+        }),
+      ).rejects.toThrow(
+        "tailscale serve requires gateway.auth.password or gateway.auth.tailscaleAllowUsers",
+      );
+    });
+
+    it("should allow serve mode with a tailscale allowlist", async () => {
+      const cfg = {
+        gateway: {
+          bind: "loopback" as const,
+          auth: {
+            mode: "token" as const,
+            token: "test-token-123",
+            tailscaleAllowUsers: ["peter@example.com"],
+          },
+          tailscale: {
+            mode: "serve" as const,
+          },
+        },
+      };
+
+      const result = await resolveGatewayRuntimeConfig({
+        cfg,
+        port: 18789,
+        host: "127.0.0.1",
+      });
+
+      expect(result.authMode).toBe("token");
+      expect(result.resolvedAuth.tailscaleAllowUsers).toEqual(["peter@example.com"]);
     });
   });
 });

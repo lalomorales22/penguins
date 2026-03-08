@@ -26,6 +26,7 @@ export type ResolvedGatewayAuth = {
   token?: string;
   password?: string;
   allowTailscale: boolean;
+  tailscaleAllowUsers?: string[];
   trustedProxy?: GatewayTrustedProxyConfig;
 };
 
@@ -55,6 +56,14 @@ type TailscaleWhoisLookup = (ip: string) => Promise<TailscaleWhoisIdentity | nul
 
 function normalizeLogin(login: string): string {
   return login.trim().toLowerCase();
+}
+
+function normalizeTailscaleAllowUsers(values: string[] | undefined): string[] | undefined {
+  if (!Array.isArray(values)) {
+    return undefined;
+  }
+  const normalized = values.map(normalizeLogin).filter(Boolean);
+  return normalized.length > 0 ? Array.from(new Set(normalized)) : undefined;
 }
 
 function headerValue(value: string | string[] | undefined): string | undefined {
@@ -186,6 +195,7 @@ export function resolveGatewayAuth(params: {
   const token = authConfig.token ?? env.PENGUINS_GATEWAY_TOKEN ?? undefined;
   const password = authConfig.password ?? env.PENGUINS_GATEWAY_PASSWORD ?? undefined;
   const trustedProxy = authConfig.trustedProxy;
+  const tailscaleAllowUsers = normalizeTailscaleAllowUsers(authConfig.tailscaleAllowUsers);
 
   let mode: ResolvedGatewayAuth["mode"];
   if (authConfig.mode) {
@@ -207,6 +217,7 @@ export function resolveGatewayAuth(params: {
     token,
     password,
     allowTailscale,
+    tailscaleAllowUsers,
     trustedProxy,
   };
 }
@@ -292,10 +303,13 @@ export async function authorizeGatewayConnect(params: {
   clientIp?: string;
   /** Optional limiter scope; defaults to shared-secret auth scope. */
   rateLimitScope?: string;
+  /** Disable Tailscale identity fallback for callers that require an app-level secret. */
+  allowTailscaleAuth?: boolean;
 }): Promise<GatewayAuthResult> {
   const { auth, connectAuth, req, trustedProxies } = params;
   const tailscaleWhois = params.tailscaleWhois ?? readTailscaleWhoisIdentity;
   const localDirect = isLocalDirectRequest(req, trustedProxies);
+  const allowTailscaleAuth = params.allowTailscaleAuth ?? true;
 
   if (auth.mode === "trusted-proxy") {
     if (!auth.trustedProxy) {
@@ -333,18 +347,23 @@ export async function authorizeGatewayConnect(params: {
     }
   }
 
-  if (auth.allowTailscale && !localDirect) {
+  if (allowTailscaleAuth && auth.allowTailscale && !localDirect) {
     const tailscaleCheck = await resolveVerifiedTailscaleUser({
       req,
       tailscaleWhois,
     });
     if (tailscaleCheck.ok) {
-      limiter?.reset(ip, rateLimitScope);
-      return {
-        ok: true,
-        method: "tailscale",
-        user: tailscaleCheck.user.login,
-      };
+      const allowUsers = auth.tailscaleAllowUsers;
+      if (allowUsers && !allowUsers.includes(normalizeLogin(tailscaleCheck.user.login))) {
+        // Fall through to shared-secret auth so explicitly provisioned callers can still connect.
+      } else {
+        limiter?.reset(ip, rateLimitScope);
+        return {
+          ok: true,
+          method: "tailscale",
+          user: tailscaleCheck.user.login,
+        };
+      }
     }
   }
 

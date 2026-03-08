@@ -128,7 +128,7 @@ export async function agentsListCommand(
   const lines = ["Agents:", ...summaries.map(formatSummary)];
   lines.push("Routing rules map channel/account/peer to an agent. Use --bindings for full rules.");
   lines.push(
-    `Channel status reflects local config/creds. For live health: ${formatCliCommand("penguins channels status --probe")}.`,
+    `For live gateway health, use ${formatCliCommand("penguins gateway status --deep")} and ${formatCliCommand("penguins logs --follow")}.`,
   );
   runtime.log(lines.join("\n"));
 }

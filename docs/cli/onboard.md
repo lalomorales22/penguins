@@ -1,7 +1,7 @@
 ---
 summary: "CLI reference for `penguins onboard` (interactive onboarding wizard)"
 read_when:
-  - You want guided setup for gateway, workspace, auth, channels, and skills
+  - You want guided setup for gateway, workspace, auth, browser access, and skills
 title: "onboard"
 ---
 
@@ -15,7 +15,6 @@ Interactive onboarding wizard (local or remote Gateway setup).
 - Onboarding overview: [Onboarding Overview](/start/onboarding-overview)
 - CLI onboarding reference: [CLI Onboarding Reference](/start/wizard-cli-reference)
 - CLI automation: [CLI Automation](/start/wizard-cli-automation)
-- macOS onboarding: [Onboarding (macOS App)](/start/onboarding)
 
 ## Examples
 
@@ -60,7 +59,7 @@ Flow notes:
 
 - `quickstart`: minimal prompts, auto-generates a gateway token.
 - `manual`: full prompts for port/bind/auth (alias of `advanced`).
-- Fastest first chat: `penguins dashboard` (Control UI, no channel setup).
+- Fastest first chat: `penguins dashboard` (Control UI).
 - Custom Provider: connect any OpenAI or Anthropic compatible endpoint,
   including hosted providers not listed. Use Unknown to auto-detect.
 

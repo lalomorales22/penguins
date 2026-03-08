@@ -26,9 +26,9 @@ On the first agent run, Penguins bootstraps the workspace (default
 
 ## Where it runs
 
-Bootstrapping always runs on the **gateway host**. If the macOS app connects to
-a remote Gateway, the workspace and bootstrapping files live on that remote
-machine.
+Bootstrapping always runs on the **gateway host**. If you reach the Gateway
+remotely through Cloudflare, Tailscale, or SSH, the workspace and bootstrapping
+files still live on that remote machine.
 
 <Note>
 When the Gateway runs on another machine, edit workspace files on the gateway
@@ -37,5 +37,5 @@ host (for example, `user@gateway-host:~/.penguins/workspace`).
 
 ## Related docs
 
-- macOS app onboarding: [Onboarding](/start/onboarding)
+- Onboarding wizard: [Onboarding Wizard](/start/wizard)
 - Workspace layout: [Agent workspace](/concepts/agent-workspace)

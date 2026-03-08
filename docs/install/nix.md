@@ -22,10 +22,9 @@ Repository: github:penguins/nix-penguins
 What I need you to do:
 1. Check if Determinate Nix is installed (if not, install it)
 2. Create a local flake at ~/code/penguins-local using templates/agent-first/flake.nix
-3. Help me create a Telegram bot (@BotFather) and get my chat ID (@userinfobot)
-4. Set up secrets (bot token, Anthropic key) - plain files at ~/.secrets/ is fine
-5. Fill in the template placeholders and run home-manager switch
-6. Verify: launchd running, bot responds to messages
+3. Set up secrets (Anthropic key or other model key) - plain files at ~/.secrets/ is fine
+4. Fill in the template placeholders and run home-manager switch
+5. Verify: launchd running and the dashboard opens
 
 Reference the nix-penguins README for module options.
 ```
@@ -36,7 +35,7 @@ Reference the nix-penguins README for module options.
 
 ## What you get
 
-- Gateway + macOS app + tools (whisper, spotify, cameras) — all pinned
+- Gateway + browser Control UI + tools — all pinned
 - Launchd service that survives reboots
 - Plugin system with declarative config
 - Instant rollback: `home-manager switch --rollback`
@@ -52,13 +51,6 @@ Enable it by exporting:
 
 ```bash
 PENGUINS_NIX_MODE=1
-```
-
-On macOS, the GUI app does not automatically inherit shell env vars. You can
-also enable Nix mode via defaults:
-
-```bash
-defaults write bot.molt.mac penguins.nixMode -bool true
 ```
 
 ### Config + state paths
@@ -78,18 +70,6 @@ stay out of the immutable store.
 - Auto-install and self-mutation flows are disabled
 - Missing dependencies surface Nix-specific remediation messages
 - UI surfaces a read-only Nix mode banner when present
-
-## Packaging note (macOS)
-
-The macOS packaging flow expects a stable Info.plist template at:
-
-```
-apps/macos/Sources/Penguins/Resources/Info.plist
-```
-
-[`scripts/package-mac-app.sh`](https://github.com/penguins/penguins/blob/main/scripts/package-mac-app.sh) copies this template into the app bundle and patches dynamic fields
-(bundle ID, version/build, Git SHA, Sparkle keys). This keeps the plist deterministic for SwiftPM
-packaging and Nix builds (which do not rely on a full Xcode toolchain).
 
 ## Related
 

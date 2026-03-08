@@ -95,7 +95,7 @@ vi.mock("../../auto-reply/thinking.js", () => ({
   supportsXHighThinking: vi.fn().mockReturnValue(false),
 }));
 
-vi.mock("../../cli/outbound-send-deps.js", () => ({
+vi.mock("../../cli/deps.js", () => ({
   createOutboundSendDeps: vi.fn().mockReturnValue({}),
 }));
 

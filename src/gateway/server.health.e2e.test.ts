@@ -25,23 +25,19 @@ describe("gateway server health/presence", () => {
     const healthP = onceMessage(ws, (o) => o.type === "res" && o.id === "health1");
     const statusP = onceMessage(ws, (o) => o.type === "res" && o.id === "status1");
     const presenceP = onceMessage(ws, (o) => o.type === "res" && o.id === "presence1");
-    const channelsP = onceMessage(ws, (o) => o.type === "res" && o.id === "channels1");
 
     const sendReq = (id: string, method: string) =>
       ws.send(JSON.stringify({ type: "req", id, method }));
     sendReq("health1", "health");
     sendReq("status1", "status");
     sendReq("presence1", "system-presence");
-    sendReq("channels1", "channels.status");
 
     const health = await healthP;
     const status = await statusP;
     const presence = await presenceP;
-    const channels = await channelsP;
     expect(health.ok).toBe(true);
     expect(status.ok).toBe(true);
     expect(presence.ok).toBe(true);
-    expect(channels.ok).toBe(true);
     expect(Array.isArray(presence.payload)).toBe(true);
 
     ws.close();

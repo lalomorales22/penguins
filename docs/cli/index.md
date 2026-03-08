@@ -33,9 +33,6 @@ This page describes the current CLI behavior. If commands change, update this do
 - [`system`](/cli/system)
 - [`models`](/cli/models)
 - [`memory`](/cli/memory)
-- [`nodes`](/cli/nodes)
-- [`devices`](/cli/devices)
-- [`node`](/cli/node)
 - [`approvals`](/cli/approvals)
 - [`sandbox`](/cli/sandbox)
 - [`tui`](/cli/tui)
@@ -45,9 +42,7 @@ This page describes the current CLI behavior. If commands change, update this do
 - [`docs`](/cli/docs)
 - [`hooks`](/cli/hooks)
 - [`webhooks`](/cli/webhooks)
-- [`pairing`](/cli/pairing)
 - [`plugins`](/cli/plugins) (plugin commands)
-- [`channels`](/cli/channels)
 - [`security`](/cli/security)
 - [`skills`](/cli/skills)
 - [`voicecall`](/cli/voicecall) (plugin; if installed)
@@ -100,14 +95,6 @@ penguins [--dev] [--profile <name>] <command>
   reset
   uninstall
   update
-  channels
-    list
-    status
-    logs
-    add
-    remove
-    login
-    logout
   skills
     list
     info
@@ -175,16 +162,6 @@ penguins [--dev] [--profile <name>] <command>
     disable
     runs
     run
-  nodes
-  devices
-  node
-    run
-    status
-    install
-    uninstall
-    start
-    stop
-    restart
   approvals
     get
     set
@@ -335,7 +312,6 @@ Options:
 - `--install-daemon`
 - `--no-install-daemon` (alias: `--skip-daemon`)
 - `--daemon-runtime <node|bun>`
-- `--skip-channels`
 - `--skip-skills`
 - `--skip-health`
 - `--skip-ui`
@@ -344,7 +320,7 @@ Options:
 
 ### `configure`
 
-Interactive configuration wizard (models, channels, skills, gateway).
+Interactive configuration wizard (models, web tools, skills, gateway).
 
 ### `config`
 
@@ -368,63 +344,6 @@ Options:
 - `--non-interactive`: skip prompts; apply safe migrations only.
 - `--deep`: scan system services for extra gateway installs.
 
-## Channel helpers
-
-### `channels`
-
-Manage chat channel accounts (WhatsApp/Telegram/Discord/Google Chat/Slack/Mattermost (plugin)/Signal/iMessage/MS Teams).
-
-Subcommands:
-
-- `channels list`: show configured channels and auth profiles.
-- `channels status`: check gateway reachability and channel health (`--probe` runs extra checks; use `penguins health` or `penguins status --deep` for gateway health probes).
-- Tip: `channels status` prints warnings with suggested fixes when it can detect common misconfigurations (then points you to `penguins doctor`).
-- `channels logs`: show recent channel logs from the gateway log file.
-- `channels add`: wizard-style setup when no flags are passed; flags switch to non-interactive mode.
-- `channels remove`: disable by default; pass `--delete` to remove config entries without prompts.
-- `channels login`: interactive channel login (WhatsApp Web only).
-- `channels logout`: log out of a channel session (if supported).
-
-Common options:
-
-- `--channel <name>`: `whatsapp|telegram|discord|googlechat|slack|mattermost|signal|imessage|msteams`
-- `--account <id>`: channel account id (default `default`)
-- `--name <label>`: display name for the account
-
-`channels login` options:
-
-- `--channel <channel>` (default `whatsapp`; supports `whatsapp`/`web`)
-- `--account <id>`
-- `--verbose`
-
-`channels logout` options:
-
-- `--channel <channel>` (default `whatsapp`)
-- `--account <id>`
-
-`channels list` options:
-
-- `--no-usage`: skip model provider usage/quota snapshots (OAuth/API-backed only).
-- `--json`: output JSON (includes usage unless `--no-usage` is set).
-
-`channels logs` options:
-
-- `--channel <name|all>` (default `all`)
-- `--lines <n>` (default `200`)
-- `--json`
-
-More detail: [/concepts/oauth](/concepts/oauth)
-
-Examples:
-
-```bash
-penguins channels add --channel telegram --account alerts --name "Alerts Bot" --token $TELEGRAM_BOT_TOKEN
-penguins channels add --channel discord --account work --name "Work Bot" --token $DISCORD_BOT_TOKEN
-penguins channels remove --channel discord --account work --delete
-penguins channels status --probe
-penguins status --deep
-```
-
 ### `skills`
 
 List and inspect available skills plus readiness info.
@@ -442,15 +361,6 @@ Options:
 - `-v`, `--verbose`: include missing requirements detail.
 
 Tip: use `npx clawhub` to search, install, and sync skills.
-
-### `pairing`
-
-Approve DM pairing requests across channels.
-
-Subcommands:
-
-- `pairing list <channel> [--json]`
-- `pairing approve <channel> <code> [--notify]`
 
 ### `webhooks gmail`
 
@@ -908,62 +818,6 @@ Subcommands:
 - `cron run <id> [--force]`
 
 All `cron` commands accept `--url`, `--token`, `--timeout`, `--expect-final`.
-
-## Node host
-
-`node` runs a **headless node host** or manages it as a background service. See
-[`penguins node`](/cli/node).
-
-Subcommands:
-
-- `node run --host <gateway-host> --port 18789`
-- `node status`
-- `node install [--host <gateway-host>] [--port <port>] [--tls] [--tls-fingerprint <sha256>] [--node-id <id>] [--display-name <name>] [--runtime <node|bun>] [--force]`
-- `node uninstall`
-- `node stop`
-- `node restart`
-
-## Nodes
-
-`nodes` talks to the Gateway and targets paired nodes. See [/nodes](/nodes).
-
-Common options:
-
-- `--url`, `--token`, `--timeout`, `--json`
-
-Subcommands:
-
-- `nodes status [--connected] [--last-connected <duration>]`
-- `nodes describe --node <id|name|ip>`
-- `nodes list [--connected] [--last-connected <duration>]`
-- `nodes pending`
-- `nodes approve <requestId>`
-- `nodes reject <requestId>`
-- `nodes rename --node <id|name|ip> --name <displayName>`
-- `nodes invoke --node <id|name|ip> --command <command> [--params <json>] [--invoke-timeout <ms>] [--idempotency-key <key>]`
-- `nodes run --node <id|name|ip> [--cwd <path>] [--env KEY=VAL] [--command-timeout <ms>] [--needs-screen-recording] [--invoke-timeout <ms>] <command...>` (mac node or headless node host)
-- `nodes notify --node <id|name|ip> [--title <text>] [--body <text>] [--sound <name>] [--priority <passive|active|timeSensitive>] [--delivery <system|overlay|auto>] [--invoke-timeout <ms>]` (mac only)
-
-Camera:
-
-- `nodes camera list --node <id|name|ip>`
-- `nodes camera snap --node <id|name|ip> [--facing front|back|both] [--device-id <id>] [--max-width <px>] [--quality <0-1>] [--delay-ms <ms>] [--invoke-timeout <ms>]`
-- `nodes camera clip --node <id|name|ip> [--facing front|back] [--device-id <id>] [--duration <ms|10s|1m>] [--no-audio] [--invoke-timeout <ms>]`
-
-Canvas + screen:
-
-- `nodes canvas snapshot --node <id|name|ip> [--format png|jpg|jpeg] [--max-width <px>] [--quality <0-1>] [--invoke-timeout <ms>]`
-- `nodes canvas present --node <id|name|ip> [--target <urlOrPath>] [--x <px>] [--y <px>] [--width <px>] [--height <px>] [--invoke-timeout <ms>]`
-- `nodes canvas hide --node <id|name|ip> [--invoke-timeout <ms>]`
-- `nodes canvas navigate <url> --node <id|name|ip> [--invoke-timeout <ms>]`
-- `nodes canvas eval [<js>] --node <id|name|ip> [--js <code>] [--invoke-timeout <ms>]`
-- `nodes canvas a2ui push --node <id|name|ip> (--jsonl <path> | --text <text>) [--invoke-timeout <ms>]`
-- `nodes canvas a2ui reset --node <id|name|ip> [--invoke-timeout <ms>]`
-- `nodes screen record --node <id|name|ip> [--screen <index>] [--duration <ms|10s>] [--fps <n>] [--no-audio] [--out <path>] [--invoke-timeout <ms>]`
-
-Location:
-
-- `nodes location get --node <id|name|ip> [--max-age <ms>] [--accuracy <coarse|balanced|precise>] [--location-timeout <ms>] [--invoke-timeout <ms>]`
 
 ## Browser
 

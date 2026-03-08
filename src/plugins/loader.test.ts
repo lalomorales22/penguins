@@ -346,6 +346,7 @@ describe("loadPenguinsPlugins", () => {
 
     const handler = registry.httpHandlers.find((entry) => entry.pluginId === "http-demo");
     expect(handler).toBeDefined();
+    expect(handler?.auth).toBe("gateway");
     const httpPlugin = registry.plugins.find((entry) => entry.id === "http-demo");
     expect(httpPlugin?.httpHandlers).toBe(1);
   });
@@ -373,8 +374,42 @@ describe("loadPenguinsPlugins", () => {
     const route = registry.httpRoutes.find((entry) => entry.pluginId === "http-route-demo");
     expect(route).toBeDefined();
     expect(route?.path).toBe("/demo");
+    expect(route?.auth).toBe("gateway");
     const httpPlugin = registry.plugins.find((entry) => entry.id === "http-route-demo");
     expect(httpPlugin?.httpHandlers).toBe(1);
+  });
+
+  it("rejects reserved http route prefixes", () => {
+    process.env.PENGUINS_BUNDLED_PLUGINS_DIR = "/nonexistent/bundled/plugins";
+    const plugin = writePlugin({
+      id: "http-route-reserved",
+      body: `export default { id: "http-route-reserved", register(api) {
+  api.registerHttpRoute({ path: "/v1/shadow", handler: async (_req, res) => { res.statusCode = 200; res.end("ok"); } });
+} };`,
+    });
+
+    const registry = loadPenguinsPlugins({
+      cache: false,
+      workspaceDir: plugin.dir,
+      config: {
+        plugins: {
+          load: { paths: [plugin.file] },
+          allow: ["http-route-reserved"],
+        },
+      },
+    });
+
+    expect(registry.httpRoutes.some((entry) => entry.pluginId === "http-route-reserved")).toBe(
+      false,
+    );
+    expect(
+      registry.diagnostics.some(
+        (entry) =>
+          entry.pluginId === "http-route-reserved" &&
+          entry.level === "error" &&
+          entry.message.includes("http route path is reserved"),
+      ),
+    ).toBe(true);
   });
 
   it("respects explicit disable in config", () => {

@@ -17,12 +17,16 @@ Examples below are aligned with the current config schema. For the exhaustive re
 
 ```json5
 {
-  agent: { workspace: "~/.penguins/workspace" },
-  channels: { whatsapp: { allowFrom: ["+15555550123"] } },
+  agents: {
+    defaults: {
+      workspace: "~/.penguins/workspace",
+      model: { primary: "anthropic/claude-sonnet-4-5" },
+    },
+  },
 }
 ```
 
-Save to `~/.penguins/penguins.json` and you can DM the bot from that number.
+Save to `~/.penguins/penguins.json`, then run `penguins onboard` or `penguins dashboard`.
 
 ### Recommended starter
 
@@ -33,22 +37,39 @@ Save to `~/.penguins/penguins.json` and you can DM the bot from that number.
     theme: "helpful assistant",
     emoji: "🦞",
   },
-  agent: {
-    workspace: "~/.penguins/workspace",
-    model: { primary: "anthropic/claude-sonnet-4-5" },
+  gateway: {
+    bind: "loopback",
+    auth: {
+      mode: "token",
+      token: "replace-me-with-a-long-random-token",
+    },
   },
-  channels: {
-    whatsapp: {
-      allowFrom: ["+15555550123"],
-      groups: { "*": { requireMention: true } },
+  agents: {
+    defaults: {
+      workspace: "~/.penguins/workspace",
+      model: { primary: "anthropic/claude-sonnet-4-5" },
+      heartbeat: {
+        every: "30m",
+        target: "none",
+      },
     },
   },
 }
 ```
 
+This starter assumes you are using the built-in Penguins app surfaces:
+
+- browser chat
+- Control UI
+- CLI
+
+If you want outbound or inbound integrations beyond those surfaces, add the relevant `channels.*` or plugin config later.
+
 ## Expanded example (major options)
 
 > JSON5 lets you use comments and trailing commas. Regular JSON works too.
+>
+> This larger example intentionally includes advanced `channels.*` routing and other optional integration features. If you only use the built-in app surfaces, skip those sections.
 
 ```json5
 {
@@ -410,6 +431,7 @@ Save to `~/.penguins/penguins.json` and you can DM the bot from that number.
       mode: "token",
       token: "gateway-token",
       allowTailscale: true,
+      tailscaleAllowUsers: ["you@example.com"],
     },
     tailscale: { mode: "serve", resetOnExit: false },
     remote: { url: "ws://gateway.tailnet:18789", token: "remote-token" },

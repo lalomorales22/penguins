@@ -11,8 +11,8 @@ Last updated: 2026-01-10
 
 TypeBox is a TypeScript-first schema library. We use it to define the **Gateway
 WebSocket protocol** (handshake, request/response, server events). Those schemas
-drive **runtime validation**, **JSON Schema export**, and **Swift codegen** for
-the macOS app. One source of truth; everything else is generated.
+drive **runtime validation**, **JSON Schema export**, and generated protocol
+artifacts. One source of truth; everything else is generated.
 
 If you want the higher-level protocol context, start with
 [Gateway architecture](/concepts/architecture).
@@ -60,16 +60,13 @@ Authoritative list lives in `src/gateway/server.ts` (`METHODS`, `EVENTS`).
 - Server handshake + method dispatch: `src/gateway/server.ts`
 - Node client: `src/gateway/client.ts`
 - Generated JSON Schema: `dist/protocol.schema.json`
-- Generated Swift models: `apps/macos/Sources/PenguinsProtocol/GatewayModels.swift`
 
 ## Current pipeline
 
 - `pnpm protocol:gen`
   - writes JSON Schema (draft‑07) to `dist/protocol.schema.json`
-- `pnpm protocol:gen:swift`
-  - generates Swift gateway models
 - `pnpm protocol:check`
-  - runs both generators and verifies the output is committed
+  - verifies the generated protocol output is committed
 
 ## How the schemas are used at runtime
 

@@ -19,6 +19,36 @@ import {
 } from "./onboard-helpers.js";
 
 type GatewayAuthChoice = "token" | "password" | "trusted-proxy";
+type GatewayTrustedProxyPreset = "cloudflare-access" | "generic" | "pomerium" | "oauth2-proxy";
+
+const TRUSTED_PROXY_PRESETS: Record<
+  GatewayTrustedProxyPreset,
+  {
+    label: string;
+    userHeader: string;
+    requiredHeaders?: string[];
+  }
+> = {
+  "cloudflare-access": {
+    label: "Cloudflare Access",
+    userHeader: "cf-access-authenticated-user-email",
+    requiredHeaders: ["cf-access-jwt-assertion", "x-forwarded-proto", "x-forwarded-host"],
+  },
+  generic: {
+    label: "Generic reverse proxy",
+    userHeader: "x-forwarded-user",
+    requiredHeaders: ["x-forwarded-proto", "x-forwarded-host"],
+  },
+  pomerium: {
+    label: "Pomerium",
+    userHeader: "x-pomerium-claim-email",
+    requiredHeaders: ["x-pomerium-jwt-assertion"],
+  },
+  "oauth2-proxy": {
+    label: "oauth2-proxy / nginx auth_request",
+    userHeader: "x-auth-request-email",
+  },
+};
 
 export async function promptGatewayConfig(
   cfg: PenguinsConfig,
@@ -142,10 +172,6 @@ export async function promptGatewayConfig(
     authMode = "password";
   }
 
-  if (authMode === "trusted-proxy" && bind === "loopback") {
-    note("Trusted proxy auth requires network bind. Adjusting bind to lan.", "Note");
-    bind = "lan";
-  }
   if (authMode === "trusted-proxy" && tailscaleMode !== "off") {
     note(
       "Trusted proxy auth is incompatible with Tailscale serve/funnel. Disabling Tailscale.",
@@ -186,13 +212,46 @@ export async function promptGatewayConfig(
   }
 
   if (authMode === "trusted-proxy") {
+    const trustedProxyPreset = guardCancel(
+      await select({
+        message: "Trusted proxy preset",
+        options: [
+          {
+            value: "cloudflare-access",
+            label: "Cloudflare Access",
+            hint: "Cloudflare Tunnel + Access headers",
+          },
+          {
+            value: "generic",
+            label: "Generic reverse proxy",
+            hint: "Forwarded user header from your auth proxy",
+          },
+          {
+            value: "pomerium",
+            label: "Pomerium",
+          },
+          {
+            value: "oauth2-proxy",
+            label: "oauth2-proxy / nginx",
+          },
+        ],
+        initialValue: "cloudflare-access",
+      }),
+      runtime,
+    ) as GatewayTrustedProxyPreset;
+    const preset = TRUSTED_PROXY_PRESETS[trustedProxyPreset];
+
     note(
       [
         "Trusted proxy mode: Penguins trusts user identity from a reverse proxy.",
         "The proxy must authenticate users and pass identity via headers.",
         "Only requests from specified proxy IPs will be trusted.",
         "",
-        "Common use cases: Pomerium, Caddy + OAuth, Traefik + forward auth",
+        `Preset: ${preset.label}`,
+        "Common use cases: Cloudflare Access, Pomerium, Caddy + OAuth, Traefik + forward auth",
+        bind === "loopback"
+          ? "Loopback bind is valid when the proxy runs on the same host (for example, cloudflared -> 127.0.0.1)."
+          : "If the proxy runs on a different host or container, use that proxy IP in trustedProxies.",
         "Docs: https://docs.penguins.ai/gateway/trusted-proxy-auth",
       ].join("\n"),
       "Trusted Proxy Auth",
@@ -201,8 +260,8 @@ export async function promptGatewayConfig(
     const userHeader = guardCancel(
       await text({
         message: "Header containing user identity",
-        placeholder: "x-forwarded-user",
-        initialValue: "x-forwarded-user",
+        placeholder: preset.userHeader,
+        initialValue: preset.userHeader,
         validate: (value) => (value?.trim() ? undefined : "User header is required"),
       }),
       runtime,
@@ -211,7 +270,8 @@ export async function promptGatewayConfig(
     const requiredHeadersRaw = guardCancel(
       await text({
         message: "Required headers (comma-separated, optional)",
-        placeholder: "x-forwarded-proto,x-forwarded-host",
+        placeholder: preset.requiredHeaders?.join(",") ?? "x-forwarded-proto,x-forwarded-host",
+        initialValue: preset.requiredHeaders?.join(",") ?? "",
       }),
       runtime,
     );
@@ -239,7 +299,7 @@ export async function promptGatewayConfig(
     const trustedProxiesRaw = guardCancel(
       await text({
         message: "Trusted proxy IPs (comma-separated)",
-        placeholder: "10.0.1.10,192.168.1.5",
+        placeholder: bind === "loopback" ? "127.0.0.1,::1" : "10.0.1.10,192.168.1.5",
         validate: (value) => {
           if (!value || String(value).trim() === "") {
             return "At least one trusted proxy IP is required";

@@ -2,23 +2,25 @@
 title: Deploy on Railway
 ---
 
-Deploy Penguins on Railway with a one-click template and finish setup in your browser.
-This is the easiest “no terminal on the server” path: Railway runs the Gateway for you,
-and you configure everything via the `/setup` web wizard.
+Deploy Penguins on Railway from the GitHub repo and finish setup in your
+browser. This is the easiest "no terminal on the server" path: Railway runs the
+Gateway for you, and you configure everything via the `/setup` web wizard.
 
 ## Quick checklist (new users)
 
-1. Click **Deploy on Railway** (below).
+1. Create a new Railway project from the `penguins/penguins` GitHub repo.
 2. Add a **Volume** mounted at `/data`.
 3. Set the required **Variables** (at least `SETUP_PASSWORD`).
 4. Enable **HTTP Proxy** on port `8080`.
 5. Open `https://<your-railway-domain>/setup` and finish the wizard.
 
-## One-click deploy
+## Deploy from GitHub
 
-<a href="https://railway.com/deploy/clawdbot-railway-template" target="_blank" rel="noreferrer">
-  Deploy on Railway
-</a>
+1. In Railway, create a new project.
+2. Choose **Deploy from GitHub repo**.
+3. Select `penguins/penguins`.
+4. Wait for the initial build to finish.
+5. Add the volume, variables, and HTTP Proxy settings from this page.
 
 After deploy, find your public URL in **Railway → your service → Settings → Domains**.
 

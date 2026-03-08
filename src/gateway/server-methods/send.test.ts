@@ -6,6 +6,10 @@ const mocks = vi.hoisted(() => ({
   deliverOutboundPayloads: vi.fn(),
   appendAssistantMessageToSessionTranscript: vi.fn(async () => ({ ok: true, sessionFile: "x" })),
   recordSessionMetaFromInbound: vi.fn(async () => ({ ok: true })),
+  resolveMessageChannelSelection: vi.fn(async ({ channel }: { channel?: string }) => ({
+    channel: channel ?? "slack",
+    configured: channel ? [channel] : ["slack"],
+  })),
 }));
 
 vi.mock("../../config/config.js", async () => {
@@ -19,7 +23,11 @@ vi.mock("../../config/config.js", async () => {
 
 vi.mock("../../channels/plugins/index.js", () => ({
   getChannelPlugin: () => ({ outbound: {} }),
-  normalizeChannelId: (value: string) => (value === "webchat" ? null : value),
+}));
+
+vi.mock("../../infra/outbound/channel-selection.js", () => ({
+  resolveMessageChannelSelection: (...args: unknown[]) =>
+    mocks.resolveMessageChannelSelection(...args),
 }));
 
 vi.mock("../../infra/outbound/targets.js", () => ({
@@ -49,6 +57,10 @@ const makeContext = (): GatewayRequestContext =>
 describe("gateway send mirroring", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.resolveMessageChannelSelection.mockResolvedValue({
+      channel: "slack",
+      configured: ["slack"],
+    });
   });
 
   it("accepts media-only sends without message", async () => {
@@ -137,6 +149,65 @@ describe("gateway send mirroring", () => {
       undefined,
       expect.objectContaining({
         message: expect.stringContaining("Use `chat.send`"),
+      }),
+    );
+  });
+
+  it("uses channel selection instead of a legacy default when channel is omitted", async () => {
+    mocks.deliverOutboundPayloads.mockResolvedValue([
+      { messageId: "m-selected", channel: "slack" },
+    ]);
+
+    const respond = vi.fn();
+    await sendHandlers.send({
+      params: {
+        to: "channel:C1",
+        message: "hi",
+        idempotencyKey: "idem-selected",
+      },
+      respond,
+      context: makeContext(),
+      req: { type: "req", id: "1", method: "send" },
+      client: null,
+      isWebchatConnect: () => false,
+    });
+
+    expect(mocks.resolveMessageChannelSelection).toHaveBeenCalledWith({
+      cfg: {},
+      channel: undefined,
+    });
+    expect(mocks.deliverOutboundPayloads).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: "slack",
+      }),
+    );
+  });
+
+  it("returns the channel-selection error when no external channel can be inferred", async () => {
+    mocks.resolveMessageChannelSelection.mockRejectedValueOnce(
+      new Error("Channel is required (no configured channels detected)."),
+    );
+
+    const respond = vi.fn();
+    await sendHandlers.send({
+      params: {
+        to: "channel:C1",
+        message: "hi",
+        idempotencyKey: "idem-no-channel",
+      },
+      respond,
+      context: makeContext(),
+      req: { type: "req", id: "1", method: "send" },
+      client: null,
+      isWebchatConnect: () => false,
+    });
+
+    expect(mocks.deliverOutboundPayloads).not.toHaveBeenCalled();
+    expect(respond).toHaveBeenCalledWith(
+      false,
+      undefined,
+      expect.objectContaining({
+        message: expect.stringContaining("Channel is required"),
       }),
     );
   });

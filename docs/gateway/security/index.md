@@ -29,13 +29,16 @@ It flags common footguns (Gateway auth exposure, browser control exposure, eleva
 
 Running an AI agent with shell access on your machine is... _spicy_. Here’s how to not get pwned.
 
-Penguins is both a product and an experiment: you’re wiring frontier-model behavior into real messaging surfaces and real tools. **There is no “perfectly secure” setup.** The goal is to be deliberate about:
+Penguins is both a product and an experiment: you’re wiring frontier-model behavior into browser/admin surfaces and real tools. **There is no “perfectly secure” setup.** The goal is to be deliberate about:
 
 - who can talk to your bot
 - where the bot is allowed to act
 - what the bot can touch
 
 Start with the smallest access that still works, then widen it as you gain confidence.
+
+The supported built-in app surfaces are browser chat, the Control UI, and the CLI.
+Anything else should be treated as an explicit custom integration you decided to add.
 
 ### What the audit checks (high level)
 
@@ -54,12 +57,11 @@ If you run `--deep`, Penguins also attempts a best-effort live Gateway probe.
 
 Use this when auditing access or deciding what to back up:
 
-- **WhatsApp**: `~/.penguins/credentials/whatsapp/<accountId>/creds.json`
-- **Telegram bot token**: config/env or `channels.telegram.tokenFile`
-- **Discord bot token**: config/env (token file not yet supported)
-- **Slack tokens**: config/env (`channels.slack.*`)
-- **Pairing allowlists**: `~/.penguins/credentials/<channel>-allowFrom.json`
+- **Gateway browser auth**: config/env (`gateway.auth.*`, `PENGUINS_GATEWAY_TOKEN`, `PENGUINS_GATEWAY_PASSWORD`)
 - **Model auth profiles**: `~/.penguins/agents/<agentId>/agent/auth-profiles.json`
+- **Session transcripts**: `~/.penguins/agents/<agentId>/sessions/*.jsonl`
+- **Custom integration credentials**: config/env or `~/.penguins/credentials/*` depending on the integration/plugin
+- **Pairing allowlists for custom inbound integrations**: `~/.penguins/credentials/<channel>-allowFrom.json`
 - **Legacy OAuth import**: `~/.penguins/credentials/oauth.json`
 
 ## Security Audit Checklist
@@ -88,7 +90,9 @@ keep it off unless you are actively debugging and can revert quickly.
 
 ## Reverse Proxy Configuration
 
-If you run the Gateway behind a reverse proxy (nginx, Caddy, Traefik, etc.), you should configure `gateway.trustedProxies` for proper client IP detection.
+If you run the Gateway behind a reverse proxy (Cloudflare Tunnel, nginx, Caddy,
+Traefik, etc.), you should configure `gateway.trustedProxies` for proper client
+IP detection.
 
 When the Gateway detects proxy headers (`X-Forwarded-For` or `X-Real-IP`) from an address that is **not** in `trustedProxies`, it will **not** treat connections as local clients. If gateway auth is disabled, those connections are rejected. This prevents authentication bypass where proxied connections would otherwise appear to come from localhost and receive automatic trust.
 
@@ -102,6 +106,26 @@ gateway:
 ```
 
 When `trustedProxies` is configured, the Gateway will use `X-Forwarded-For` headers to determine the real client IP for local client detection. Make sure your proxy overwrites (not appends to) incoming `X-Forwarded-For` headers to prevent spoofing.
+
+If the proxy also authenticates users, switch to
+`gateway.auth.mode: "trusted-proxy"` and configure the user header explicitly.
+Cloudflare Access example:
+
+```yaml
+gateway:
+  bind: loopback
+  trustedProxies:
+    - "127.0.0.1"
+  auth:
+    mode: trusted-proxy
+    trustedProxy:
+      userHeader: cf-access-authenticated-user-email
+      requiredHeaders:
+        - cf-access-jwt-assertion
+```
+
+See [Trusted Proxy Auth](/gateway/trusted-proxy-auth) and
+[Cloudflare Tunnel](/gateway/cloudflare-tunnel).
 
 ## Local session logs live on disk
 
@@ -135,9 +159,9 @@ Your AI assistant can:
 - Execute arbitrary shell commands
 - Read/write files
 - Access network services
-- Send messages to anyone (if you give it WhatsApp access)
+- Deliver to external systems you wire in through custom integrations
 
-People who message you can:
+People or systems that can reach your Gateway or custom integrations can:
 
 - Try to trick your AI into doing bad things
 - Social engineer access to your data
@@ -467,6 +491,19 @@ authentication. Penguins verifies the identity by resolving the
 and matching it to the header. This only triggers for requests that hit loopback
 and include `x-forwarded-for`, `x-forwarded-proto`, and `x-forwarded-host` as
 injected by Tailscale.
+
+If you use this mode, configure `gateway.auth.tailscaleAllowUsers` so only the
+intended Tailscale logins can use Serve identity auth. Serve startup refuses to
+continue if identity auth is enabled without either `gateway.auth.password` or
+that allowlist.
+
+This shortcut only covers the Gateway WebSocket / Control UI handshake. The
+privileged HTTP APIs still require an app-level secret:
+
+- `POST /tools/invoke`
+- `POST /v1/chat/completions`
+- `POST /v1/responses`
+- protected plugin HTTP routes
 
 **Security rule:** do not forward these headers from your own reverse proxy. If
 you terminate TLS or proxy in front of the gateway, disable

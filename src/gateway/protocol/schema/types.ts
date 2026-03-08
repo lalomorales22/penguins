@@ -34,11 +34,8 @@ import type {
   SkillsUpdateParamsSchema,
 } from "./agents-models-skills.js";
 import type {
-  ChannelsLogoutParamsSchema,
   TalkConfigParamsSchema,
   TalkConfigResultSchema,
-  ChannelsStatusParamsSchema,
-  ChannelsStatusResultSchema,
   TalkModeParamsSchema,
   WebLoginStartParamsSchema,
   WebLoginWaitParamsSchema,
@@ -184,9 +181,6 @@ export type WizardStatusResult = Static<typeof WizardStatusResultSchema>;
 export type TalkModeParams = Static<typeof TalkModeParamsSchema>;
 export type TalkConfigParams = Static<typeof TalkConfigParamsSchema>;
 export type TalkConfigResult = Static<typeof TalkConfigResultSchema>;
-export type ChannelsStatusParams = Static<typeof ChannelsStatusParamsSchema>;
-export type ChannelsStatusResult = Static<typeof ChannelsStatusResultSchema>;
-export type ChannelsLogoutParams = Static<typeof ChannelsLogoutParamsSchema>;
 export type WebLoginStartParams = Static<typeof WebLoginStartParamsSchema>;
 export type WebLoginWaitParams = Static<typeof WebLoginWaitParamsSchema>;
 export type AgentSummary = Static<typeof AgentSummarySchema>;

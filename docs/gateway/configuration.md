@@ -13,9 +13,9 @@ Penguins reads an optional <Tooltip tip="JSON5 supports comments and trailing co
 
 If the file is missing, Penguins uses safe defaults. Common reasons to add a config:
 
-- Connect channels and control who can message the bot
-- Set models, tools, sandboxing, or automation (cron, hooks)
-- Tune sessions, media, networking, or UI
+- Set up the built-in app surfaces (browser chat, Control UI, CLI access)
+- Choose models, tools, sandboxing, or automation (cron, hooks, heartbeat)
+- Tune sessions, media, networking, remote access, or UI behavior
 
 See the [full reference](/gateway/configuration-reference) for every available field.
 
@@ -28,8 +28,12 @@ See the [full reference](/gateway/configuration-reference) for every available f
 ```json5
 // ~/.penguins/penguins.json
 {
-  agents: { defaults: { workspace: "~/.penguins/workspace" } },
-  channels: { whatsapp: { allowFrom: ["+15555550123"] } },
+  agents: {
+    defaults: {
+      workspace: "~/.penguins/workspace",
+      model: { primary: "anthropic/claude-sonnet-4-5" },
+    },
+  },
 }
 ```
 
@@ -74,33 +78,38 @@ When validation fails:
 ## Common tasks
 
 <AccordionGroup>
-  <Accordion title="Set up a channel (WhatsApp, Telegram, Discord, etc.)">
-    Each channel has its own config section under `channels.<provider>`. See the dedicated channel page for setup steps:
-
-    - [WhatsApp](/channels/whatsapp) — `channels.whatsapp`
-    - [Telegram](/channels/telegram) — `channels.telegram`
-    - [Discord](/channels/discord) — `channels.discord`
-    - [Slack](/channels/slack) — `channels.slack`
-    - [Signal](/channels/signal) — `channels.signal`
-    - [iMessage](/channels/imessage) — `channels.imessage`
-    - [Google Chat](/channels/googlechat) — `channels.googlechat`
-    - [Mattermost](/channels/mattermost) — `channels.mattermost`
-    - [MS Teams](/channels/msteams) — `channels.msteams`
-
-    All channels share the same DM policy pattern:
+  <Accordion title="Set up the built-in app surfaces">
+    For the built-in Penguins app, most setup lives under `gateway.*` and `agents.*` rather than `channels.*`.
 
     ```json5
     {
-      channels: {
-        telegram: {
-          enabled: true,
-          botToken: "123:abc",
-          dmPolicy: "pairing",   // pairing | allowlist | open | disabled
-          allowFrom: ["tg:123"], // only for allowlist/open
+      gateway: {
+        bind: "loopback",
+        auth: {
+          mode: "token",
+          token: "replace-me-with-a-long-random-token",
+        },
+        controlUi: {
+          basePath: "/",
+        },
+      },
+      agents: {
+        defaults: {
+          workspace: "~/.penguins/workspace",
+          model: { primary: "anthropic/claude-sonnet-4-5" },
         },
       },
     }
     ```
+
+    Use these docs for the built-in surfaces:
+
+    - [Control UI](/web/control-ui)
+    - [WebChat](/web/webchat)
+    - [Health Checks](/gateway/health)
+    - [Remote access](/gateway/remote)
+
+    If you are building custom inbound or outbound integrations, those still live under `channels.*` or plugin config and should be treated as optional extensions around the core app.
 
   </Accordion>
 
@@ -131,8 +140,10 @@ When validation fails:
 
   </Accordion>
 
-  <Accordion title="Control who can message the bot">
-    DM access is controlled per channel via `dmPolicy`:
+  <Accordion title="Control who can use custom inbound integrations">
+    If you only use the built-in browser chat, Control UI, and CLI surfaces, gateway auth is the main access control layer.
+
+    For custom inbound integrations, DM access is controlled per channel via `dmPolicy`:
 
     - `"pairing"` (default): unknown senders get a one-time pairing code to approve
     - `"allowlist"`: only senders in `allowFrom` (or the paired allow store)
@@ -145,7 +156,7 @@ When validation fails:
 
   </Accordion>
 
-  <Accordion title="Set up group chat mention gating">
+  <Accordion title="Set up custom group or room mention gating">
     Group messages default to **require mention**. Configure patterns per agent:
 
     ```json5
@@ -225,7 +236,7 @@ When validation fails:
         defaults: {
           heartbeat: {
             every: "30m",
-            target: "last",
+            target: "none",
           },
         },
       },
@@ -233,7 +244,8 @@ When validation fails:
     ```
 
     - `every`: duration string (`30m`, `2h`). Set `0m` to disable.
-    - `target`: `last` | `whatsapp` | `telegram` | `discord` | `none`
+    - `target: "none"` is the recommended built-in setting.
+    - `target: "last"` or an explicit integration target is only for advanced custom delivery flows.
     - See [Heartbeat](/gateway/heartbeat) for the full guide.
 
   </Accordion>
@@ -352,16 +364,16 @@ The Gateway watches `~/.penguins/penguins.json` and applies changes automaticall
 
 Most fields hot-apply without downtime. In `hybrid` mode, restart-required changes are handled automatically.
 
-| Category            | Fields                                                               | Restart needed? |
-| ------------------- | -------------------------------------------------------------------- | --------------- |
-| Channels            | `channels.*`, `web` (WhatsApp) — all built-in and extension channels | No              |
-| Agent & models      | `agent`, `agents`, `models`, `routing`                               | No              |
-| Automation          | `hooks`, `cron`, `agent.heartbeat`                                   | No              |
-| Sessions & messages | `session`, `messages`                                                | No              |
-| Tools & media       | `tools`, `browser`, `skills`, `audio`, `talk`                        | No              |
-| UI & misc           | `ui`, `logging`, `identity`, `bindings`                              | No              |
-| Gateway server      | `gateway.*` (port, bind, auth, tailscale, TLS, HTTP)                 | **Yes**         |
-| Infrastructure      | `discovery`, `canvasHost`, `plugins`                                 | **Yes**         |
+| Category            | Fields                                                 | Restart needed? |
+| ------------------- | ------------------------------------------------------ | --------------- |
+| Custom integrations | `channels.*`, plugin-defined delivery/inbound settings | No              |
+| Agent & models      | `agent`, `agents`, `models`, `routing`                 | No              |
+| Automation          | `hooks`, `cron`, `agent.heartbeat`                     | No              |
+| Sessions & messages | `session`, `messages`                                  | No              |
+| Tools & media       | `tools`, `browser`, `skills`, `audio`, `talk`          | No              |
+| UI & misc           | `ui`, `logging`, `identity`, `bindings`                | No              |
+| Gateway server      | `gateway.*` (port, bind, auth, tailscale, TLS, HTTP)   | **Yes**         |
+| Infrastructure      | `discovery`, `canvasHost`, `plugins`                   | **Yes**         |
 
 <Note>
 `gateway.reload` and `gateway.remote` are exceptions — changing them does **not** trigger a restart.

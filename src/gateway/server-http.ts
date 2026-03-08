@@ -10,6 +10,7 @@ import { createServer as createHttpsServer } from "node:https";
 import type { CanvasHostHandler } from "../canvas-host/server.js";
 import type { createSubsystemLogger } from "../logging/subsystem.js";
 import type { AuthRateLimiter } from "./auth-rate-limit.js";
+import type { PluginHttpRequestHandler } from "./server/plugins-http.js";
 import type { GatewayWsClient } from "./server/ws-types.js";
 import { resolveAgentAvatar } from "../agents/identity-avatar.js";
 import {
@@ -186,6 +187,28 @@ function writeUpgradeAuthFailure(
 }
 
 export type HooksRequestHandler = (req: IncomingMessage, res: ServerResponse) => Promise<boolean>;
+
+async function authorizeGatewayHttpRequest(params: {
+  req: IncomingMessage;
+  res: ServerResponse;
+  auth: ResolvedGatewayAuth;
+  trustedProxies: string[];
+  rateLimiter?: AuthRateLimiter;
+}): Promise<boolean> {
+  const token = getBearerToken(params.req);
+  const authResult = await authorizeGatewayConnect({
+    auth: { ...params.auth, allowTailscale: false },
+    connectAuth: token ? { token, password: token } : null,
+    req: params.req,
+    trustedProxies: params.trustedProxies,
+    rateLimiter: params.rateLimiter,
+  });
+  if (!authResult.ok) {
+    sendGatewayAuthFailure(params.res, authResult);
+    return false;
+  }
+  return true;
+}
 
 export function createHooksRequestHandler(
   opts: {
@@ -445,7 +468,7 @@ export function createGatewayHttpServer(opts: {
   openResponsesEnabled: boolean;
   openResponsesConfig?: import("../config/types.gateway.js").GatewayHttpResponsesConfig;
   handleHooksRequest: HooksRequestHandler;
-  handlePluginRequest?: HooksRequestHandler;
+  handlePluginRequest?: PluginHttpRequestHandler;
   resolvedAuth: ResolvedGatewayAuth;
   /** Optional rate limiter for auth brute-force protection. */
   rateLimiter?: AuthRateLimiter;
@@ -499,24 +522,18 @@ export function createGatewayHttpServer(opts: {
         return;
       }
       if (handlePluginRequest) {
-        // Channel HTTP endpoints are gateway-auth protected by default.
-        // Non-channel plugin routes remain plugin-owned and must enforce
-        // their own auth when exposing sensitive functionality.
-        if (requestPath.startsWith("/api/channels/")) {
-          const token = getBearerToken(req);
-          const authResult = await authorizeGatewayConnect({
-            auth: resolvedAuth,
-            connectAuth: token ? { token, password: token } : null,
-            req,
-            trustedProxies,
-            rateLimiter,
-          });
-          if (!authResult.ok) {
-            sendGatewayAuthFailure(res, authResult);
-            return;
-          }
-        }
-        if (await handlePluginRequest(req, res)) {
+        if (
+          await handlePluginRequest(req, res, {
+            authorizeGatewayRequest: async () =>
+              await authorizeGatewayHttpRequest({
+                req,
+                res,
+                auth: resolvedAuth,
+                trustedProxies,
+                rateLimiter,
+              }),
+          })
+        ) {
           return;
         }
       }

@@ -32,6 +32,7 @@ export const FIELD_LABELS: Record<string, string> = {
   "gateway.remote.tlsFingerprint": "Remote Gateway TLS Fingerprint",
   "gateway.auth.token": "Gateway Token",
   "gateway.auth.password": "Gateway Password",
+  "gateway.auth.tailscaleAllowUsers": "Tailscale Gateway Allowlist",
   "tools.media.image.enabled": "Enable Image Understanding",
   "tools.media.image.maxBytes": "Image Understanding Max Bytes",
   "tools.media.image.maxChars": "Image Understanding Max Chars",

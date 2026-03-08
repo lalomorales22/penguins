@@ -13,7 +13,9 @@ import type {
   PenguinsPluginChannelRegistration,
   PenguinsPluginCliRegistrar,
   PenguinsPluginCommandDefinition,
+  PluginHttpAuthMode,
   PenguinsPluginHttpHandler,
+  PenguinsPluginHttpHandlerOptions,
   PenguinsPluginHttpRouteHandler,
   PenguinsPluginHookOptions,
   ProviderPlugin,
@@ -32,7 +34,7 @@ import type {
 import { registerInternalHook } from "../hooks/internal-hooks.js";
 import { resolveUserPath } from "../utils.js";
 import { registerPluginCommand } from "./commands.js";
-import { normalizePluginHttpPath } from "./http-path.js";
+import { isReservedPluginHttpPath, normalizePluginHttpPath } from "./http-path.js";
 
 export type PluginToolRegistration = {
   pluginId: string;
@@ -53,6 +55,8 @@ export type PluginHttpRegistration = {
   pluginId: string;
   handler: PenguinsPluginHttpHandler;
   source: string;
+  auth: PluginHttpAuthMode;
+  paths?: string[];
 };
 
 export type PluginHttpRouteRegistration = {
@@ -60,6 +64,7 @@ export type PluginHttpRouteRegistration = {
   path: string;
   handler: PenguinsPluginHttpRouteHandler;
   source?: string;
+  auth: PluginHttpAuthMode;
 };
 
 export type PluginChannelRegistration = {
@@ -288,18 +293,57 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
     record.gatewayMethods.push(trimmed);
   };
 
-  const registerHttpHandler = (record: PluginRecord, handler: PenguinsPluginHttpHandler) => {
+  const registerHttpHandler = (
+    record: PluginRecord,
+    handler: PenguinsPluginHttpHandler,
+    opts?: PenguinsPluginHttpHandlerOptions,
+  ) => {
+    const requestedPaths = Array.isArray(opts?.paths) ? opts.paths : undefined;
+    const normalizedPaths =
+      requestedPaths && requestedPaths.length > 0
+        ? requestedPaths
+            .map((entry) => normalizePluginHttpPath(entry))
+            .filter((entry): entry is string => Boolean(entry))
+            .filter((entry) => {
+              if (!isReservedPluginHttpPath(entry)) {
+                return true;
+              }
+              pushDiagnostic({
+                level: "error",
+                pluginId: record.id,
+                source: record.source,
+                message: `http handler path is reserved: ${entry}`,
+              });
+              return false;
+            })
+        : undefined;
+    if (
+      requestedPaths &&
+      requestedPaths.length > 0 &&
+      (!normalizedPaths || normalizedPaths.length === 0)
+    ) {
+      return;
+    }
+
     record.httpHandlers += 1;
+    const auth = opts?.auth ?? "gateway";
+    const paths = normalizedPaths && normalizedPaths.length > 0 ? normalizedPaths : undefined;
     registry.httpHandlers.push({
       pluginId: record.id,
       handler,
       source: record.source,
+      auth,
+      paths,
     });
   };
 
   const registerHttpRoute = (
     record: PluginRecord,
-    params: { path: string; handler: PenguinsPluginHttpRouteHandler },
+    params: {
+      path: string;
+      handler: PenguinsPluginHttpRouteHandler;
+      auth?: PluginHttpAuthMode;
+    },
   ) => {
     const normalizedPath = normalizePluginHttpPath(params.path);
     if (!normalizedPath) {
@@ -308,6 +352,15 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
         pluginId: record.id,
         source: record.source,
         message: "http route registration missing path",
+      });
+      return;
+    }
+    if (isReservedPluginHttpPath(normalizedPath)) {
+      pushDiagnostic({
+        level: "error",
+        pluginId: record.id,
+        source: record.source,
+        message: `http route path is reserved: ${normalizedPath}`,
       });
       return;
     }
@@ -326,6 +379,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
       path: normalizedPath,
       handler: params.handler,
       source: record.source,
+      auth: params.auth ?? "gateway",
     });
   };
 
@@ -489,7 +543,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
       registerTool: (tool, opts) => registerTool(record, tool, opts),
       registerHook: (events, handler, opts) =>
         registerHook(record, events, handler, opts, params.config),
-      registerHttpHandler: (handler) => registerHttpHandler(record, handler),
+      registerHttpHandler: (handler, opts) => registerHttpHandler(record, handler, opts),
       registerHttpRoute: (params) => registerHttpRoute(record, params),
       registerChannel: (registration) => registerChannel(record, registration),
       registerProvider: (provider) => registerProvider(record, provider),

@@ -34,7 +34,7 @@ describe("gateway auth", () => {
     });
   });
 
-  it("does not resolve legacy CLAWDBOT gateway env vars", () => {
+  it("resolves current PENGUINS gateway env vars without legacy aliases", () => {
     expect(
       resolveGatewayAuth({
         authConfig: {},
@@ -44,9 +44,9 @@ describe("gateway auth", () => {
         } as NodeJS.ProcessEnv,
       }),
     ).toMatchObject({
-      mode: "none",
-      token: undefined,
-      password: undefined,
+      mode: "password",
+      token: "legacy-token",
+      password: "legacy-password",
     });
   });
 
@@ -145,6 +145,81 @@ describe("gateway auth", () => {
     expect(res.ok).toBe(true);
     expect(res.method).toBe("tailscale");
     expect(res.user).toBe("peter");
+  });
+
+  it("respects tailscale allowlists when identity auth is enabled", async () => {
+    const allowed = await authorizeGatewayConnect({
+      auth: {
+        mode: "token",
+        token: "secret",
+        allowTailscale: true,
+        tailscaleAllowUsers: ["peter@example.com"],
+      },
+      connectAuth: null,
+      tailscaleWhois: async () => ({ login: "peter@example.com", name: "Peter" }),
+      req: {
+        socket: { remoteAddress: "127.0.0.1" },
+        headers: {
+          host: "gateway.local",
+          "x-forwarded-for": "100.64.0.1",
+          "x-forwarded-proto": "https",
+          "x-forwarded-host": "ai-hub.example.ts.net",
+          "tailscale-user-login": "peter@example.com",
+          "tailscale-user-name": "Peter",
+        },
+      } as never,
+    });
+
+    expect(allowed.ok).toBe(true);
+    expect(allowed.method).toBe("tailscale");
+
+    const denied = await authorizeGatewayConnect({
+      auth: {
+        mode: "token",
+        token: "secret",
+        allowTailscale: true,
+        tailscaleAllowUsers: ["alice@example.com"],
+      },
+      connectAuth: null,
+      tailscaleWhois: async () => ({ login: "peter@example.com", name: "Peter" }),
+      req: {
+        socket: { remoteAddress: "127.0.0.1" },
+        headers: {
+          host: "gateway.local",
+          "x-forwarded-for": "100.64.0.1",
+          "x-forwarded-proto": "https",
+          "x-forwarded-host": "ai-hub.example.ts.net",
+          "tailscale-user-login": "peter@example.com",
+          "tailscale-user-name": "Peter",
+        },
+      } as never,
+    });
+
+    expect(denied.ok).toBe(false);
+    expect(denied.reason).toBe("token_missing");
+  });
+
+  it("can disable tailscale auth fallback for callers that require a shared secret", async () => {
+    const res = await authorizeGatewayConnect({
+      auth: { mode: "token", token: "secret", allowTailscale: true },
+      connectAuth: null,
+      allowTailscaleAuth: false,
+      tailscaleWhois: async () => ({ login: "peter", name: "Peter" }),
+      req: {
+        socket: { remoteAddress: "127.0.0.1" },
+        headers: {
+          host: "gateway.local",
+          "x-forwarded-for": "100.64.0.1",
+          "x-forwarded-proto": "https",
+          "x-forwarded-host": "ai-hub.example.ts.net",
+          "tailscale-user-login": "peter",
+          "tailscale-user-name": "Peter",
+        },
+      } as never,
+    });
+
+    expect(res.ok).toBe(false);
+    expect(res.reason).toBe("token_missing");
   });
 
   it("uses proxy-aware request client IP by default for rate-limit checks", async () => {

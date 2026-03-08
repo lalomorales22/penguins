@@ -58,11 +58,9 @@ const finalizeOnboardingWizard = vi.hoisted(() =>
     return { launchedTui: true };
   }),
 );
-const listChannelPlugins = vi.hoisted(() => vi.fn(() => []));
 const logConfigUpdated = vi.hoisted(() => vi.fn(() => {}));
 const setupInternalHooks = vi.hoisted(() => vi.fn(async (cfg) => cfg));
 
-const setupChannels = vi.hoisted(() => vi.fn(async (cfg) => cfg));
 const setupSkills = vi.hoisted(() => vi.fn(async (cfg) => cfg));
 const healthCommand = vi.hoisted(() => vi.fn(async () => {}));
 const ensureWorkspaceAndSessions = vi.hoisted(() => vi.fn(async () => {}));
@@ -75,10 +73,6 @@ const isSystemdUserServiceAvailable = vi.hoisted(() => vi.fn(async () => true));
 const ensureControlUiAssetsBuilt = vi.hoisted(() => vi.fn(async () => ({ ok: true })));
 const runTui = vi.hoisted(() => vi.fn(async () => {}));
 const setupOnboardingShellCompletion = vi.hoisted(() => vi.fn(async () => {}));
-
-vi.mock("../commands/onboard-channels.js", () => ({
-  setupChannels,
-}));
 
 vi.mock("../commands/onboard-skills.js", () => ({
   setupSkills,
@@ -157,10 +151,6 @@ vi.mock("../daemon/systemd.js", () => ({
 
 vi.mock("../infra/control-ui-assets.js", () => ({
   ensureControlUiAssetsBuilt,
-}));
-
-vi.mock("../channels/plugins/index.js", () => ({
-  listChannelPlugins,
 }));
 
 vi.mock("../config/logging.js", () => ({
@@ -294,7 +284,6 @@ describe("runOnboardingWizard", () => {
     );
 
     expect(select).not.toHaveBeenCalled();
-    expect(setupChannels).not.toHaveBeenCalled();
     expect(setupSkills).not.toHaveBeenCalled();
     expect(healthCommand).not.toHaveBeenCalled();
     expect(runTui).not.toHaveBeenCalled();

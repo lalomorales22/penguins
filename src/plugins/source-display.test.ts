@@ -6,7 +6,7 @@ describe("formatPluginSourceForTable", () => {
     const out = formatPluginSourceForTable(
       {
         origin: "bundled",
-        source: "/opt/homebrew/lib/node_modules/penguins/extensions/bluebubbles/index.ts",
+        source: "/opt/homebrew/lib/node_modules/penguins/extensions/memory-core/index.ts",
       },
       {
         stock: "/opt/homebrew/lib/node_modules/penguins/extensions",
@@ -14,7 +14,7 @@ describe("formatPluginSourceForTable", () => {
         workspace: "/Users/x/ws/.penguins/extensions",
       },
     );
-    expect(out.value).toBe("stock:bluebubbles/index.ts");
+    expect(out.value).toBe("stock:memory-core/index.ts");
     expect(out.rootKey).toBe("stock");
   });
 
@@ -22,7 +22,7 @@ describe("formatPluginSourceForTable", () => {
     const out = formatPluginSourceForTable(
       {
         origin: "workspace",
-        source: "/Users/x/ws/.penguins/extensions/matrix/index.ts",
+        source: "/Users/x/ws/.penguins/extensions/open-prose/index.ts",
       },
       {
         stock: "/opt/homebrew/lib/node_modules/penguins/extensions",
@@ -30,7 +30,7 @@ describe("formatPluginSourceForTable", () => {
         workspace: "/Users/x/ws/.penguins/extensions",
       },
     );
-    expect(out.value).toBe("workspace:matrix/index.ts");
+    expect(out.value).toBe("workspace:open-prose/index.ts");
     expect(out.rootKey).toBe("workspace");
   });
 

@@ -20,7 +20,7 @@ penguins status --all
 penguins gateway probe
 penguins gateway status
 penguins doctor
-penguins channels status --probe
+penguins gateway status --deep
 penguins logs --follow
 ```
 
@@ -31,7 +31,7 @@ Good output in one line:
 - `penguins gateway probe` → expected gateway target is reachable.
 - `penguins gateway status` → `Runtime: running` and `RPC probe: ok`.
 - `penguins doctor` → no blocking config/service errors.
-- `penguins channels status --probe` → channels report `connected` or `ready`.
+- `penguins gateway status --deep` → bind/auth/dashboard details match the host you expect.
 - `penguins logs --follow` → steady activity, no repeating fatal errors.
 
 ## Decision tree
@@ -61,8 +61,8 @@ flowchart TD
     ```bash
     penguins status
     penguins gateway status
-    penguins channels status --probe
-    penguins pairing list <channel>
+    penguins gateway status --deep
+    penguins sessions list --active 30
     penguins logs --follow
     ```
 
@@ -70,8 +70,8 @@ flowchart TD
 
     - `Runtime: running`
     - `RPC probe: ok`
-    - Your channel shows connected/ready in `channels status --probe`
-    - Sender appears approved (or DM policy is open/allowlist)
+    - The dashboard/chat connection stays up without auth loops
+    - Recent sessions or chat activity show new events arriving
 
     Common log signatures:
 
@@ -82,8 +82,8 @@ flowchart TD
     Deep pages:
 
     - [/gateway/troubleshooting#no-replies](/gateway/troubleshooting#no-replies)
-    - [/channels/troubleshooting](/channels/troubleshooting)
-    - [/channels/pairing](/channels/pairing)
+    - [/web/control-ui](/web/control-ui)
+    - [/gateway/security](/gateway/security)
 
   </Accordion>
 
@@ -93,7 +93,7 @@ flowchart TD
     penguins gateway status
     penguins logs --follow
     penguins doctor
-    penguins channels status --probe
+    penguins gateway status --deep
     ```
 
     Good output looks like:
@@ -122,7 +122,7 @@ flowchart TD
     penguins gateway status
     penguins logs --follow
     penguins doctor
-    penguins channels status --probe
+    penguins gateway status --deep
     ```
 
     Good output looks like:
@@ -151,7 +151,7 @@ flowchart TD
     penguins gateway status
     penguins logs --follow
     penguins doctor
-    penguins channels status --probe
+    penguins gateway status --deep
     ```
 
     Good output looks like:
@@ -169,7 +169,7 @@ flowchart TD
     Deep pages:
 
     - [/gateway/troubleshooting#channel-connected-messages-not-flowing](/gateway/troubleshooting#channel-connected-messages-not-flowing)
-    - [/channels/troubleshooting](/channels/troubleshooting)
+    - [/web/control-ui](/web/control-ui)
 
   </Accordion>
 

@@ -96,7 +96,7 @@ async function dispatchRequest(
 }
 
 describe("gateway plugin HTTP auth boundary", () => {
-  test("requires gateway auth for /api/channels/* plugin routes and allows authenticated pass-through", async () => {
+  test("passes a gateway-auth callback so private plugin routes are protected and public ones can opt out", async () => {
     const resolvedAuth: ResolvedGatewayAuth = {
       mode: "token",
       token: "test-token",
@@ -107,22 +107,32 @@ describe("gateway plugin HTTP auth boundary", () => {
     await withTempConfig({
       cfg: { gateway: { trustedProxies: [] } },
       run: async () => {
-        const handlePluginRequest = vi.fn(async (req: IncomingMessage, res: ServerResponse) => {
-          const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
-          if (pathname === "/api/channels/nostr/default/profile") {
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json; charset=utf-8");
-            res.end(JSON.stringify({ ok: true, route: "channel" }));
-            return true;
-          }
-          if (pathname === "/plugin/public") {
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json; charset=utf-8");
-            res.end(JSON.stringify({ ok: true, route: "public" }));
-            return true;
-          }
-          return false;
-        });
+        const handlePluginRequest = vi.fn(
+          async (
+            req: IncomingMessage,
+            res: ServerResponse,
+            opts?: { authorizeGatewayRequest?: () => Promise<boolean> },
+          ) => {
+            const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
+            if (pathname === "/plugin/private") {
+              const authorized = await opts?.authorizeGatewayRequest?.();
+              if (!authorized) {
+                return true;
+              }
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json; charset=utf-8");
+              res.end(JSON.stringify({ ok: true, route: "private" }));
+              return true;
+            }
+            if (pathname === "/plugin/public") {
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json; charset=utf-8");
+              res.end(JSON.stringify({ ok: true, route: "public" }));
+              return true;
+            }
+            return false;
+          },
+        );
 
         const server = createGatewayHttpServer({
           canvasHost: null,
@@ -139,24 +149,24 @@ describe("gateway plugin HTTP auth boundary", () => {
         const unauthenticated = createResponse();
         await dispatchRequest(
           server,
-          createRequest({ path: "/api/channels/nostr/default/profile" }),
+          createRequest({ path: "/plugin/private" }),
           unauthenticated.res,
         );
         expect(unauthenticated.res.statusCode).toBe(401);
         expect(unauthenticated.getBody()).toContain("Unauthorized");
-        expect(handlePluginRequest).not.toHaveBeenCalled();
+        expect(handlePluginRequest).toHaveBeenCalledTimes(1);
 
         const authenticated = createResponse();
         await dispatchRequest(
           server,
           createRequest({
-            path: "/api/channels/nostr/default/profile",
+            path: "/plugin/private",
             authorization: "Bearer test-token",
           }),
           authenticated.res,
         );
         expect(authenticated.res.statusCode).toBe(200);
-        expect(authenticated.getBody()).toContain('"route":"channel"');
+        expect(authenticated.getBody()).toContain('"route":"private"');
 
         const unauthenticatedPublic = createResponse();
         await dispatchRequest(
@@ -167,7 +177,7 @@ describe("gateway plugin HTTP auth boundary", () => {
         expect(unauthenticatedPublic.res.statusCode).toBe(200);
         expect(unauthenticatedPublic.getBody()).toContain('"route":"public"');
 
-        expect(handlePluginRequest).toHaveBeenCalledTimes(2);
+        expect(handlePluginRequest).toHaveBeenCalledTimes(3);
       },
     });
   });

@@ -199,6 +199,30 @@ export type PenguinsPluginHttpRouteHandler = (
   res: ServerResponse,
 ) => Promise<void> | void;
 
+export type PluginHttpAuthMode = "gateway" | "public";
+
+export type PenguinsPluginHttpHandlerOptions = {
+  /**
+   * Auth mode for this handler.
+   * - gateway: require gateway auth before invoking the handler
+   * - public: allow anonymous requests (for verified inbound webhooks, etc.)
+   *
+   * Protected generic handlers should also provide `paths` when possible so
+   * the gateway can avoid auth-challenging unrelated requests.
+   */
+  auth?: PluginHttpAuthMode;
+  /** Optional exact paths this handler is expected to serve. */
+  paths?: string[];
+};
+
+export type PenguinsPluginHttpRouteOptions = {
+  /**
+   * Auth mode for this route.
+   * Defaults to gateway auth; public routes must opt in explicitly.
+   */
+  auth?: PluginHttpAuthMode;
+};
+
 export type PenguinsPluginCliContext = {
   program: Command;
   config: PenguinsConfig;
@@ -260,8 +284,15 @@ export type PenguinsPluginApi = {
     handler: InternalHookHandler,
     opts?: PenguinsPluginHookOptions,
   ) => void;
-  registerHttpHandler: (handler: PenguinsPluginHttpHandler) => void;
-  registerHttpRoute: (params: { path: string; handler: PenguinsPluginHttpRouteHandler }) => void;
+  registerHttpHandler: (
+    handler: PenguinsPluginHttpHandler,
+    opts?: PenguinsPluginHttpHandlerOptions,
+  ) => void;
+  registerHttpRoute: (params: {
+    path: string;
+    handler: PenguinsPluginHttpRouteHandler;
+    auth?: PluginHttpAuthMode;
+  }) => void;
   registerChannel: (registration: PenguinsPluginChannelRegistration | ChannelPlugin) => void;
   registerGatewayMethod: (method: string, handler: GatewayRequestHandler) => void;
   registerCli: (registrar: PenguinsPluginCliRegistrar, opts?: { commands?: string[] }) => void;

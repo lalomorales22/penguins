@@ -10,16 +10,16 @@ title: "Setup"
 
 <Note>
 If you are setting up for the first time, start with [Getting Started](/start/getting-started).
-For wizard details, see [Onboarding Wizard](/start/wizard).
+This page is for source checkouts, custom hosts, and private deployment workflows.
 </Note>
 
-Last updated: 2026-01-01
+Last updated: 2026-03-07
 
 ## TL;DR
 
-- **Tailoring lives outside the repo:** `~/.penguins/workspace` (workspace) + `~/.penguins/penguins.json` (config).
-- **Stable workflow:** install the macOS app; let it run the bundled Gateway.
-- **Bleeding edge workflow:** run the Gateway yourself via `pnpm gateway:watch`, then let the macOS app attach in Local mode.
+- **Personal state lives outside the repo:** `~/.penguins/workspace` (workspace) + `~/.penguins/penguins.json` (config).
+- **Recommended workflow:** install Penguins, run `penguins onboard --install-daemon`, then open the browser Control UI.
+- **From source:** `pnpm install`, `pnpm build`, `pnpm penguins onboard`, and `pnpm penguins dashboard`.
 
 ## Prereqs (from source)
 
@@ -43,97 +43,74 @@ penguins setup
 From inside this repo, use the local CLI entry:
 
 ```bash
-penguins setup
+pnpm penguins setup
 ```
 
-If you don’t have a global install yet, run it via `pnpm penguins setup`.
+If you don’t have a global install yet, keep using `pnpm penguins ...` from the
+repo checkout.
 
 ## Run the Gateway from this repo
 
-After `pnpm build`, you can run the packaged CLI directly:
-
-```bash
-node penguins.mjs gateway --port 18789 --verbose
-```
-
-## Stable workflow (macOS app first)
-
-1. Install + launch **Penguins.app** (menu bar).
-2. Complete the onboarding/permissions checklist (TCC prompts).
-3. Ensure Gateway is **Local** and running (the app manages it).
-4. Link surfaces (example: WhatsApp):
-
-```bash
-penguins channels login
-```
-
-5. Sanity check:
-
-```bash
-penguins health
-```
-
-If onboarding is not available in your build:
-
-- Run `penguins setup`, then `penguins channels login`, then start the Gateway manually (`penguins gateway`).
-
-## Bleeding edge workflow (Gateway in a terminal)
-
-Goal: work on the TypeScript Gateway, get hot reload, keep the macOS app UI attached.
-
-### 0) (Optional) Run the macOS app from source too
-
-If you also want the macOS app on the bleeding edge:
-
-```bash
-./scripts/restart-mac.sh
-```
-
-### 1) Start the dev Gateway
+After `pnpm build`, you can use the local CLI entry:
 
 ```bash
 pnpm install
+pnpm build
+pnpm penguins onboard
+pnpm penguins gateway --port 18789
+pnpm penguins dashboard --no-open
+```
+
+## Development workflow
+
+### 1) Install dependencies
+
+```bash
+pnpm install
+```
+
+### 2) Start the dev Gateway
+
+```bash
 pnpm gateway:watch
 ```
 
 `gateway:watch` runs the gateway in watch mode and reloads on TypeScript changes.
 
-### 2) Point the macOS app at your running Gateway
+### 3) Open the Control UI
 
-In **Penguins.app**:
-
-- Connection Mode: **Local**
-  The app will attach to the running gateway on the configured port.
-
-### 3) Verify
-
-- In-app Gateway status should read **“Using existing gateway …”**
-- Or via CLI:
+In another terminal:
 
 ```bash
-penguins health
+pnpm penguins dashboard --no-open
 ```
 
-### Common footguns
+Then open the printed URL in your browser.
 
-- **Wrong port:** Gateway WS defaults to `ws://127.0.0.1:18789`; keep app + CLI on the same port.
-- **Where state lives:**
-  - Credentials: `~/.penguins/credentials/`
-  - Sessions: `~/.penguins/agents/<agentId>/sessions/`
-  - Logs: `/tmp/penguins/`
+### 4) Keep remote access private
+
+Recommended production shape:
+
+- `gateway.bind: "loopback"`
+- auth enabled
+- Cloudflare Tunnel + Access, SSH, or Tailscale in front of the browser UI
+
+Start with [Cloudflare Tunnel](/gateway/cloudflare-tunnel) if you want the
+cleanest personal deployment.
 
 ## Credential storage map
 
 Use this when debugging auth or deciding what to back up:
 
-- **WhatsApp**: `~/.penguins/credentials/whatsapp/<accountId>/creds.json`
-- **Telegram bot token**: config/env or `channels.telegram.tokenFile`
-- **Discord bot token**: config/env (token file not yet supported)
-- **Slack tokens**: config/env (`channels.slack.*`)
-- **Pairing allowlists**: `~/.penguins/credentials/<channel>-allowFrom.json`
+- **Gateway config**: `~/.penguins/penguins.json`
+- **Gateway state**: `~/.penguins/`
+- **Workspace**: `~/.penguins/workspace`
+- **Sessions**: `~/.penguins/agents/<agentId>/sessions/`
 - **Model auth profiles**: `~/.penguins/agents/<agentId>/agent/auth-profiles.json`
-- **Legacy OAuth import**: `~/.penguins/credentials/oauth.json`
-  More detail: [Security](/gateway/security#credential-storage-map).
+- **OAuth credentials**: `~/.penguins/credentials/oauth.json`
+- **Logs**: `/tmp/penguins/`
+
+More detail: [Security](/gateway/security#credential-storage-map).
 
 ## Updating (without wrecking your setup)
 
@@ -157,6 +134,5 @@ user service (no lingering needed). See [Gateway runbook](/gateway) for the syst
 
 - [Gateway runbook](/gateway) (flags, supervision, ports)
 - [Gateway configuration](/gateway/configuration) (config schema + examples)
-- [Discord](/channels/discord) and [Telegram](/channels/telegram) (reply tags + replyToMode settings)
+- [Cloudflare Tunnel](/gateway/cloudflare-tunnel) (private HTTPS setup)
 - [Penguins assistant setup](/start/penguins)
-- [macOS app](/platforms/macos) (gateway lifecycle)

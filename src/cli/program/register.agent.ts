@@ -1,5 +1,4 @@
 import type { Command } from "commander";
-import { DEFAULT_CHAT_CHANNEL } from "../../channels/registry.js";
 import { agentCliCommand } from "../../commands/agent-via-gateway.js";
 import {
   agentsAddCommand,
@@ -22,14 +21,14 @@ export function registerAgentCommands(program: Command, args: { agentChannelOpti
     .command("agent")
     .description("Run an agent turn via the Gateway (use --local for embedded)")
     .requiredOption("-m, --message <text>", "Message body for the agent")
-    .option("-t, --to <number>", "Recipient number in E.164 used to derive the session key")
+    .option("-t, --to <target>", "Session target used to derive the session key when needed")
     .option("--session-id <id>", "Use an explicit session id")
     .option("--agent <id>", "Agent id (overrides routing bindings)")
     .option("--thinking <level>", "Thinking level: off | minimal | low | medium | high")
     .option("--verbose <on|off>", "Persist agent verbose level for the session")
     .option(
       "--channel <channel>",
-      `Delivery channel: ${args.agentChannelOptions} (default: ${DEFAULT_CHAT_CHANNEL})`,
+      `External delivery channel for a custom integration: ${args.agentChannelOptions}`,
     )
     .option("--reply-to <target>", "Delivery target override (separate from session routing)")
     .option("--reply-channel <channel>", "Delivery channel override (separate from routing)")
@@ -51,20 +50,20 @@ export function registerAgentCommands(program: Command, args: { agentChannelOpti
         `
 ${theme.heading("Examples:")}
 ${formatHelpExamples([
-  ['penguins agent --to +15555550123 --message "status update"', "Start a new session."],
+  ['penguins agent --agent main --message "status update"', "Run the default agent session."],
   ['penguins agent --agent ops --message "Summarize logs"', "Use a specific agent."],
   [
     'penguins agent --session-id 1234 --message "Summarize inbox" --thinking medium',
     "Target a session with explicit thinking level.",
   ],
   [
-    'penguins agent --to +15555550123 --message "Trace logs" --verbose on --json',
+    'penguins agent --agent ops --message "Trace logs" --verbose on --json',
     "Enable verbose logging and JSON output.",
   ],
-  ['penguins agent --to +15555550123 --message "Summon reply" --deliver', "Deliver reply."],
+  ['penguins agent --session-id 1234 --message "Summon reply"', "Run against an existing session."],
   [
     'penguins agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"',
-    "Send reply to a different channel/target.",
+    "Send reply to an explicit custom integration target.",
   ],
 ])}
 

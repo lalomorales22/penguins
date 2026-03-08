@@ -81,6 +81,8 @@ export async function resolveGatewayRuntimeConfig(params: {
     typeof resolvedAuth.password === "string" && resolvedAuth.password.trim().length > 0;
   const hasSharedSecret =
     (authMode === "token" && hasToken) || (authMode === "password" && hasPassword);
+  const hasTailscaleAllowUsers =
+    Array.isArray(resolvedAuth.tailscaleAllowUsers) && resolvedAuth.tailscaleAllowUsers.length > 0;
   const hooksConfig = resolveHooksConfig(params.cfg);
   const canvasHostEnabled =
     process.env.PENGUINS_SKIP_CANVAS_HOST !== "1" && params.cfg.canvasHost?.enabled !== false;
@@ -93,6 +95,13 @@ export async function resolveGatewayRuntimeConfig(params: {
       "tailscale funnel requires gateway auth mode=password (set gateway.auth.password or PENGUINS_GATEWAY_PASSWORD)",
     );
   }
+  if (tailscaleMode === "serve" && resolvedAuth.allowTailscale && authMode !== "password") {
+    if (!hasTailscaleAllowUsers) {
+      throw new Error(
+        "tailscale serve requires gateway.auth.password or gateway.auth.tailscaleAllowUsers when Tailscale identity auth is enabled",
+      );
+    }
+  }
   if (tailscaleMode !== "off" && !isLoopbackHost(bindHost)) {
     throw new Error("tailscale serve/funnel requires gateway bind=loopback (127.0.0.1)");
   }
@@ -103,11 +112,6 @@ export async function resolveGatewayRuntimeConfig(params: {
   }
 
   if (authMode === "trusted-proxy") {
-    if (isLoopbackHost(bindHost)) {
-      throw new Error(
-        "gateway auth mode=trusted-proxy makes no sense with bind=loopback; use bind=lan or bind=custom with gateway.trustedProxies configured",
-      );
-    }
     if (trustedProxies.length === 0) {
       throw new Error(
         "gateway auth mode=trusted-proxy requires gateway.trustedProxies to be configured with at least one proxy IP",

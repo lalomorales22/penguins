@@ -1,8 +1,8 @@
 ---
-summary: "Windows (WSL2) support + companion app status"
+summary: "Windows host support for Penguins through WSL2."
 read_when:
   - Installing Penguins on Windows
-  - Looking for Windows companion app status
+  - Planning a Windows host deployment
 title: "Windows (WSL2)"
 ---
 
@@ -13,8 +13,6 @@ CLI + Gateway run inside Linux, which keeps the runtime consistent and makes
 tooling far more compatible (Node/Bun/pnpm, Linux binaries, skills). Native
 Windows might be trickier. WSL2 gives you the full Linux experience — one command
 to install: `wsl --install`.
-
-Native Windows companion apps are planned.
 
 ## Install (WSL2)
 
@@ -152,8 +150,3 @@ penguins onboard
 ```
 
 Full guide: [Getting Started](/start/getting-started)
-
-## Windows companion app
-
-We do not have a Windows companion app yet. Contributions are welcome if you want
-contributions to make it happen.

@@ -1,5 +1,5 @@
 import { html, nothing } from "lit";
-import type { ChannelUiMetaEntry, CronJob, CronRunLogEntry, CronStatus } from "../types.ts";
+import type { CronJob, CronRunLogEntry, CronStatus } from "../types.ts";
 import type { CronFormState } from "../ui-types.ts";
 import { formatRelativeTimestamp, formatMs } from "../format.ts";
 import { pathForTab } from "../navigation.ts";
@@ -15,7 +15,6 @@ export type CronProps = {
   form: CronFormState;
   channels: string[];
   channelLabels?: Record<string, string>;
-  channelMeta?: ChannelUiMetaEntry[];
   runsJobId: string | null;
   runs: CronRunLogEntry[];
   onFormChange: (patch: Partial<CronFormState>) => void;
@@ -46,10 +45,6 @@ function buildChannelOptions(props: CronProps): string[] {
 function resolveChannelLabel(props: CronProps, channel: string): string {
   if (channel === "last") {
     return "last";
-  }
-  const meta = props.channelMeta?.find((entry) => entry.id === channel);
-  if (meta?.label) {
-    return meta.label;
   }
   return props.channelLabels?.[channel] ?? channel;
 }

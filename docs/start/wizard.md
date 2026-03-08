@@ -1,5 +1,5 @@
 ---
-summary: "CLI onboarding wizard: guided setup for gateway, workspace, channels, and skills"
+summary: "CLI onboarding wizard: guided setup for gateway, workspace, auth, and skills"
 read_when:
   - Running or configuring the onboarding wizard
   - Setting up a new machine
@@ -11,8 +11,8 @@ sidebarTitle: "Onboarding: CLI"
 
 The onboarding wizard is the **recommended** way to set up Penguins on macOS,
 Linux, or Windows (via WSL2; strongly recommended).
-It configures a local Gateway or a remote Gateway connection, plus channels, skills,
-and workspace defaults in one guided flow.
+It configures a local Gateway or a remote Gateway connection, plus workspace
+defaults, auth, and browser access in one guided flow.
 
 ```bash
 penguins onboard
@@ -51,10 +51,10 @@ The wizard starts with **QuickStart** (defaults) vs **Advanced** (full control).
     - Gateway port **18789**
     - Gateway auth **Token** (auto‑generated, even on loopback)
     - Tailscale exposure **Off**
-    - Telegram + WhatsApp DMs default to **allowlist** (you'll be prompted for your phone number)
+    - Browser dashboard ready on the local gateway port
   </Tab>
   <Tab title="Advanced (full control)">
-    - Exposes every step (mode, workspace, gateway, channels, daemon, skills).
+    - Exposes every step (mode, workspace, gateway, daemon, skills).
   </Tab>
 </Tabs>
 
@@ -66,7 +66,7 @@ The wizard starts with **QuickStart** (defaults) vs **Advanced** (full control).
    (OpenAI-compatible, Anthropic-compatible, or Unknown auto-detect). Pick a default model.
 2. **Workspace** — Location for agent files (default `~/.penguins/workspace`). Seeds bootstrap files.
 3. **Gateway** — Port, bind address, auth mode, Tailscale exposure.
-4. **Channels** — WhatsApp, Telegram, Discord, Google Chat, Mattermost, Signal, BlueBubbles, or iMessage.
+4. **Browser access** — Open the local Control UI or your private remote tunnel.
 5. **Daemon** — Installs a LaunchAgent (macOS) or systemd user unit (Linux/WSL2).
 6. **Health check** — Starts the Gateway and verifies it's running.
 7. **Skills** — Installs recommended skills and optional dependencies.
@@ -93,8 +93,7 @@ What it sets:
 Notes:
 
 - Default workspaces follow `~/.penguins/workspace-<agentId>`.
-- Add `bindings` to route inbound messages (the wizard can do this).
-- Non-interactive flags: `--model`, `--agent-dir`, `--bind`, `--non-interactive`.
+- Non-interactive flags: `--model`, `--agent-dir`, `--non-interactive`.
 
 ## Full reference
 
@@ -106,5 +105,4 @@ RPC API, and a full list of config fields the wizard writes, see the
 
 - CLI command reference: [`penguins onboard`](/cli/onboard)
 - Onboarding overview: [Onboarding Overview](/start/onboarding-overview)
-- macOS app onboarding: [Onboarding](/start/onboarding)
 - Agent first-run ritual: [Agent Bootstrapping](/start/bootstrapping)

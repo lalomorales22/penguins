@@ -57,7 +57,8 @@ Check your Node version with `node --version` if you are unsure.
     penguins onboard --install-daemon
     ```
 
-    The wizard configures auth, gateway settings, and optional channels.
+    The wizard configures auth, your workspace, gateway settings, and the
+    recommended local browser workflow.
     See [Onboarding Wizard](/start/wizard) for details.
 
   </Step>
@@ -91,11 +92,11 @@ If the Control UI loads, your Gateway is ready for use.
     ```
 
   </Accordion>
-  <Accordion title="Send a test message">
-    Requires a configured channel.
+  <Accordion title="Print the Control UI URL">
+    Useful on headless hosts or over SSH.
 
     ```bash
-    penguins message send --target +15555550123 --message "Hello from Penguins"
+    penguins dashboard --no-open
     ```
 
   </Accordion>
@@ -117,8 +118,8 @@ Full environment variable reference: [Environment vars](/help/environment).
   <Card title="Onboarding Wizard (details)" href="/start/wizard">
     Full CLI wizard reference and advanced options.
   </Card>
-  <Card title="macOS app onboarding" href="/start/onboarding">
-    First run flow for the macOS app.
+  <Card title="Cloudflare Tunnel" href="/gateway/cloudflare-tunnel">
+    Recommended private remote access for the browser UI.
   </Card>
 </Columns>
 
@@ -126,10 +127,10 @@ Full environment variable reference: [Environment vars](/help/environment).
 
 - A running Gateway
 - Auth configured
-- Control UI access or a connected channel
+- Local Control UI access
 
 ## Next steps
 
-- DM safety and approvals: [Pairing](/channels/pairing)
-- Connect more channels: [Channels](/channels)
+- Private browser access: [Cloudflare Tunnel](/gateway/cloudflare-tunnel)
+- Gateway configuration: [Configuration](/gateway/configuration)
 - Advanced workflows and from source: [Setup](/start/setup)

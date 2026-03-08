@@ -13,7 +13,6 @@ export const CONFIGURE_WIZARD_SECTIONS = [
   "web",
   "gateway",
   "daemon",
-  "channels",
   "skills",
   "health",
 ] as const;
@@ -38,8 +37,6 @@ export function parseConfigureWizardSections(raw: unknown): {
   return { sections, invalid };
 }
 
-export type ChannelsWizardMode = "configure" | "remove";
-
 export type ConfigureWizardParams = {
   command: "configure" | "update";
   sections?: WizardSection[];
@@ -59,16 +56,11 @@ export const CONFIGURE_SECTION_OPTIONS: Array<{
     label: "Daemon",
     hint: "Install/manage the background service",
   },
-  {
-    value: "channels",
-    label: "Channels",
-    hint: "Link WhatsApp/Telegram/etc and defaults",
-  },
   { value: "skills", label: "Skills", hint: "Install/enable workspace skills" },
   {
     value: "health",
     label: "Health check",
-    hint: "Run gateway + channel checks",
+    hint: "Run gateway checks",
   },
 ];
 

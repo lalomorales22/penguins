@@ -414,6 +414,7 @@ export const PenguinsSchema = z
             token: z.string().optional().register(sensitive),
             password: z.string().optional().register(sensitive),
             allowTailscale: z.boolean().optional(),
+            tailscaleAllowUsers: z.array(z.string()).optional(),
             rateLimit: z
               .object({
                 maxAttempts: z.number().optional(),
@@ -674,4 +675,3 @@ export const PenguinsSchema = z
       }
     }
   });
-

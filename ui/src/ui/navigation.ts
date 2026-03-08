@@ -4,7 +4,7 @@ export const TAB_GROUPS = [
   { label: "Chat", tabs: ["chat"] },
   {
     label: "Control",
-    tabs: ["overview", "channels", "instances", "sessions", "usage", "cron"],
+    tabs: ["overview", "instances", "sessions", "usage", "cron"],
   },
   { label: "Agent", tabs: ["agents", "skills", "nodes"] },
   { label: "Settings", tabs: ["config", "debug", "logs"] },
@@ -13,7 +13,6 @@ export const TAB_GROUPS = [
 export type Tab =
   | "agents"
   | "overview"
-  | "channels"
   | "instances"
   | "sessions"
   | "usage"
@@ -28,7 +27,6 @@ export type Tab =
 const TAB_PATHS: Record<Tab, string> = {
   agents: "/agents",
   overview: "/overview",
-  channels: "/channels",
   instances: "/instances",
   sessions: "/sessions",
   usage: "/usage",
@@ -42,6 +40,7 @@ const TAB_PATHS: Record<Tab, string> = {
 };
 
 const PATH_TO_TAB = new Map(Object.entries(TAB_PATHS).map(([tab, path]) => [path, tab as Tab]));
+const LEGACY_TAB_PATHS = new Set(["/channels"]);
 
 export function normalizeBasePath(basePath: string): string {
   if (!basePath) {
@@ -97,6 +96,9 @@ export function tabFromPath(pathname: string, basePath = ""): Tab | null {
   if (normalized === "/") {
     return "chat";
   }
+  if (normalized === "/channels") {
+    return "overview";
+  }
   return PATH_TO_TAB.get(normalized) ?? null;
 }
 
@@ -114,7 +116,7 @@ export function inferBasePathFromPathname(pathname: string): string {
   }
   for (let i = 0; i < segments.length; i++) {
     const candidate = `/${segments.slice(i).join("/")}`.toLowerCase();
-    if (PATH_TO_TAB.has(candidate)) {
+    if (PATH_TO_TAB.has(candidate) || LEGACY_TAB_PATHS.has(candidate)) {
       const prefix = segments.slice(0, i);
       return prefix.length ? `/${prefix.join("/")}` : "";
     }
@@ -130,8 +132,6 @@ export function iconForTab(tab: Tab): IconName {
       return "messageSquare";
     case "overview":
       return "barChart";
-    case "channels":
-      return "link";
     case "instances":
       return "radio";
     case "sessions":
@@ -161,8 +161,6 @@ export function titleForTab(tab: Tab) {
       return "Agents";
     case "overview":
       return "Overview";
-    case "channels":
-      return "Channels";
     case "instances":
       return "Instances";
     case "sessions":
@@ -194,8 +192,6 @@ export function subtitleForTab(tab: Tab) {
       return "Manage agent workspaces, tools, and identities.";
     case "overview":
       return "Gateway status, entry points, and a fast health read.";
-    case "channels":
-      return "Manage channels and settings.";
     case "instances":
       return "Presence beacons from connected clients and nodes.";
     case "sessions":

@@ -1,12 +1,13 @@
 ---
-summary: "SSH tunnel setup for Penguins.app connecting to a remote gateway"
-read_when: "Connecting the macOS app to a remote gateway over SSH"
-title: "Remote Gateway Setup"
+summary: "Quick SSH tunnel recipe for reaching a loopback-only Penguins gateway remotely."
+read_when: "Connecting a browser or CLI to a remote gateway over SSH"
+title: "SSH Tunnel Quick Recipe"
 ---
 
-# Running Penguins.app with a Remote Gateway
+# SSH tunnel quick recipe
 
-Penguins.app uses SSH tunneling to connect to a remote gateway. This guide shows you how to set it up.
+Use this when the Gateway stays bound to loopback on a remote host and you want
+private access from your laptop without opening a public port.
 
 ## Overview
 
@@ -14,8 +15,8 @@ Penguins.app uses SSH tunneling to connect to a remote gateway. This guide shows
 flowchart TB
     subgraph Client["Client Machine"]
         direction TB
-        A["Penguins.app"]
-        B["ws://127.0.0.1:18789\n(local port)"]
+        A["Browser or CLI"]
+        B["127.0.0.1:18789\n(local forwarded port)"]
         T["SSH Tunnel"]
 
         A --> B
@@ -55,26 +56,20 @@ Copy your public key to the remote machine (enter password once):
 ssh-copy-id -i ~/.ssh/id_rsa <REMOTE_USER>@<REMOTE_IP>
 ```
 
-### Step 3: Set Gateway Token
-
-```bash
-launchctl setenv PENGUINS_GATEWAY_TOKEN "<your-token>"
-```
-
-### Step 4: Start SSH Tunnel
+### Step 3: Start SSH Tunnel
 
 ```bash
 ssh -N remote-gateway &
 ```
 
-### Step 5: Restart Penguins.app
+### Step 4: Print the local URL
 
 ```bash
-# Quit Penguins.app (⌘Q), then reopen:
-open /path/to/Penguins.app
+penguins dashboard --no-open
 ```
 
-The app will now connect to the remote gateway through the SSH tunnel.
+Then open the printed URL in your browser. If the Control UI prompts for auth,
+paste the gateway token or password from the remote host.
 
 ---
 
@@ -84,7 +79,7 @@ To have the SSH tunnel start automatically when you log in, create a Launch Agen
 
 ### Create the PLIST file
 
-Save this as `~/Library/LaunchAgents/bot.molt.ssh-tunnel.plist`:
+Save this as `~/Library/LaunchAgents/ai.penguins.ssh-tunnel.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -92,7 +87,7 @@ Save this as `~/Library/LaunchAgents/bot.molt.ssh-tunnel.plist`:
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>bot.molt.ssh-tunnel</string>
+    <string>ai.penguins.ssh-tunnel</string>
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/ssh</string>
@@ -110,7 +105,7 @@ Save this as `~/Library/LaunchAgents/bot.molt.ssh-tunnel.plist`:
 ### Load the Launch Agent
 
 ```bash
-launchctl bootstrap gui/$UID ~/Library/LaunchAgents/bot.molt.ssh-tunnel.plist
+launchctl bootstrap gui/$UID ~/Library/LaunchAgents/ai.penguins.ssh-tunnel.plist
 ```
 
 The tunnel will now:
@@ -118,8 +113,6 @@ The tunnel will now:
 - Start automatically when you log in
 - Restart if it crashes
 - Keep running in the background
-
-Legacy note: remove any leftover `com.penguins.ssh-tunnel` LaunchAgent if present.
 
 ---
 
@@ -135,13 +128,13 @@ lsof -i :18789
 **Restart the tunnel:**
 
 ```bash
-launchctl kickstart -k gui/$UID/bot.molt.ssh-tunnel
+launchctl kickstart -k gui/$UID/ai.penguins.ssh-tunnel
 ```
 
 **Stop the tunnel:**
 
 ```bash
-launchctl bootout gui/$UID/bot.molt.ssh-tunnel
+launchctl bootout gui/$UID/ai.penguins.ssh-tunnel
 ```
 
 ---
@@ -155,4 +148,6 @@ launchctl bootout gui/$UID/bot.molt.ssh-tunnel
 | `KeepAlive`                          | Automatically restarts tunnel if it crashes                  |
 | `RunAtLoad`                          | Starts tunnel when the agent loads                           |
 
-Penguins.app connects to `ws://127.0.0.1:18789` on your client machine. The SSH tunnel forwards that connection to port 18789 on the remote machine where the Gateway is running.
+The browser and CLI connect to `127.0.0.1:18789` on your client machine. The
+SSH tunnel forwards that traffic to port `18789` on the remote machine where
+the Gateway is running.

@@ -95,16 +95,20 @@ Open:
 
 ## Security notes
 
-- Gateway auth is required by default (token/password or Tailscale identity headers).
+- Gateway auth is required by default.
 - Non-loopback binds still **require** a shared token/password (`gateway.auth` or env).
 - The wizard generates a gateway token by default (even on loopback).
 - The UI sends `connect.params.auth.token` or `connect.params.auth.password`.
 - The Control UI sends anti-clickjacking headers and only accepts same-origin browser
   websocket connections unless `gateway.controlUi.allowedOrigins` is set.
-- With Serve, Tailscale identity headers can satisfy auth when
-  `gateway.auth.allowTailscale` is `true` (no token/password required). Set
-  `gateway.auth.allowTailscale: false` to require explicit credentials. See
-  [Tailscale](/gateway/tailscale) and [Security](/gateway/security).
+- With Serve, verified Tailscale identity headers can satisfy the Gateway
+  WebSocket / Control UI handshake when `gateway.auth.allowTailscale` is `true`.
+  If you use that mode, also set `gateway.auth.tailscaleAllowUsers`, or switch
+  to `gateway.auth.mode: "password"`. See [Tailscale](/gateway/tailscale) and
+  [Security](/gateway/security).
+- Privileged HTTP endpoints still require bearer auth, even over Serve:
+  `POST /tools/invoke`, `POST /v1/chat/completions`, `POST /v1/responses`, and
+  protected plugin HTTP routes all need `Authorization: Bearer <token-or-password>`.
 - `gateway.tailscale.mode: "funnel"` requires `gateway.auth.mode: "password"` (shared password).
 
 ## Building the UI

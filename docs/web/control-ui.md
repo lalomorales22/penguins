@@ -1,5 +1,5 @@
 ---
-summary: "Browser-based control UI for the Gateway (chat, nodes, config)"
+summary: "Browser-based control UI for the Gateway (chat, config, and operations)"
 read_when:
   - You want to operate the Gateway from a browser
   - You want Tailnet access without SSH tunnels
@@ -30,51 +30,44 @@ Auth is supplied during the WebSocket handshake via:
   The dashboard settings panel lets you store a token; passwords are not persisted.
   The onboarding wizard generates a gateway token by default, so paste it here on first connect.
 
-## Device pairing (first connection)
+With Tailscale Serve, verified identity headers can also satisfy this WebSocket
+handshake when `gateway.auth.allowTailscale` is `true` and the user is listed
+in `gateway.auth.tailscaleAllowUsers`. That shortcut only applies to the
+Gateway WebSocket / Control UI connection. Privileged HTTP endpoints still
+require `Authorization: Bearer <token-or-password>`.
 
-When you connect to the Control UI from a new browser or device, the Gateway
-requires a **one-time pairing approval** — even if you're on the same Tailnet
-with `gateway.auth.allowTailscale: true`. This is a security measure to prevent
-unauthorized access.
+With `gateway.auth.mode: "trusted-proxy"` (for example Cloudflare Access), the
+browser can also connect without pasting a token/password when the request
+arrives from a configured trusted proxy and includes the configured user
+header. See [Cloudflare Tunnel](/gateway/cloudflare-tunnel) and
+[Trusted Proxy Auth](/gateway/trusted-proxy-auth).
 
-**What you'll see:** "disconnected (1008): pairing required"
+## First connection
 
-**To approve the device:**
+The supported Control UI auth paths are:
 
-```bash
-# List pending requests
-penguins devices list
+- paste the gateway token in the UI settings
+- use Tailscale Serve with `gateway.auth.allowTailscale`
+- use trusted-proxy auth such as Cloudflare Access
 
-# Approve by request ID
-penguins devices approve <requestId>
-```
-
-Once approved, the device is remembered and won't require re-approval unless
-you revoke it with `penguins devices revoke --device <id> --role <role>`. See
-[Devices CLI](/cli/devices) for token rotation and revocation.
-
-**Notes:**
-
-- Local connections (`127.0.0.1`) are auto-approved.
-- Remote connections (LAN, Tailnet, etc.) require explicit approval.
-- Each browser profile generates a unique device ID, so switching browsers or
-  clearing browser data will require re-pairing.
+If the UI says `unauthorized` or keeps reconnecting, verify the same gateway
+auth settings you use for the CLI. See [Remote access](/gateway/remote),
+[Cloudflare Tunnel](/gateway/cloudflare-tunnel), and
+[Trusted Proxy Auth](/gateway/trusted-proxy-auth).
 
 ## What it can do (today)
 
 - Chat with the model via Gateway WS (`chat.history`, `chat.send`, `chat.abort`, `chat.inject`)
 - Stream tool calls + live tool output cards in Chat (agent events)
-- Channels: WhatsApp/Telegram/Discord/Slack + plugin channels (Mattermost, etc.) status + QR login + per-channel config (`channels.status`, `web.login.*`, `config.patch`)
 - Instances: presence list + refresh (`system-presence`)
 - Sessions: list + per-session thinking/verbose overrides (`sessions.list`, `sessions.patch`)
 - Cron jobs: list/add/run/enable/disable + run history (`cron.*`)
 - Skills: status, enable/disable, install, API key updates (`skills.*`)
-- Nodes: list + caps (`node.list`)
-- Exec approvals: edit gateway or node allowlists + ask policy for `exec host=gateway/node` (`exec.approvals.*`)
+- Exec approvals: edit gateway allowlists + ask policy for local exec (`exec.approvals.*`)
 - Config: view/edit `~/.penguins/penguins.json` (`config.get`, `config.set`)
 - Config: apply + restart with validation (`config.apply`) and wake the last active session
 - Config writes include a base-hash guard to prevent clobbering concurrent edits
-- Config schema + form rendering (`config.schema`, including plugin + channel schemas); Raw JSON editor remains available
+- Config schema + form rendering (`config.schema`, including plugin schemas); Raw JSON editor remains available
 - Debug: status/health/models snapshots + event log + manual RPC calls (`status`, `health`, `models.list`)
 - Logs: live tail of gateway file logs with filter/export (`logs.tail`)
 - Update: run a package/git update + restart (`update.run`) with a restart report
@@ -82,7 +75,7 @@ you revoke it with `penguins devices revoke --device <id> --role <role>`. See
 Cron jobs panel notes:
 
 - For isolated jobs, delivery defaults to announce summary. You can switch to none if you want internal-only runs.
-- Channel/target fields appear when announce is selected.
+- Channel/target fields appear when announce is selected and are meant for advanced custom delivery integrations.
 - New job form includes a **Notify webhook** toggle (`notify` on the job).
 - Gateway webhook posting requires both `notify: true` on the job and `cron.webhook` in config.
 - Set `cron.webhookToken` to send a dedicated bearer token, if omitted the webhook is sent without an auth header.
@@ -91,7 +84,7 @@ Cron jobs panel notes:
 
 - `chat.send` is **non-blocking**: it acks immediately with `{ runId, status: "started" }` and the response streams via `chat` events.
 - Re-sending with the same `idempotencyKey` returns `{ status: "in_flight" }` while running, and `{ status: "ok" }` after completion.
-- `chat.inject` appends an assistant note to the session transcript and broadcasts a `chat` event for UI-only updates (no agent run, no channel delivery).
+- `chat.inject` appends an assistant note to the session transcript and broadcasts a `chat` event for UI-only updates (no agent run, no outbound integration delivery).
 - Stop:
   - Click **Stop** (calls `chat.abort`)
   - Type `/stop` (or `stop|esc|abort|wait|exit|interrupt`) to abort out-of-band
@@ -115,13 +108,21 @@ Open:
 
 - `https://<magicdns>/` (or your configured `gateway.controlUi.basePath`)
 
-By default, Serve requests can authenticate via Tailscale identity headers
-(`tailscale-user-login`) when `gateway.auth.allowTailscale` is `true`. Penguins
-verifies the identity by resolving the `x-forwarded-for` address with
-`tailscale whois` and matching it to the header, and only accepts these when the
-request hits loopback with Tailscale’s `x-forwarded-*` headers. Set
-`gateway.auth.allowTailscale: false` (or force `gateway.auth.mode: "password"`)
-if you want to require a token/password even for Serve traffic.
+By default, Serve requests can satisfy the Control UI / Gateway WebSocket
+handshake via Tailscale identity headers (`tailscale-user-login`) when
+`gateway.auth.allowTailscale` is `true`. Penguins verifies the identity by
+resolving the `x-forwarded-for` address with `tailscale whois` and matching it
+to the header, and only accepts these when the request hits loopback with
+Tailscale’s `x-forwarded-*` headers.
+
+If you use Serve identity auth, set `gateway.auth.tailscaleAllowUsers` to the
+allowed Tailscale logins. If you want to require a token/password even for the
+Control UI, set `gateway.auth.allowTailscale: false` (or force
+`gateway.auth.mode: "password"`).
+
+Privileged HTTP endpoints are stricter: `POST /tools/invoke`,
+`POST /v1/chat/completions`, `POST /v1/responses`, and protected plugin HTTP
+routes always require `Authorization: Bearer <token-or-password>`.
 
 ### Bind to tailnet + token
 
@@ -158,7 +159,7 @@ Penguins **blocks** Control UI connections without device identity.
 }
 ```
 
-This disables device identity + pairing for the Control UI (even on HTTPS). Use
+This disables stricter browser-side auth protections for the Control UI. Use
 only if you trust the network.
 
 See [Tailscale](/gateway/tailscale) for HTTPS setup guidance.

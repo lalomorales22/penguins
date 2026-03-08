@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Penguins",
-  "description": "Self-hosted gateway that connects WhatsApp, Telegram, Discord, iMessage, and more to AI coding agents. Run a single Gateway process on your own machine and message your AI assistant from anywhere.",
+  "description": "Self-hosted AI gateway with a private browser control UI and CLI. Run Penguins on your own machine or server, then reach it locally or through a private tunnel.",
   "theme": "mint",
   "icons": {
     "library": "lucide"
@@ -117,39 +117,39 @@
     },
     {
       "source": "/providers/discord",
-      "destination": "/channels/discord"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/providers/googlechat",
-      "destination": "/channels/googlechat"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/providers/grammy",
-      "destination": "/channels/grammy"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/providers/location",
-      "destination": "/channels/location"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/providers/msteams",
-      "destination": "/channels/msteams"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/providers/slack",
-      "destination": "/channels/slack"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/providers/telegram",
-      "destination": "/channels/telegram"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/providers/troubleshooting",
-      "destination": "/channels/troubleshooting"
+      "destination": "/help/troubleshooting"
     },
     {
       "source": "/providers/whatsapp",
-      "destination": "/channels/whatsapp"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/sandbox",
@@ -265,11 +265,15 @@
     },
     {
       "source": "/device-models",
-      "destination": "/reference/device-models"
+      "destination": "/platforms"
+    },
+    {
+      "source": "/reference/device-models",
+      "destination": "/platforms"
     },
     {
       "source": "/discord",
-      "destination": "/channels/discord"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/discovery",
@@ -317,15 +321,15 @@
     },
     {
       "source": "/grammy",
-      "destination": "/channels/grammy"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/group-messages",
-      "destination": "/channels/group-messages"
+      "destination": "/concepts/multi-agent"
     },
     {
       "source": "/groups",
-      "destination": "/channels/groups"
+      "destination": "/concepts/multi-agent"
     },
     {
       "source": "/health",
@@ -345,7 +349,7 @@
     },
     {
       "source": "/location",
-      "destination": "/channels/location"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/lore",
@@ -377,7 +381,11 @@
     },
     {
       "source": "/onboarding",
-      "destination": "/start/onboarding"
+      "destination": "/start/wizard"
+    },
+    {
+      "source": "/start/onboarding",
+      "destination": "/start/wizard"
     },
     {
       "source": "/onboarding-config-protocol",
@@ -385,7 +393,7 @@
     },
     {
       "source": "/pairing",
-      "destination": "/channels/pairing"
+      "destination": "/gateway/security"
     },
     {
       "source": "/plans/cron-add-hardening",
@@ -409,11 +417,11 @@
     },
     {
       "source": "/provider-routing",
-      "destination": "/channels/channel-routing"
+      "destination": "/concepts/multi-agent"
     },
     {
       "source": "/concepts/provider-routing",
-      "destination": "/channels/channel-routing"
+      "destination": "/concepts/multi-agent"
     },
     {
       "source": "/queue",
@@ -469,7 +477,7 @@
     },
     {
       "source": "/slack",
-      "destination": "/channels/slack"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/slash-commands",
@@ -485,7 +493,7 @@
     },
     {
       "source": "/telegram",
-      "destination": "/channels/telegram"
+      "destination": "/web/control-ui"
     },
     {
       "source": "/templates/AGENTS",
@@ -557,7 +565,159 @@
     },
     {
       "source": "/whatsapp",
-      "destination": "/channels/whatsapp"
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/index",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/whatsapp",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/telegram",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/discord",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/slack",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/googlechat",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/msteams",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/matrix",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/bluebubbles",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/imessage",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/signal",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/grammy",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/location",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/channels/pairing",
+      "destination": "/gateway/security"
+    },
+    {
+      "source": "/channels/group-messages",
+      "destination": "/concepts/multi-agent"
+    },
+    {
+      "source": "/channels/groups",
+      "destination": "/concepts/multi-agent"
+    },
+    {
+      "source": "/channels/broadcast-groups",
+      "destination": "/concepts/multi-agent"
+    },
+    {
+      "source": "/channels/channel-routing",
+      "destination": "/concepts/multi-agent"
+    },
+    {
+      "source": "/channels/troubleshooting",
+      "destination": "/help/troubleshooting"
+    },
+    {
+      "source": "/channels/mattermost",
+      "destination": "/tools/plugin"
+    },
+    {
+      "source": "/channels/nostr",
+      "destination": "/tools/plugin"
+    },
+    {
+      "source": "/channels/zalo",
+      "destination": "/tools/plugin"
+    },
+    {
+      "source": "/gateway/pairing",
+      "destination": "/gateway/security"
+    },
+    {
+      "source": "/cli/channels",
+      "destination": "/web/control-ui"
+    },
+    {
+      "source": "/cli/pairing",
+      "destination": "/gateway/security"
+    },
+    {
+      "source": "/cli/nodes",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/cli/node",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/cli/devices",
+      "destination": "/gateway/security"
+    },
+    {
+      "source": "/nodes",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/nodes/index",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/nodes/troubleshooting",
+      "destination": "/gateway/troubleshooting"
+    },
+    {
+      "source": "/nodes/camera",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/nodes/images",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/nodes/media-understanding",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/nodes/talk",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/platforms/mac/remote",
+      "destination": "/gateway/remote"
+    },
+    {
+      "source": "/platforms/mac/release",
+      "destination": "/reference/RELEASING"
     },
     {
       "source": "/windows",
@@ -658,36 +818,23 @@
             "groups": [
               {
                 "group": "Home",
-                "pages": [
-                  "index"
-                ]
+                "pages": ["index"]
               },
               {
                 "group": "Overview",
-                "pages": [
-                  "start/showcase"
-                ]
+                "pages": ["start/showcase"]
               },
               {
                 "group": "Core concepts",
-                "pages": [
-                  "concepts/features"
-                ]
+                "pages": ["concepts/features"]
               },
               {
                 "group": "First steps",
-                "pages": [
-                  "start/getting-started",
-                  "start/onboarding-overview",
-                  "start/wizard",
-                  "start/onboarding"
-                ]
+                "pages": ["start/getting-started", "start/onboarding-overview", "start/wizard"]
               },
               {
                 "group": "Guides",
-                "pages": [
-                  "start/penguins"
-                ]
+                "pages": ["start/penguins"]
               }
             ]
           },
@@ -696,10 +843,7 @@
             "groups": [
               {
                 "group": "Install overview",
-                "pages": [
-                  "install/index",
-                  "install/installer"
-                ]
+                "pages": ["install/index", "install/installer"]
               },
               {
                 "group": "Other install methods",
@@ -713,11 +857,7 @@
               },
               {
                 "group": "Maintenance",
-                "pages": [
-                  "install/updating",
-                  "install/migrating",
-                  "install/uninstall"
-                ]
+                "pages": ["install/updating", "install/migrating", "install/uninstall"]
               },
               {
                 "group": "Hosting and deployment",
@@ -734,44 +874,7 @@
               },
               {
                 "group": "Advanced",
-                "pages": [
-                  "install/development-channels"
-                ]
-              }
-            ]
-          },
-          {
-            "tab": "Channels",
-            "groups": [
-              {
-                "group": "Overview",
-                "pages": [
-                  "channels/index"
-                ]
-              },
-              {
-                "group": "Messaging platforms",
-                "pages": [
-                  "channels/whatsapp",
-                  "channels/telegram",
-                  "channels/discord",
-                  "channels/slack",
-                  "channels/googlechat",
-                  "channels/msteams",
-                  "channels/matrix"
-                ]
-              },
-              {
-                "group": "Configuration",
-                "pages": [
-                  "channels/pairing",
-                  "channels/group-messages",
-                  "channels/groups",
-                  "channels/broadcast-groups",
-                  "channels/channel-routing",
-                  "channels/location",
-                  "channels/troubleshooting"
-                ]
+                "pages": ["install/development-channels"]
               }
             ]
           },
@@ -792,9 +895,7 @@
               },
               {
                 "group": "Bootstrapping",
-                "pages": [
-                  "start/bootstrapping"
-                ]
+                "pages": ["start/bootstrapping"]
               },
               {
                 "group": "Sessions and memory",
@@ -809,10 +910,7 @@
               },
               {
                 "group": "Multi-agent",
-                "pages": [
-                  "concepts/multi-agent",
-                  "concepts/presence"
-                ]
+                "pages": ["concepts/multi-agent", "concepts/presence"]
               },
               {
                 "group": "Messages and delivery",
@@ -830,9 +928,7 @@
             "groups": [
               {
                 "group": "Overview",
-                "pages": [
-                  "tools/index"
-                ]
+                "pages": ["tools/index"]
               },
               {
                 "group": "Built-in tools",
@@ -858,11 +954,7 @@
               },
               {
                 "group": "Agent coordination",
-                "pages": [
-                  "tools/agent-send",
-                  "tools/subagents",
-                  "tools/multi-agent-sandbox-tools"
-                ]
+                "pages": ["tools/agent-send", "tools/subagents", "tools/multi-agent-sandbox-tools"]
               },
               {
                 "group": "Skills",
@@ -894,23 +986,15 @@
             "groups": [
               {
                 "group": "Overview",
-                "pages": [
-                  "providers/index",
-                  "providers/models"
-                ]
+                "pages": ["providers/index", "providers/models"]
               },
               {
                 "group": "Model concepts",
-                "pages": [
-                  "concepts/models"
-                ]
+                "pages": ["concepts/models"]
               },
               {
                 "group": "Configuration",
-                "pages": [
-                  "concepts/model-providers",
-                  "concepts/model-failover"
-                ]
+                "pages": ["concepts/model-providers", "concepts/model-failover"]
               },
               {
                 "group": "Providers",
@@ -937,11 +1021,7 @@
             "groups": [
               {
                 "group": "Platforms overview",
-                "pages": [
-                  "platforms/index",
-                  "platforms/linux",
-                  "platforms/windows"
-                ]
+                "pages": ["platforms/index", "platforms/linux", "platforms/windows"]
               }
             ]
           },
@@ -991,12 +1071,7 @@
                   },
                   {
                     "group": "Networking and discovery",
-                    "pages": [
-                      "gateway/network-model",
-                      "gateway/pairing",
-                      "gateway/discovery",
-                      "gateway/bonjour"
-                    ]
+                    "pages": ["gateway/network-model", "gateway/discovery", "gateway/bonjour"]
                   }
                 ]
               },
@@ -1004,25 +1079,18 @@
                 "group": "Remote access",
                 "pages": [
                   "gateway/remote",
+                  "gateway/cloudflare-tunnel",
                   "gateway/remote-gateway-readme",
                   "gateway/tailscale"
                 ]
               },
               {
                 "group": "Security",
-                "pages": [
-                  "security/formal-verification"
-                ]
+                "pages": ["security/formal-verification"]
               },
               {
                 "group": "Web interfaces",
-                "pages": [
-                  "web/index",
-                  "web/control-ui",
-                  "web/dashboard",
-                  "web/webchat",
-                  "web/tui"
-                ]
+                "pages": ["web/index", "web/control-ui", "web/dashboard", "web/webchat", "web/tui"]
               }
             ]
           },
@@ -1037,7 +1105,6 @@
                   "cli/agents",
                   "cli/approvals",
                   "cli/browser",
-                  "cli/channels",
                   "cli/configure",
                   "cli/cron",
                   "cli/dashboard",
@@ -1052,9 +1119,7 @@
                   "cli/memory",
                   "cli/message",
                   "cli/models",
-                  "cli/nodes",
                   "cli/onboard",
-                  "cli/pairing",
                   "cli/plugins",
                   "cli/reset",
                   "cli/sandbox",
@@ -1072,10 +1137,7 @@
               },
               {
                 "group": "RPC and API",
-                "pages": [
-                  "reference/rpc",
-                  "reference/device-models"
-                ]
+                "pages": ["reference/rpc"]
               },
               {
                 "group": "Templates",
@@ -1093,11 +1155,7 @@
               },
               {
                 "group": "Technical reference",
-                "pages": [
-                  "reference/wizard",
-                  "reference/token-use",
-                  "channels/grammy"
-                ]
+                "pages": ["reference/wizard", "reference/token-use", "channels/grammy"]
               },
               {
                 "group": "Concept internals",
@@ -1111,16 +1169,11 @@
               },
               {
                 "group": "Project",
-                "pages": [
-                  "reference/credits"
-                ]
+                "pages": ["reference/credits"]
               },
               {
                 "group": "Release notes",
-                "pages": [
-                  "reference/RELEASING",
-                  "reference/test"
-                ]
+                "pages": ["reference/RELEASING", "reference/test"]
               },
               {
                 "group": "Experiments",
@@ -1139,57 +1192,35 @@
             "groups": [
               {
                 "group": "Help",
-                "pages": [
-                  "help/index",
-                  "help/troubleshooting",
-                  "help/faq"
-                ]
+                "pages": ["help/index", "help/troubleshooting", "help/faq"]
               },
               {
                 "group": "Community",
-                "pages": [
-                  "start/lore"
-                ]
+                "pages": ["start/lore"]
               },
               {
                 "group": "Environment and debugging",
-                "pages": [
-                  "help/environment",
-                  "help/debugging",
-                  "help/testing",
-                  "help/scripts"
-                ]
+                "pages": ["help/environment", "help/debugging", "help/testing", "help/scripts"]
               },
               {
                 "group": "Node runtime",
-                "pages": [
-                  "install/node"
-                ]
+                "pages": ["install/node"]
               },
               {
                 "group": "Compaction internals",
-                "pages": [
-                  "reference/session-management-compaction"
-                ]
+                "pages": ["reference/session-management-compaction"]
               },
               {
                 "group": "Developer setup",
-                "pages": [
-                  "start/setup"
-                ]
+                "pages": ["start/setup"]
               },
               {
                 "group": "Contributing",
-                "pages": [
-                  "ci"
-                ]
+                "pages": ["ci"]
               },
               {
                 "group": "Docs meta",
-                "pages": [
-                  "start/hubs",
-                  "start/docs-directory"
-                ]
+                "pages": ["start/hubs", "start/docs-directory"]
               }
             ]
           }

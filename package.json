@@ -1,13 +1,12 @@
 {
   "name": "penguins",
   "version": "2026.2.15",
-  "description": "Multi-channel AI gateway with extensible messaging integrations",
+  "description": "Self-hosted AI gateway with a private browser control UI and CLI",
   "keywords": [],
   "license": "MIT",
   "author": "",
   "bin": {
-    "penguins": "penguins.mjs",
-    "openclaw": "penguins.mjs"
+    "penguins": "penguins.mjs"
   },
   "files": [
     "CHANGELOG.md",

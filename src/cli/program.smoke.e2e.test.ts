@@ -6,8 +6,6 @@ import {
   installSmokeProgramMocks,
   messageCommand,
   onboardCommand,
-  runChannelLogin,
-  runChannelLogout,
   runTui,
   runtime,
   setupCommand,
@@ -219,24 +217,5 @@ describe("cli program (smoke)", () => {
       }),
       runtime,
     );
-  });
-
-  it("runs channels login", async () => {
-    const program = buildProgram();
-    await program.parseAsync(["channels", "login", "--account", "work"], {
-      from: "user",
-    });
-    expect(runChannelLogin).toHaveBeenCalledWith(
-      { channel: undefined, account: "work", verbose: false },
-      runtime,
-    );
-  });
-
-  it("runs channels logout", async () => {
-    const program = buildProgram();
-    await program.parseAsync(["channels", "logout", "--account", "work"], {
-      from: "user",
-    });
-    expect(runChannelLogout).toHaveBeenCalledWith({ channel: undefined, account: "work" }, runtime);
   });
 });

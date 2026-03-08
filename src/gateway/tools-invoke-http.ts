@@ -152,6 +152,7 @@ export async function handleToolsInvokeHttpRequest(
     req,
     trustedProxies: opts.trustedProxies ?? cfg.gateway?.trustedProxies,
     rateLimiter: opts.rateLimiter,
+    allowTailscaleAuth: false,
   });
   if (!authResult.ok) {
     sendGatewayAuthFailure(res, authResult);

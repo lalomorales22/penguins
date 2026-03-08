@@ -1,9 +1,9 @@
 import type { PenguinsPluginApi } from "penguins/plugin-sdk";
-import { emptyPluginConfigSchema } from "penguins/plugin-sdk";
 import { Type } from "@sinclair/typebox";
-import fs from "node:fs/promises";
 import fsSync from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
+import { emptyPluginConfigSchema } from "penguins/plugin-sdk";
 
 const MEMORY_CATEGORIES = ["fact", "preference", "note", "event", "skill"] as const;
 type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
@@ -96,6 +96,11 @@ const memoryCorePlugin = {
                     text: `Saved to memory [${category}]: "${(params.content as string).slice(0, 100)}"`,
                   },
                 ],
+                details: {
+                  action: "saved",
+                  category,
+                  path: memFile,
+                },
               };
             } catch (err) {
               return {
@@ -105,6 +110,11 @@ const memoryCorePlugin = {
                     text: `Failed to save memory: ${String(err)}`,
                   },
                 ],
+                details: {
+                  action: "error",
+                  path: memFile,
+                  error: String(err),
+                },
                 isError: true,
               };
             }

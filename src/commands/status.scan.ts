@@ -1,11 +1,12 @@
 import type { MemoryProviderStatus } from "../memory/types.js";
 import type { RuntimeEnv } from "../runtime.js";
+import type { HealthSummary } from "./health.js";
 import { withProgress } from "../cli/progress.js";
 import { loadConfig } from "../config/config.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
 import { normalizeControlUiBasePath } from "../gateway/control-ui-shared.js";
 import { probeGateway } from "../gateway/probe.js";
-import { collectChannelStatusIssues } from "../infra/channels-status-issues.js";
+import { collectHealthChannelIssues } from "../infra/channels-status-issues.js";
 import { resolveOsSummary } from "../infra/os-summary.js";
 import { getTailnetHostname } from "../infra/tailscale.js";
 import { getMemorySearchManager } from "../memory/index.js";
@@ -51,7 +52,7 @@ export type StatusScanResult = {
   gatewayProbe: Awaited<ReturnType<typeof probeGateway>> | null;
   gatewayReachable: boolean;
   gatewaySelf: ReturnType<typeof pickGatewaySelfPresence>;
-  channelIssues: ReturnType<typeof collectChannelStatusIssues>;
+  channelIssues: ReturnType<typeof collectHealthChannelIssues>;
   agentStatus: Awaited<ReturnType<typeof getAgentLocalStatuses>>;
   channels: Awaited<ReturnType<typeof buildChannelsTable>>;
   summary: Awaited<ReturnType<typeof getStatusSummary>>;
@@ -126,18 +127,14 @@ export async function scanStatus(
         : null;
       progress.tick();
 
-      progress.setLabel("Querying channel status…");
-      const channelsStatus = gatewayReachable
+      progress.setLabel("Reading gateway health…");
+      const health = gatewayReachable
         ? await callGateway({
-            method: "channels.status",
-            params: {
-              probe: false,
-              timeoutMs: Math.min(8000, opts.timeoutMs ?? 10_000),
-            },
+            method: "health",
             timeoutMs: Math.min(opts.all ? 5000 : 2500, opts.timeoutMs ?? 10_000),
-          }).catch(() => null)
+          }).catch(() => null as HealthSummary | null)
         : null;
-      const channelIssues = channelsStatus ? collectChannelStatusIssues(channelsStatus) : [];
+      const channelIssues = health ? collectHealthChannelIssues(health) : [];
       progress.tick();
 
       progress.setLabel("Summarizing channels…");

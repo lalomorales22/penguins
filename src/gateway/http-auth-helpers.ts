@@ -18,6 +18,7 @@ export async function authorizeGatewayBearerRequestOrReply(params: {
     req: params.req,
     trustedProxies: params.trustedProxies,
     rateLimiter: params.rateLimiter,
+    allowTailscaleAuth: false,
   });
   if (!authResult.ok) {
     sendGatewayAuthFailure(params.res, authResult);

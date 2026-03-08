@@ -18,7 +18,7 @@ penguins status
 penguins gateway status
 penguins logs --follow
 penguins doctor
-penguins channels status --probe
+penguins gateway status --deep
 ```
 
 Then run automation checks:
@@ -55,7 +55,7 @@ Common signatures:
 ```bash
 penguins cron runs --id <jobId> --limit 20
 penguins cron list
-penguins channels status --probe
+penguins gateway status --deep
 penguins logs --follow
 ```
 
@@ -63,7 +63,7 @@ Good output looks like:
 
 - Run status is `ok`.
 - Delivery mode/target are set for isolated jobs.
-- Channel probe reports target channel connected.
+- Gateway status and logs match the delivery target you expect.
 
 Common signatures:
 
@@ -77,7 +77,7 @@ Common signatures:
 penguins system heartbeat last
 penguins logs --follow
 penguins config get agents.defaults.heartbeat
-penguins channels status --probe
+penguins gateway status --deep
 ```
 
 Good output looks like:

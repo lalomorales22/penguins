@@ -9,24 +9,19 @@ const CLI_NAME = resolveCliName();
 
 const EXAMPLES = [
   [
-    "penguins channels login --verbose",
-    "Link personal WhatsApp Web and show QR + connection logs.",
+    "penguins onboard --install-daemon",
+    "Run the guided first-run setup and install the managed Gateway service.",
   ],
-  [
-    'penguins message send --target +15555550123 --message "Hi" --json',
-    "Send via your web session and print JSON result.",
-  ],
+  ["penguins dashboard --no-open", "Print the local Control UI URL without opening a browser."],
+  ["penguins status", "Check Gateway health, runtime status, and local diagnostics."],
   ["penguins gateway --port 18789", "Run the WebSocket Gateway locally."],
   ["penguins --dev gateway", "Run a dev Gateway (isolated state/config) on ws://127.0.0.1:19001."],
   ["penguins gateway --force", "Kill anything bound to the default gateway port, then start it."],
   ["penguins gateway ...", "Gateway control via WebSocket."],
+  ['penguins agent --message "Summarize the latest logs"', "Run the agent directly from the CLI."],
   [
-    'penguins agent --to +15555550123 --message "Run summary" --deliver',
-    "Talk directly to the agent using the Gateway; optionally send the WhatsApp reply.",
-  ],
-  [
-    'penguins message send --channel telegram --target @mychat --message "Hi"',
-    "Send via your Telegram bot.",
+    'penguins message send --channel my-integration --target ops-room --message "Deploy complete"',
+    "Send through a configured custom integration.",
   ],
 ] as const;
 

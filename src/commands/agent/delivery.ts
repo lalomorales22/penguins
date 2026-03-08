@@ -5,7 +5,7 @@ import type { AgentCommandOpts } from "./types.js";
 import { resolveSessionAgentId } from "../../agents/agent-scope.js";
 import { AGENT_LANE_NESTED } from "../../agents/lanes.js";
 import { getChannelPlugin, normalizeChannelId } from "../../channels/plugins/index.js";
-import { createOutboundSendDeps, type CliDeps } from "../../cli/outbound-send-deps.js";
+import { createOutboundSendDeps, type CliDeps } from "../../cli/deps.js";
 import {
   resolveAgentDeliveryPlan,
   resolveAgentOutboundTarget,
@@ -76,7 +76,6 @@ export async function deliverAgentCommandResult(params: {
     explicitTo: opts.replyTo ?? opts.to,
     explicitThreadId: opts.threadId,
     accountId: opts.replyAccountId ?? opts.accountId,
-    wantsDelivery: deliver,
   });
   const deliveryChannel = deliveryPlan.resolvedChannel;
   // Channel docking: delivery channels are resolved via plugin registry.

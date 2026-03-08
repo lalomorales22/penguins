@@ -81,14 +81,14 @@ Use this if the gateway service keeps running but `penguins` is missing.
 
 ### macOS (launchd)
 
-Default label is `bot.molt.gateway` (or `bot.molt.<profile>`; legacy `com.penguins.*` may still exist):
+Default label is `ai.penguins.gateway` (or `ai.penguins.<profile>` for named profiles):
 
 ```bash
-launchctl bootout gui/$UID/bot.molt.gateway
-rm -f ~/Library/LaunchAgents/bot.molt.gateway.plist
+launchctl bootout gui/$UID/ai.penguins.gateway
+rm -f ~/Library/LaunchAgents/ai.penguins.gateway.plist
 ```
 
-If you used a profile, replace the label and plist name with `bot.molt.<profile>`. Remove any legacy `com.penguins.*` plists if present.
+If you used a profile, replace the label and plist name with `ai.penguins.<profile>`.
 
 ### Linux (systemd user unit)
 

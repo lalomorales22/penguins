@@ -5,24 +5,41 @@ read_when:
 title: "Remote Access"
 ---
 
-# Remote access (SSH, tunnels, and tailnets)
+# Remote access (Cloudflare, SSH, and tailnets)
 
 This repo supports “remote over SSH” by keeping a single Gateway (the master) running on a dedicated host (desktop/server) and connecting clients to it.
 
+- For **public browser access**: Cloudflare Tunnel + Cloudflare Access is the
+  easiest hosted path.
 - For **operators (you / the macOS app)**: SSH tunneling is the universal fallback.
 - For **nodes (iOS/Android and future devices)**: connect to the Gateway **WebSocket** (LAN/tailnet or SSH tunnel as needed).
 
 ## The core idea
 
 - The Gateway WebSocket binds to **loopback** on your configured port (defaults to 18789).
-- For remote use, you forward that loopback port over SSH (or use a tailnet/VPN and tunnel less).
+- For remote use, you either proxy that loopback port through Cloudflare
+  Tunnel, forward it over SSH, or reach it over a tailnet/VPN.
 
 ## Common VPN/tailnet setups (where the agent lives)
 
 Think of the **Gateway host** as “where the agent lives.” It owns sessions, auth profiles, channels, and state.
 Your laptop/desktop (and nodes) connect to that host.
 
-### 1) Always-on Gateway in your tailnet (VPS or home server)
+### 1) Public HTTPS hostname with Cloudflare Tunnel
+
+Use this when you want a public URL for the Control UI without exposing the raw
+Gateway port.
+
+- Keep `gateway.bind: "loopback"`.
+- Run `cloudflared` on the same host and route the hostname to
+  `http://127.0.0.1:18789`.
+- Set `gateway.auth.mode: "trusted-proxy"` and trust the Cloudflare proxy IP
+  (`127.0.0.1` when `cloudflared` runs on the same host).
+- Let Cloudflare Access handle browser login.
+
+Runbook: [Cloudflare Tunnel](/gateway/cloudflare-tunnel).
+
+### 2) Always-on Gateway in your tailnet (VPS or home server)
 
 Run the Gateway on a persistent host and reach it via **Tailscale** or SSH.
 
@@ -32,7 +49,7 @@ Run the Gateway on a persistent host and reach it via **Tailscale** or SSH.
 
 This is ideal when your laptop sleeps often but you want the agent always-on.
 
-### 2) Home desktop runs the Gateway, laptop is remote control
+### 3) Home desktop runs the Gateway, laptop is remote control
 
 The laptop does **not** run the agent. It connects remotely:
 
@@ -41,7 +58,7 @@ The laptop does **not** run the agent. It connects remotely:
 
 Runbook: [macOS remote access](/platforms/mac/remote).
 
-### 3) Laptop runs the Gateway, remote access from other machines
+### 4) Laptop runs the Gateway, remote access from other machines
 
 Keep the Gateway local but expose it safely:
 
@@ -118,12 +135,23 @@ Runbook: [macOS remote access](/platforms/mac/remote).
 
 Short version: **keep the Gateway loopback-only** unless you’re sure you need a bind.
 
-- **Loopback + SSH/Tailscale Serve** is the safest default (no public exposure).
-- **Non-loopback binds** (`lan`/`tailnet`/`custom`, or `auto` when loopback is unavailable) must use auth tokens/passwords.
+- **Loopback + Cloudflare Tunnel/SSH/Tailscale Serve** is the safest default
+  (no raw public gateway port).
+- **Non-loopback binds** (`lan`/`tailnet`/`custom`, or `auto` when loopback is
+  unavailable) must use auth tokens/passwords or an explicitly configured
+  `trusted-proxy`.
 - `gateway.remote.token` is **only** for remote CLI calls — it does **not** enable local auth.
 - `gateway.remote.tlsFingerprint` pins the remote TLS cert when using `wss://`.
-- **Tailscale Serve** can authenticate via identity headers when `gateway.auth.allowTailscale: true`.
-  Set it to `false` if you want tokens/passwords instead.
+- **Cloudflare Tunnel + Access** works best with `gateway.auth.mode:
+"trusted-proxy"` and a tight `gateway.auth.trustedProxy.allowUsers`.
+- **Tailscale Serve** can satisfy the Gateway WebSocket / Control UI handshake via verified identity headers when `gateway.auth.allowTailscale: true`.
+  If you use that mode, also set `gateway.auth.tailscaleAllowUsers`, or switch to `gateway.auth.mode: "password"`.
+- Privileged HTTP endpoints still require an app-level secret over Tailscale
+  Serve:
+  `POST /tools/invoke`, `POST /v1/chat/completions`, `POST /v1/responses`, and protected plugin HTTP routes all require `Authorization: Bearer <token-or-password>`.
+- In `trusted-proxy` mode, those same routes follow the proxy identity auth on
+  the exposed hostname. Treat them like operator access and keep the Access /
+  `allowUsers` policy narrow.
 - Treat browser control like operator access: tailnet-only + deliberate node pairing.
 
 Deep dive: [Security](/gateway/security).

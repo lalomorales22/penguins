@@ -1,17 +1,15 @@
 ---
-summary: "Linux support + companion app status"
+summary: "Linux host support for the Penguins gateway and browser UI."
 read_when:
-  - Looking for Linux companion app status
-  - Planning platform coverage or contributions
-title: "Linux App"
+  - Installing Penguins on Linux
+  - Planning a Linux host deployment
+title: "Linux"
 ---
 
-# Linux App
+# Linux
 
 The Gateway is fully supported on Linux. **Node is the recommended runtime**.
 Bun is not recommended for the Gateway (WhatsApp/Telegram bugs).
-
-Native Linux companion apps are planned. Contributions are welcome if you want to help build one.
 
 ## Beginner quick path (VPS)
 

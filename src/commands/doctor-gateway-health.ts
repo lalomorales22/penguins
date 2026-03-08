@@ -1,7 +1,8 @@
 import type { PenguinsConfig } from "../config/config.js";
 import type { RuntimeEnv } from "../runtime.js";
+import type { HealthSummary } from "./health.js";
 import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
-import { collectChannelStatusIssues } from "../infra/channels-status-issues.js";
+import { collectHealthChannelIssues } from "../infra/channels-status-issues.js";
 import { note } from "../terminal/note.js";
 import { formatHealthCheckFailure } from "./health-format.js";
 import { healthCommand } from "./health.js";
@@ -30,12 +31,12 @@ export async function checkGatewayHealth(params: {
 
   if (healthOk) {
     try {
-      const status = await callGateway({
-        method: "channels.status",
-        params: { probe: true, timeoutMs: 5000 },
+      const health = await callGateway<HealthSummary>({
+        method: "health",
+        params: { probe: true },
         timeoutMs: 6000,
       });
-      const issues = collectChannelStatusIssues(status);
+      const issues = collectHealthChannelIssues(health);
       if (issues.length > 0) {
         note(
           issues

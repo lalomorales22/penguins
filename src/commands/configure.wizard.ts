@@ -1,10 +1,6 @@
 import type { PenguinsConfig } from "../config/config.js";
 import type { RuntimeEnv } from "../runtime.js";
-import type {
-  ChannelsWizardMode,
-  ConfigureWizardParams,
-  WizardSection,
-} from "./configure.shared.js";
+import type { ConfigureWizardParams, WizardSection } from "./configure.shared.js";
 import { formatCliCommand } from "../cli/command-format.js";
 import { readConfigFileSnapshot, resolveGatewayPort, writeConfigFile } from "../config/config.js";
 import { logConfigUpdated } from "../config/logging.js";
@@ -14,7 +10,6 @@ import { note } from "../terminal/note.js";
 import { resolveUserPath } from "../utils.js";
 import { createClackPrompter } from "../wizard/clack-prompter.js";
 import { WizardCancelledError } from "../wizard/prompts.js";
-import { removeChannelConfigWizard } from "./configure.channels.js";
 import { maybeInstallDaemon } from "./configure.daemon.js";
 import { promptAuthConfig } from "./configure.gateway-auth.js";
 import { promptGatewayConfig } from "./configure.gateway.js";
@@ -28,7 +23,6 @@ import {
 } from "./configure.shared.js";
 import { formatHealthCheckFailure } from "./health-format.js";
 import { healthCommand } from "./health.js";
-import { noteChannelStatus, setupChannels } from "./onboard-channels.js";
 import {
   applyWizardMetadata,
   DEFAULT_WORKSPACE,
@@ -102,28 +96,6 @@ async function promptConfigureSection(
     }),
     runtime,
   );
-}
-
-async function promptChannelMode(runtime: RuntimeEnv): Promise<ChannelsWizardMode> {
-  return guardCancel(
-    await select({
-      message: "Channels",
-      options: [
-        {
-          value: "configure",
-          label: "Configure/link",
-          hint: "Add/update channels; disable unselected accounts",
-        },
-        {
-          value: "remove",
-          label: "Remove channel config",
-          hint: "Delete channel tokens/settings from penguins.json",
-        },
-      ],
-      initialValue: "configure",
-    }),
-    runtime,
-  ) as ChannelsWizardMode;
 }
 
 async function promptWebToolsConfig(
@@ -371,21 +343,6 @@ export async function runConfigureWizard(
         gatewayToken = gateway.token;
       }
 
-      if (selected.includes("channels")) {
-        await noteChannelStatus({ cfg: nextConfig, prompter });
-        const channelMode = await promptChannelMode(runtime);
-        if (channelMode === "configure") {
-          nextConfig = await setupChannels(nextConfig, runtime, prompter, {
-            allowDisable: true,
-            allowSignalInstall: true,
-            skipConfirm: true,
-            skipStatusNote: true,
-          });
-        } else {
-          nextConfig = await removeChannelConfigWizard(nextConfig, runtime);
-        }
-      }
-
       if (selected.includes("skills")) {
         const wsDir = resolveUserPath(workspaceDir);
         nextConfig = await setupSkills(nextConfig, wsDir, runtime, prompter);
@@ -444,22 +401,6 @@ export async function runConfigureWizard(
           gatewayPort = gateway.port;
           gatewayToken = gateway.token;
           didConfigureGateway = true;
-          await persistConfig();
-        }
-
-        if (choice === "channels") {
-          await noteChannelStatus({ cfg: nextConfig, prompter });
-          const channelMode = await promptChannelMode(runtime);
-          if (channelMode === "configure") {
-            nextConfig = await setupChannels(nextConfig, runtime, prompter, {
-              allowDisable: true,
-              allowSignalInstall: true,
-              skipConfirm: true,
-              skipStatusNote: true,
-            });
-          } else {
-            nextConfig = await removeChannelConfigWizard(nextConfig, runtime);
-          }
           await persistConfig();
         }
 

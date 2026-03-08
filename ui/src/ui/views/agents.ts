@@ -3,16 +3,11 @@ import type {
   AgentIdentityResult,
   AgentsFilesListResult,
   AgentsListResult,
-  ChannelsStatusSnapshot,
   CronJob,
   CronStatus,
   SkillStatusReport,
 } from "../types.ts";
-import {
-  renderAgentFiles,
-  renderAgentChannels,
-  renderAgentCron,
-} from "./agents-panels-status-files.ts";
+import { renderAgentFiles, renderAgentCron } from "./agents-panels-status-files.ts";
 import { renderAgentTools, renderAgentSkills } from "./agents-panels-tools-skills.ts";
 import {
   agentBadgeText,
@@ -28,7 +23,7 @@ import {
   resolveModelPrimary,
 } from "./agents-utils.ts";
 
-export type AgentsPanel = "overview" | "files" | "tools" | "skills" | "channels" | "cron";
+export type AgentsPanel = "overview" | "files" | "tools" | "skills" | "cron";
 
 export type AgentsProps = {
   loading: boolean;
@@ -40,10 +35,6 @@ export type AgentsProps = {
   configLoading: boolean;
   configSaving: boolean;
   configDirty: boolean;
-  channelsLoading: boolean;
-  channelsError: string | null;
-  channelsSnapshot: ChannelsStatusSnapshot | null;
-  channelsLastSuccess: number | null;
   cronLoading: boolean;
   cronStatus: CronStatus | null;
   cronJobs: CronJob[];
@@ -77,7 +68,6 @@ export type AgentsProps = {
   onConfigSave: () => void;
   onModelChange: (agentId: string, modelId: string | null) => void;
   onModelFallbacksChange: (agentId: string, fallbacks: string[]) => void;
-  onChannelsRefresh: () => void;
   onCronRefresh: () => void;
   onSkillsFilterChange: (next: string) => void;
   onSkillsRefresh: () => void;
@@ -241,25 +231,6 @@ export function renderAgents(props: AgentsProps) {
                     : nothing
                 }
                 ${
-                  props.activePanel === "channels"
-                    ? renderAgentChannels({
-                        context: buildAgentContext(
-                          selectedAgent,
-                          props.configForm,
-                          props.agentFilesList,
-                          defaultId,
-                          props.agentIdentityById[selectedAgent.id] ?? null,
-                        ),
-                        configForm: props.configForm,
-                        snapshot: props.channelsSnapshot,
-                        loading: props.channelsLoading,
-                        error: props.channelsError,
-                        lastSuccess: props.channelsLastSuccess,
-                        onRefresh: props.onChannelsRefresh,
-                      })
-                    : nothing
-                }
-                ${
                   props.activePanel === "cron"
                     ? renderAgentCron({
                         context: buildAgentContext(
@@ -317,7 +288,6 @@ function renderAgentTabs(active: AgentsPanel, onSelect: (panel: AgentsPanel) => 
     { id: "files", label: "Files" },
     { id: "tools", label: "Tools" },
     { id: "skills", label: "Skills" },
-    { id: "channels", label: "Channels" },
     { id: "cron", label: "Cron Jobs" },
   ];
   return html`

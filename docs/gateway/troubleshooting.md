@@ -20,14 +20,14 @@ penguins status
 penguins gateway status
 penguins logs --follow
 penguins doctor
-penguins channels status --probe
+penguins gateway status --deep
 ```
 
 Expected healthy signals:
 
 - `penguins gateway status` shows `Runtime: running` and `RPC probe: ok`.
 - `penguins doctor` reports no blocking config/service issues.
-- `penguins channels status --probe` shows connected/ready channels.
+- `penguins gateway status --deep` shows the expected bind/auth/dashboard details.
 
 ## No replies
 
@@ -35,9 +35,9 @@ If channels are up but nothing answers, check routing and policy before reconnec
 
 ```bash
 penguins status
-penguins channels status --probe
-penguins pairing list <channel>
-penguins config get channels
+penguins gateway status --deep
+penguins sessions list --active 30
+penguins config get gateway
 penguins logs --follow
 ```
 
@@ -55,9 +55,9 @@ Common signatures:
 
 Related:
 
-- [/channels/troubleshooting](/channels/troubleshooting)
-- [/channels/pairing](/channels/pairing)
-- [/channels/groups](/channels/groups)
+- [/web/control-ui](/web/control-ui)
+- [/gateway/security](/gateway/security)
+- [/concepts/multi-agent](/concepts/multi-agent)
 
 ## Dashboard control ui connectivity
 
@@ -124,11 +124,9 @@ Related:
 If channel state is connected but message flow is dead, focus on policy, permissions, and channel specific delivery rules.
 
 ```bash
-penguins channels status --probe
-penguins pairing list <channel>
-penguins status --deep
+penguins gateway status --deep
 penguins logs --follow
-penguins config get channels
+penguins config get gateway
 ```
 
 Look for:
@@ -145,10 +143,9 @@ Common signatures:
 
 Related:
 
-- [/channels/troubleshooting](/channels/troubleshooting)
-- [/channels/whatsapp](/channels/whatsapp)
-- [/channels/telegram](/channels/telegram)
-- [/channels/discord](/channels/discord)
+- [/web/control-ui](/web/control-ui)
+- [/gateway/security](/gateway/security)
+- [/gateway/remote](/gateway/remote)
 
 ## Cron and heartbeat delivery
 

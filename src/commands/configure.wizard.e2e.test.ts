@@ -75,10 +75,6 @@ vi.mock("./configure.gateway-auth.js", () => ({
   promptAuthConfig: vi.fn(),
 }));
 
-vi.mock("./configure.channels.js", () => ({
-  removeChannelConfigWizard: vi.fn(),
-}));
-
 vi.mock("./configure.daemon.js", () => ({
   maybeInstallDaemon: vi.fn(),
 }));
@@ -89,10 +85,6 @@ vi.mock("./onboard-remote.js", () => ({
 
 vi.mock("./onboard-skills.js", () => ({
   setupSkills: vi.fn(),
-}));
-
-vi.mock("./onboard-channels.js", () => ({
-  setupChannels: vi.fn(),
 }));
 
 import { WizardCancelledError } from "../wizard/prompts.js";

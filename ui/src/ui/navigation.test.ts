@@ -28,7 +28,6 @@ describe("iconForTab", () => {
   it("returns stable icons for known tabs", () => {
     expect(iconForTab("chat")).toBe("messageSquare");
     expect(iconForTab("overview")).toBe("barChart");
-    expect(iconForTab("channels")).toBe("link");
     expect(iconForTab("instances")).toBe("radio");
     expect(iconForTab("sessions")).toBe("fileText");
     expect(iconForTab("cron")).toBe("loader");
@@ -132,6 +131,10 @@ describe("tabFromPath", () => {
     expect(tabFromPath("/sessions")).toBe("sessions");
   });
 
+  it("maps legacy channels paths to overview", () => {
+    expect(tabFromPath("/channels")).toBe("overview");
+  });
+
   it("returns chat for root path", () => {
     expect(tabFromPath("/")).toBe("chat");
   });
@@ -164,6 +167,7 @@ describe("inferBasePathFromPathname", () => {
   it("infers base path from nested paths", () => {
     expect(inferBasePathFromPathname("/ui/chat")).toBe("/ui");
     expect(inferBasePathFromPathname("/apps/penguins/sessions")).toBe("/apps/penguins");
+    expect(inferBasePathFromPathname("/ui/channels")).toBe("/ui");
   });
 
   it("handles index.html suffix", () => {

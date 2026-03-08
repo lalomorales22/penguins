@@ -69,7 +69,7 @@ Channel config lives under `channels.zalouser` (not `plugins.entries.*`):
 ```bash
 penguins channels login --channel zalouser
 penguins channels logout --channel zalouser
-penguins channels status --probe
+penguins gateway status --deep
 penguins message send --channel zalouser --target <threadId> --message "Hello from Penguins"
 penguins directory peers list --channel zalouser --query "name"
 ```

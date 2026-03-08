@@ -16,7 +16,6 @@ COPY patches ./patches
 COPY ui ./ui
 COPY extensions/memory-core ./extensions/memory-core
 COPY vendor/a2ui/renderers/lit ./vendor/a2ui/renderers/lit
-COPY apps/shared/PenguinsKit/Tools/CanvasA2UI ./apps/shared/PenguinsKit/Tools/CanvasA2UI
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm build

@@ -32,7 +32,6 @@ Notes:
   The installer will `git pull --rebase` **only** if the repo is clean.
 
 - For **global installs**, the script uses `npm install -g penguins@latest` under the hood.
-- Legacy note: `clawdbot` remains available as a compatibility shim.
 
 ## Before you update
 
@@ -170,7 +169,7 @@ penguins logs --follow
 
 If you’re supervised:
 
-- macOS launchd (app-bundled LaunchAgent): `launchctl kickstart -k gui/$UID/bot.molt.gateway` (use `bot.molt.<profile>`; legacy `com.penguins.*` still works)
+- macOS launchd (app-bundled LaunchAgent): `launchctl kickstart -k gui/$UID/ai.penguins.gateway` (use `ai.penguins.<profile>` for named profiles)
 - Linux systemd user service: `systemctl --user restart penguins-gateway[-<profile>].service`
 - Windows (WSL2): `systemctl --user restart penguins-gateway[-<profile>].service`
   - `launchctl`/`systemctl` only work if the service is installed; otherwise run `penguins gateway install`.

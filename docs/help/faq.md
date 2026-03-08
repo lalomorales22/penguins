@@ -348,9 +348,13 @@ The wizard opens your browser with a clean (non-tokenized) dashboard URL right a
 
 **Not on localhost:**
 
-- **Tailscale Serve** (recommended): keep bind loopback, run `penguins gateway --tailscale serve`, open `https://<magicdns>/`. If `gateway.auth.allowTailscale` is `true`, identity headers satisfy auth (no token).
+- **Tailscale Serve** (recommended): keep bind loopback, run `penguins gateway --tailscale serve`, open `https://<magicdns>/`. If `gateway.auth.allowTailscale` is `true`, Serve can satisfy the Control UI / Gateway WS handshake via verified identity headers. Also set `gateway.auth.tailscaleAllowUsers`, or switch to `gateway.auth.mode: "password"`.
 - **Tailnet bind**: run `penguins gateway --bind tailnet --token "<token>"`, open `http://<tailscale-ip>:18789/`, paste token in dashboard settings.
 - **SSH tunnel**: `ssh -N -L 18789:127.0.0.1:18789 user@host` then open `http://127.0.0.1:18789/` and paste the token in Control UI settings.
+
+Even over Tailscale Serve, keep the token/password for remote CLI calls and
+privileged HTTP endpoints such as `/tools/invoke`, `/v1/chat/completions`, and
+`/v1/responses`.
 
 See [Dashboard](/web/dashboard) and [Web surfaces](/web) for bind modes and auth details.
 
@@ -931,29 +935,30 @@ If you are running macOS in a VM, see [macOS VM](/install/macos-vm).
 
 ### What is Penguins in one paragraph
 
-Penguins is a personal AI assistant you run on your own devices. It replies on the messaging surfaces you already use (WhatsApp, Telegram, Slack, Mattermost (plugin), Discord, Google Chat, Signal, iMessage, WebChat) and can also do voice + a live Canvas on supported platforms. The **Gateway** is the always-on control plane; the assistant is the product.
+Penguins is a personal AI assistant you run on your own devices. The supported built-in product surfaces are browser chat, the private Control UI, and the CLI. The **Gateway** is the always-on control plane that keeps your sessions, tools, automations, and state on hardware you control. If you want anything else, you can build your own integrations on top of that Gateway.
 
 ### What's the value proposition
 
 Penguins is not "just a Claude wrapper." It's a **local-first control plane** that lets you run a
-capable assistant on **your own hardware**, reachable from the chat apps you already use, with
-stateful sessions, memory, and tools - without handing control of your workflows to a hosted
-SaaS.
+capable assistant on **your own hardware**, reachable through browser chat, the Control UI, and
+the CLI, with stateful sessions, memory, and tools without handing control of your workflows to a
+hosted SaaS.
 
 Highlights:
 
 - **Your devices, your data:** run the Gateway wherever you want (Mac, Linux, VPS) and keep the
   workspace + session history local.
-- **Real channels, not a web sandbox:** WhatsApp/Telegram/Slack/Discord/Signal/iMessage/etc,
-  plus mobile voice and Canvas on supported platforms.
+- **Built-in app surfaces that stay under your control:** browser chat for conversation, the
+  Control UI for ops, and the CLI for setup + scripting.
 - **Model-agnostic:** use Anthropic, OpenAI, MiniMax, OpenRouter, etc., with per-agent routing
   and failover.
 - **Local-only option:** run local models so **all data can stay on your device** if you want.
-- **Multi-agent routing:** separate agents per channel, account, or task, each with its own
-  workspace and defaults.
-- **Open source and hackable:** inspect, extend, and self-host without vendor lock-in.
+- **Always-on state and automation:** persistent sessions, cron, heartbeat, logs, health checks,
+  and tools live behind one Gateway.
+- **Open source and hackable:** inspect, extend, self-host, and add custom integrations without
+  vendor lock-in.
 
-Docs: [Gateway](/gateway), [Channels](/channels), [Multi-agent](/concepts/multi-agent),
+Docs: [Gateway](/gateway), [Control UI](/web/control-ui), [CLI](/cli),
 [Memory](/concepts/memory).
 
 ### I just set it up what should I do first
@@ -972,11 +977,11 @@ use sub agents for parallel work.
 
 Everyday wins usually look like:
 
-- **Personal briefings:** summaries of inbox, calendar, and news you care about.
-- **Research and drafting:** quick research, summaries, and first drafts for emails or docs.
-- **Reminders and follow ups:** cron or heartbeat driven nudges and checklists.
-- **Browser automation:** filling forms, collecting data, and repeating web tasks.
-- **Cross device coordination:** send a task from your phone, let the Gateway run it on a server, and get the result back in chat.
+- **Ongoing browser chat:** keep one durable conversation with your assistant instead of starting over every time.
+- **Operator workflows in the Control UI:** inspect logs, restart flows, edit config, review sessions, and manage cron jobs from one browser tab.
+- **Research and drafting:** quick research, summaries, and first drafts for emails, docs, and plans.
+- **Scheduled follow-through:** cron and heartbeat for reminders, reviews, and recurring checks.
+- **CLI automation:** run one-off jobs, wire scripts together, and keep repeatable workflows in source control.
 
 ### Can Penguins help with lead gen outreach ads and blogs for a SaaS
 
@@ -998,10 +1003,11 @@ want durable memory, cross-device access, and tool orchestration.
 Advantages:
 
 - **Persistent memory + workspace** across sessions
-- **Multi-platform access** (WhatsApp, Telegram, TUI, WebChat)
+- **Built-in browser chat, Control UI, and CLI** on top of the same Gateway
+- **Operator features** like logs, health, sessions, config editing, and cron
 - **Tool orchestration** (browser, files, scheduling, hooks)
-- **Always-on Gateway** (run on a VPS, interact from anywhere)
-- **Nodes** for local browser/screen/camera/exec
+- **Always-on Gateway** (run on a VPS or home machine, interact from anywhere)
+- **Nodes and custom integrations** when you need to extend beyond the core app
 
 Showcase: [https://penguins.ai/showcase](https://penguins.ai/showcase)
 
@@ -1511,7 +1517,7 @@ Check the basics:
 
 - Gateway is running: `penguins gateway status`
 - Gateway health: `penguins status`
-- Channel health: `penguins channels status`
+- Gateway runtime details: `penguins gateway status --deep`
 
 Then verify auth and routing:
 
@@ -2451,7 +2457,7 @@ Quick setup (recommended):
 - Set a unique `gateway.port` in each profile config (or pass `--port` for manual runs).
 - Install a per-profile service: `penguins --profile <name> gateway install`.
 
-Profiles also suffix service names (`bot.molt.<profile>`; legacy `com.penguins.*`, `penguins-gateway-<profile>.service`, `Penguins Gateway (<profile>)`).
+Profiles also suffix service names (`ai.penguins.<profile>`, `penguins-gateway-<profile>.service`, `Penguins Gateway (<profile>)`).
 Full guide: [Multiple gateways](/gateway/multiple-gateways).
 
 ### What does invalid handshake code 1008 mean
@@ -2561,7 +2567,7 @@ Start with a quick health sweep:
 ```bash
 penguins status
 penguins models status
-penguins channels status
+penguins gateway status --deep
 penguins logs --follow
 ```
 
@@ -2598,8 +2604,8 @@ Docs: [Dashboard](/web/dashboard), [Remote access](/gateway/remote), [Troublesho
 Start with logs and channel status:
 
 ```bash
-penguins channels status
-penguins channels logs --channel telegram
+penguins gateway status --deep
+penguins logs --follow
 ```
 
 If you are on a VPS or behind a proxy, confirm outbound HTTPS is allowed and DNS works.

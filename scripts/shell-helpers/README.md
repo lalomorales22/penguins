@@ -1,6 +1,11 @@
-# ClawDock <!-- omit in toc -->
+# Penguins Docker Helpers <!-- omit in toc -->
 
-Stop typing `docker-compose` commands. Just type `clawdock-start`.
+> Optional shell shortcuts for repo-based Docker workflows.
+> Recommended primary path: use `./docker-setup.sh`, plain `docker compose`,
+> and `penguins dashboard`.
+
+Stop typing repeated `docker compose` commands. Just type
+`penguins-docker-start`.
 
 Inspired by Simon Willison's [Running Penguins in Docker](https://til.simonwillison.net/llms/penguins-docker).
 
@@ -14,7 +19,7 @@ Inspired by Simon Willison's [Running Penguins in Docker](https://til.simonwilli
   - [Utilities](#utilities)
 - [Common Workflows](#common-workflows)
   - [Check Status and Logs](#check-status-and-logs)
-  - [Set Up WhatsApp Bot](#set-up-whatsapp-bot)
+  - [Run Advanced Commands in the Container](#run-advanced-commands-in-the-container)
   - [Troubleshooting Device Pairing](#troubleshooting-device-pairing)
   - [Fix Token Mismatch Issues](#fix-token-mismatch-issues)
   - [Permission Denied](#permission-denied)
@@ -22,105 +27,103 @@ Inspired by Simon Willison's [Running Penguins in Docker](https://til.simonwilli
 
 ## Quickstart
 
-**Install:**
+Point your shell at the helper script inside your Penguins clone:
 
 ```bash
-mkdir -p ~/.clawdock && curl -sL https://raw.githubusercontent.com/penguins/penguins/main/scripts/shell-helpers/clawdock-helpers.sh -o ~/.clawdock/clawdock-helpers.sh
+echo 'source ~/penguins/scripts/shell-helpers/penguins-docker-helpers.sh' >> ~/.zshrc && source ~/.zshrc
 ```
 
-```bash
-echo 'source ~/.clawdock/clawdock-helpers.sh' >> ~/.zshrc && source ~/.zshrc
-```
+If your repo lives somewhere else, replace `~/penguins` with the actual path.
 
 **See what you get:**
 
 ```bash
-clawdock-help
+penguins-docker-help
 ```
 
-On first command, ClawDock auto-detects your Penguins directory:
+On first command, the helper auto-detects your Penguins directory:
 
 - Checks common paths (`~/penguins`, `~/workspace/penguins`, etc.)
 - If found, asks you to confirm
-- Saves to `~/.clawdock/config`
+- Saves to `~/.penguins/docker-helpers/config`
 
 **First time setup:**
 
 ```bash
-clawdock-start
+penguins-docker-start
 ```
 
 ```bash
-clawdock-fix-token
+penguins-docker-fix-token
 ```
 
 ```bash
-clawdock-dashboard
+penguins-docker-dashboard
 ```
 
 If you see "pairing required":
 
 ```bash
-clawdock-devices
+penguins-docker-devices
 ```
 
 And approve the request for the specific device:
 
 ```bash
-clawdock-approve <request-id>
+penguins-docker-approve <request-id>
 ```
 
 ## Available Commands
 
 ### Basic Operations
 
-| Command            | Description                     |
-| ------------------ | ------------------------------- |
-| `clawdock-start`   | Start the gateway               |
-| `clawdock-stop`    | Stop the gateway                |
-| `clawdock-restart` | Restart the gateway             |
-| `clawdock-status`  | Check container status          |
-| `clawdock-logs`    | View live logs (follows output) |
+| Command                   | Description                     |
+| ------------------------- | ------------------------------- |
+| `penguins-docker-start`   | Start the gateway               |
+| `penguins-docker-stop`    | Stop the gateway                |
+| `penguins-docker-restart` | Restart the gateway             |
+| `penguins-docker-status`  | Check container status          |
+| `penguins-docker-logs`    | View live logs (follows output) |
 
 ### Container Access
 
-| Command                   | Description                                    |
-| ------------------------- | ---------------------------------------------- |
-| `clawdock-shell`          | Interactive shell inside the gateway container |
-| `clawdock-cli <command>`  | Run Penguins CLI commands                      |
-| `clawdock-exec <command>` | Execute arbitrary commands in the container    |
+| Command                          | Description                                    |
+| -------------------------------- | ---------------------------------------------- |
+| `penguins-docker-shell`          | Interactive shell inside the gateway container |
+| `penguins-docker-cli <command>`  | Run Penguins CLI commands                      |
+| `penguins-docker-exec <command>` | Execute arbitrary commands in the container    |
 
 ### Web UI & Devices
 
-| Command                 | Description                                |
-| ----------------------- | ------------------------------------------ |
-| `clawdock-dashboard`    | Open web UI in browser with authentication |
-| `clawdock-devices`      | List device pairing requests               |
-| `clawdock-approve <id>` | Approve a device pairing request           |
+| Command                        | Description                                |
+| ------------------------------ | ------------------------------------------ |
+| `penguins-docker-dashboard`    | Open web UI in browser with authentication |
+| `penguins-docker-devices`      | List device pairing requests               |
+| `penguins-docker-approve <id>` | Approve a device pairing request           |
 
 ### Setup & Configuration
 
-| Command              | Description                                       |
-| -------------------- | ------------------------------------------------- |
-| `clawdock-fix-token` | Configure gateway authentication token (run once) |
+| Command                     | Description                                       |
+| --------------------------- | ------------------------------------------------- |
+| `penguins-docker-fix-token` | Configure gateway authentication token (run once) |
 
 ### Maintenance
 
-| Command            | Description                                      |
-| ------------------ | ------------------------------------------------ |
-| `clawdock-rebuild` | Rebuild the Docker image                         |
-| `clawdock-clean`   | Remove all containers and volumes (destructive!) |
+| Command                   | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `penguins-docker-rebuild` | Rebuild the Docker image                         |
+| `penguins-docker-clean`   | Remove all containers and volumes (destructive!) |
 
 ### Utilities
 
-| Command              | Description                               |
-| -------------------- | ----------------------------------------- |
-| `clawdock-health`    | Run gateway health check                  |
-| `clawdock-token`     | Display the gateway authentication token  |
-| `clawdock-cd`        | Jump to the Penguins project directory    |
-| `clawdock-config`    | Open the Penguins config directory        |
-| `clawdock-workspace` | Open the workspace directory              |
-| `clawdock-help`      | Show all available commands with examples |
+| Command                     | Description                               |
+| --------------------------- | ----------------------------------------- |
+| `penguins-docker-health`    | Run gateway health check                  |
+| `penguins-docker-token`     | Display the gateway authentication token  |
+| `penguins-docker-cd`        | Jump to the Penguins project directory    |
+| `penguins-docker-config`    | Open the Penguins config directory        |
+| `penguins-docker-workspace` | Open the workspace directory              |
+| `penguins-docker-help`      | Show all available commands with examples |
 
 ## Common Workflows
 
@@ -129,41 +132,43 @@ clawdock-approve <request-id>
 **Restart the gateway:**
 
 ```bash
-clawdock-restart
+penguins-docker-restart
 ```
 
 **Check container status:**
 
 ```bash
-clawdock-status
+penguins-docker-status
 ```
 
 **View live logs:**
 
 ```bash
-clawdock-logs
+penguins-docker-logs
 ```
 
-### Set Up WhatsApp Bot
+### Run Advanced Commands in the Container
 
 **Shell into the container:**
 
 ```bash
-clawdock-shell
+penguins-docker-shell
 ```
 
-**Inside the container, login to WhatsApp:**
-
-```bash
-penguins channels login --channel whatsapp --verbose
-```
-
-Scan the QR code with WhatsApp on your phone.
-
-**Verify connection:**
+**Inside the container, use the built-in app and low-level CLI directly:**
 
 ```bash
 penguins status
+```
+
+```bash
+penguins dashboard --no-open
+```
+
+If you are building a custom integration and need the advanced outbound surface:
+
+```bash
+penguins message --help
 ```
 
 ### Troubleshooting Device Pairing
@@ -171,13 +176,13 @@ penguins status
 **Check for pending pairing requests:**
 
 ```bash
-clawdock-devices
+penguins-docker-devices
 ```
 
 **Copy the Request ID from the "Pending" table, then approve:**
 
 ```bash
-clawdock-approve <request-id>
+penguins-docker-approve <request-id>
 ```
 
 Then refresh your browser.
@@ -187,7 +192,7 @@ Then refresh your browser.
 If you see "gateway token mismatch" errors:
 
 ```bash
-clawdock-fix-token
+penguins-docker-fix-token
 ```
 
 This will:
@@ -216,11 +221,11 @@ docker ps
 **Test with fresh config (mimics first-time install):**
 
 ```bash
-unset CLAWDOCK_DIR && rm -f ~/.clawdock/config && source scripts/shell-helpers/clawdock-helpers.sh
+unset PENGUINS_DOCKER_DIR && rm -f ~/.penguins/docker-helpers/config && source scripts/shell-helpers/penguins-docker-helpers.sh
 ```
 
 Then run any command to trigger auto-detect:
 
 ```bash
-clawdock-start
+penguins-docker-start
 ```

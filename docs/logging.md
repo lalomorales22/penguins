@@ -71,12 +71,12 @@ penguins doctor
 The Control UI’s **Logs** tab tails the same file using `logs.tail`.
 See [/web/control-ui](/web/control-ui) for how to open it.
 
-### Channel-only logs
+### Focused delivery logs
 
-To filter channel activity (WhatsApp/Telegram/etc), use:
+To filter delivery-related activity, tail the gateway log and match the subsystem you need:
 
 ```bash
-penguins channels logs --channel whatsapp
+penguins logs --follow
 ```
 
 ## Log formats

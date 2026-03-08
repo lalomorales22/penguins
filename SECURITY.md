@@ -6,10 +6,7 @@ If you believe you've found a security issue in Penguins, please report it priva
 
 Report vulnerabilities directly to the repository where the issue lives:
 
-- **Core CLI and gateway** — [penguins/penguins](https://github.com/penguins/penguins)
-- **macOS desktop app** — [penguins/penguins](https://github.com/penguins/penguins) (apps/macos)
-- **iOS app** — [penguins/penguins](https://github.com/penguins/penguins) (apps/ios)
-- **Android app** — [penguins/penguins](https://github.com/penguins/penguins) (apps/android)
+- **Core CLI, gateway, docs, and web UI** — [penguins/penguins](https://github.com/penguins/penguins)
 - **PenguinsHub** — [penguins/penguinshub](https://github.com/penguins/penguinshub)
 - **Trust and threat model** — [penguins/trust](https://github.com/penguins/trust)
 

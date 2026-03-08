@@ -56,6 +56,7 @@ After it finishes:
 
 - Open `http://127.0.0.1:18789/` in your browser.
 - Paste the token into the Control UI (Settings → token).
+- Keep that token (or switch to a password) if you later expose the gateway beyond localhost. Privileged HTTP endpoints such as `/tools/invoke`, `/v1/chat/completions`, and `/v1/responses` always require it.
 - Need the URL again? Run `docker compose run --rm penguins-cli dashboard --no-open`.
 
 It writes config/workspace on the host:
@@ -65,23 +66,30 @@ It writes config/workspace on the host:
 
 Running on a VPS? See [Hetzner (Docker VPS)](/install/hetzner).
 
-### Shell Helpers (optional)
+### Penguins Docker helpers (optional)
 
-For easier day-to-day Docker management, install `ClawDock`:
+`penguins-docker-*` is an optional convenience layer for repo-based Docker
+workflows. It is not the primary install path. Prefer `./docker-setup.sh`,
+plain `docker compose`, and `penguins dashboard` unless you specifically want
+shell shortcuts.
+
+Add the helper to your shell config:
 
 ```bash
-mkdir -p ~/.clawdock && curl -sL https://raw.githubusercontent.com/penguins/penguins/main/scripts/shell-helpers/clawdock-helpers.sh -o ~/.clawdock/clawdock-helpers.sh
+echo 'source ~/penguins/scripts/shell-helpers/penguins-docker-helpers.sh' >> ~/.zshrc && source ~/.zshrc
 ```
 
-**Add to your shell config (zsh):**
+If your repo is not at `~/penguins`, replace that path with your actual clone
+location.
 
 ```bash
-echo 'source ~/.clawdock/clawdock-helpers.sh' >> ~/.zshrc && source ~/.zshrc
+source /path/to/penguins/scripts/shell-helpers/penguins-docker-helpers.sh
 ```
 
-Then use `clawdock-start`, `clawdock-stop`, `clawdock-dashboard`, etc. Run `clawdock-help` for all commands.
+Then use `penguins-docker-start`, `penguins-docker-stop`,
+`penguins-docker-dashboard`, etc. Run `penguins-docker-help` for the full list.
 
-See [`ClawDock` Helper README](https://github.com/penguins/penguins/blob/main/scripts/shell-helpers/README.md) for details.
+See the [Penguins Docker Helpers README](https://github.com/penguins/penguins/blob/main/scripts/shell-helpers/README.md) for details.
 
 ### Manual flow (compose)
 
@@ -99,18 +107,17 @@ Note: run `docker compose ...` from the repo root. If you enabled
 docker compose -f docker-compose.yml -f docker-compose.extra.yml <command>
 ```
 
-### Control UI token + pairing (Docker)
+### Control UI auth (Docker)
 
-If you see “unauthorized” or “disconnected (1008): pairing required”, fetch a
-fresh dashboard link and approve the browser device:
+If you see `unauthorized`, fetch a fresh dashboard link and confirm the gateway
+token/password you entered in the browser:
 
 ```bash
 docker compose run --rm penguins-cli dashboard --no-open
-docker compose run --rm penguins-cli devices list
-docker compose run --rm penguins-cli devices approve <requestId>
+docker compose run --rm penguins-cli config get gateway.auth
 ```
 
-More detail: [Dashboard](/web/dashboard), [Devices](/cli/devices).
+More detail: [Dashboard](/web/dashboard), [Control UI](/web/control-ui).
 
 ### Extra mounts (optional)
 
@@ -270,29 +277,16 @@ ENV NODE_ENV=production
 CMD ["node","dist/index.js"]
 ```
 
-### Channel setup (optional)
+### Open the app
 
-Use the CLI container to configure channels, then restart the gateway if needed.
+The supported Docker flow is:
 
-WhatsApp (QR):
+1. start the gateway container
+2. open the dashboard/control UI in your browser
+3. use the CLI container for gateway, model, skills, and config tasks
 
-```bash
-docker compose run --rm penguins-cli channels login
-```
-
-Telegram (bot token):
-
-```bash
-docker compose run --rm penguins-cli channels add --channel telegram --token "<token>"
-```
-
-Discord (bot token):
-
-```bash
-docker compose run --rm penguins-cli channels add --channel discord --token "<token>"
-```
-
-Docs: [WhatsApp](/channels/whatsapp), [Telegram](/channels/telegram), [Discord](/channels/discord)
+The legacy messaging channel setup flow has been removed from the supported
+Docker path.
 
 ### OpenAI Codex OAuth (headless Docker)
 

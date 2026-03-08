@@ -26,30 +26,69 @@ Set `gateway.auth.mode` to control the handshake:
 - `password` (shared secret via `PENGUINS_GATEWAY_PASSWORD` or config)
 
 When `tailscale.mode = "serve"` and `gateway.auth.allowTailscale` is `true`,
-valid Serve proxy requests can authenticate via Tailscale identity headers
-(`tailscale-user-login`) without supplying a token/password. Penguins verifies
-the identity by resolving the `x-forwarded-for` address via the local Tailscale
-daemon (`tailscale whois`) and matching it to the header before accepting it.
-Penguins only treats a request as Serve when it arrives from loopback with
-Tailscale’s `x-forwarded-for`, `x-forwarded-proto`, and `x-forwarded-host`
-headers.
-To require explicit credentials, set `gateway.auth.allowTailscale: false` or
-force `gateway.auth.mode: "password"`.
+valid Serve proxy requests can satisfy the Gateway WebSocket / Control UI
+handshake via Tailscale identity headers (`tailscale-user-login`) without
+supplying a token/password. Penguins verifies the identity by resolving the
+`x-forwarded-for` address via the local Tailscale daemon (`tailscale whois`)
+and matching it to the header before accepting it. Penguins only treats a
+request as Serve when it arrives from loopback with Tailscale’s
+`x-forwarded-for`, `x-forwarded-proto`, and `x-forwarded-host` headers.
+
+This does **not** replace bearer auth for privileged HTTP endpoints. Even over
+Serve, `POST /tools/invoke`, `POST /v1/chat/completions`,
+`POST /v1/responses`, and protected plugin HTTP routes still require
+`Authorization: Bearer <token-or-password>`.
+
+Serve startup is also stricter now:
+
+- If you want Serve identity auth, configure `gateway.auth.tailscaleAllowUsers`
+  with the allowed Tailscale logins.
+- If you want one shared secret for everything, use password auth instead.
+- To require explicit credentials on Serve while keeping token auth, set
+  `gateway.auth.allowTailscale: false`.
 
 ## Config examples
 
-### Tailnet-only (Serve)
+### Tailnet-only (Serve + allowlisted Tailscale users)
 
 ```json5
 {
   gateway: {
     bind: "loopback",
+    auth: {
+      mode: "token",
+      token: "your-token",
+      allowTailscale: true,
+      tailscaleAllowUsers: ["you@example.com"],
+    },
     tailscale: { mode: "serve" },
   },
 }
 ```
 
 Open: `https://<magicdns>/` (or your configured `gateway.controlUi.basePath`)
+
+Allowlisted Serve users can open the Control UI without pasting the token, but
+keep the token for remote CLI calls and privileged HTTP endpoints.
+
+### Tailnet-only (Serve + explicit secret only)
+
+```json5
+{
+  gateway: {
+    bind: "loopback",
+    auth: {
+      mode: "token",
+      token: "your-token",
+      allowTailscale: false,
+    },
+    tailscale: { mode: "serve" },
+  },
+}
+```
+
+Use this if you want Serve for HTTPS only and still require the token/password
+everywhere.
 
 ### Tailnet-only (bind to Tailnet IP)
 
@@ -88,6 +127,7 @@ Prefer `PENGUINS_GATEWAY_PASSWORD` over committing a password to disk.
 ## CLI examples
 
 ```bash
+# Requires gateway.auth.password or gateway.auth.tailscaleAllowUsers in config.
 penguins gateway --tailscale serve
 penguins gateway --tailscale funnel --auth password
 ```
@@ -96,6 +136,7 @@ penguins gateway --tailscale funnel --auth password
 
 - Tailscale Serve/Funnel requires the `tailscale` CLI to be installed and logged in.
 - `tailscale.mode: "funnel"` refuses to start unless auth mode is `password` to avoid public exposure.
+- `tailscale.mode: "serve"` refuses to start if Serve identity auth is enabled but neither `gateway.auth.password` nor `gateway.auth.tailscaleAllowUsers` is configured.
 - Set `gateway.tailscale.resetOnExit` if you want Penguins to undo `tailscale serve`
   or `tailscale funnel` configuration on shutdown.
 - `gateway.bind: "tailnet"` is a direct Tailnet bind (no HTTPS, no Serve/Funnel).

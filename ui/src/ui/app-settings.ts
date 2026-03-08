@@ -11,7 +11,6 @@ import { scheduleChatScroll, scheduleLogsScroll } from "./app-scroll.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
 import { loadAgentSkills } from "./controllers/agent-skills.ts";
 import { loadAgents } from "./controllers/agents.ts";
-import { loadChannels } from "./controllers/channels.ts";
 import { loadConfig, loadConfigSchema } from "./controllers/config.ts";
 import { loadCronJobs, loadCronStatus } from "./controllers/cron.ts";
 import { loadDebug } from "./controllers/debug.ts";
@@ -50,7 +49,7 @@ type SettingsHost = {
   basePath: string;
   agentsList?: AgentsListResult | null;
   agentsSelectedId?: string | null;
-  agentsPanel?: "overview" | "files" | "tools" | "skills" | "channels" | "cron";
+  agentsPanel?: "overview" | "files" | "tools" | "skills" | "cron";
   themeMedia: MediaQueryList | null;
   themeMediaHandler: ((event: MediaQueryListEvent) => void) | null;
   pendingGatewayUrl?: string | null;
@@ -182,9 +181,6 @@ export async function refreshActiveTab(host: SettingsHost) {
   if (host.tab === "overview") {
     await loadOverview(host);
   }
-  if (host.tab === "channels") {
-    await loadChannelsTab(host);
-  }
   if (host.tab === "instances") {
     await loadPresence(host as unknown as PenguinsApp);
   }
@@ -210,9 +206,6 @@ export async function refreshActiveTab(host: SettingsHost) {
       void loadAgentIdentity(host as unknown as PenguinsApp, agentId);
       if (host.agentsPanel === "skills") {
         void loadAgentSkills(host as unknown as PenguinsApp, agentId);
-      }
-      if (host.agentsPanel === "channels") {
-        void loadChannels(host as unknown as PenguinsApp, false);
       }
       if (host.agentsPanel === "cron") {
         void loadCron(host);
@@ -404,7 +397,6 @@ export function syncUrlWithSessionKey(host: SettingsHost, sessionKey: string, re
 
 export async function loadOverview(host: SettingsHost) {
   await Promise.all([
-    loadChannels(host as unknown as PenguinsApp, false),
     loadPresence(host as unknown as PenguinsApp),
     loadSessions(host as unknown as PenguinsApp),
     loadCronStatus(host as unknown as PenguinsApp),
@@ -412,17 +404,9 @@ export async function loadOverview(host: SettingsHost) {
   ]);
 }
 
-export async function loadChannelsTab(host: SettingsHost) {
-  await Promise.all([
-    loadChannels(host as unknown as PenguinsApp, true),
-    loadConfigSchema(host as unknown as PenguinsApp),
-    loadConfig(host as unknown as PenguinsApp),
-  ]);
-}
-
 export async function loadCron(host: SettingsHost) {
   await Promise.all([
-    loadChannels(host as unknown as PenguinsApp, false),
+    loadConfigSchema(host as unknown as PenguinsApp),
     loadCronStatus(host as unknown as PenguinsApp),
     loadCronJobs(host as unknown as PenguinsApp),
   ]);

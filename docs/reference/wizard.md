@@ -71,16 +71,10 @@ For a high-level overview, see [Onboarding Wizard](/start/wizard).
     - Disable auth only if you fully trust every local process.
     - Non‑loopback binds still require auth.
   </Step>
-  <Step title="Channels">
-    - [WhatsApp](/channels/whatsapp): optional QR login.
-    - [Telegram](/channels/telegram): bot token.
-    - [Discord](/channels/discord): bot token.
-    - [Google Chat](/channels/googlechat): service account JSON + webhook audience.
-    - [Mattermost](/channels/mattermost) (plugin): bot token + base URL.
-    - [Signal](/channels/signal): optional `signal-cli` install + account config.
-    - [BlueBubbles](/channels/bluebubbles): **recommended for iMessage**; server URL + password + webhook.
-    - [iMessage](/channels/imessage): legacy `imsg` CLI path + DB access.
-    - DM security: default is pairing. First DM sends a code; approve via `penguins pairing approve <channel> <code>` or use allowlists.
+  <Step title="Browser access">
+    - The wizard now targets private browser access, not external messaging integrations.
+    - After setup, open the Control UI locally or through your private tunnel.
+    - Docs: [Control UI](/web/control-ui), [Dashboard](/web/dashboard), [Cloudflare Tunnel](/gateway/cloudflare-tunnel).
   </Step>
   <Step title="Daemon install">
     - macOS: LaunchAgent
@@ -88,7 +82,7 @@ For a high-level overview, see [Onboarding Wizard](/start/wizard).
     - Linux (and Windows via WSL2): systemd user unit
       - Wizard attempts to enable lingering via `loginctl enable-linger <user>` so the Gateway stays up after logout.
       - May prompt for sudo (writes `/var/lib/systemd/linger`); it tries without sudo first.
-    - **Runtime selection:** Node (recommended; required for WhatsApp/Telegram). Bun is **not recommended**.
+    - **Runtime selection:** Node (recommended). Bun is **not recommended**.
   </Step>
   <Step title="Health check">
     - Starts the Gateway (if needed) and runs `penguins health`.
@@ -100,7 +94,7 @@ For a high-level overview, see [Onboarding Wizard](/start/wizard).
     - Installs optional dependencies (some use Homebrew on macOS).
   </Step>
   <Step title="Finish">
-    - Summary + next steps, including iOS/Android/macOS apps for extra features.
+    - Summary + next steps for browser access, remote tunnels, and workspace bootstrapping.
   </Step>
 </Steps>
 
@@ -212,7 +206,6 @@ Add `--json` for a machine‑readable summary.
 penguins agents add work \
   --workspace ~/.penguins/workspace-work \
   --model openai/gpt-5.2 \
-  --bind whatsapp:biz \
   --non-interactive \
   --json
 ```
@@ -220,7 +213,8 @@ penguins agents add work \
 ## Gateway wizard RPC
 
 The Gateway exposes the wizard flow over RPC (`wizard.start`, `wizard.next`, `wizard.cancel`, `wizard.status`).
-Clients (macOS app, Control UI) can render steps without re‑implementing onboarding logic.
+Clients (Control UI and other RPC consumers) can render steps without
+re‑implementing onboarding logic.
 
 ## Signal setup (signal-cli)
 
@@ -263,7 +257,6 @@ will prompt to install it (npm or a local path) before it can be configured.
 ## Related docs
 
 - Wizard overview: [Onboarding Wizard](/start/wizard)
-- macOS app onboarding: [Onboarding](/start/onboarding)
 - Config reference: [Gateway configuration](/gateway/configuration)
-- Providers: [WhatsApp](/channels/whatsapp), [Telegram](/channels/telegram), [Discord](/channels/discord), [Google Chat](/channels/googlechat), [Signal](/channels/signal), [BlueBubbles](/channels/bluebubbles) (iMessage), [iMessage](/channels/imessage) (legacy)
+- Browser access: [Control UI](/web/control-ui), [Dashboard](/web/dashboard), [Cloudflare Tunnel](/gateway/cloudflare-tunnel)
 - Skills: [Skills](/tools/skills), [Skills config](/tools/skills-config)

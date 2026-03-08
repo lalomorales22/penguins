@@ -24,8 +24,9 @@ Authentication is enforced at the WebSocket handshake via `connect.params.auth`
 (token or password). See `gateway.auth` in [Gateway configuration](/gateway/configuration).
 
 Security note: the Control UI is an **admin surface** (chat, config, exec approvals).
-Do not expose it publicly. The UI stores the token in `localStorage` after first load.
-Prefer localhost, Tailscale Serve, or an SSH tunnel.
+Do not expose it casually. The UI stores the token in `localStorage` after
+first load. Prefer localhost, Cloudflare Tunnel + Access, Tailscale Serve, or
+an SSH tunnel.
 
 ## Fast path (recommended)
 
@@ -37,7 +38,13 @@ Prefer localhost, Tailscale Serve, or an SSH tunnel.
 
 - **Localhost**: open `http://127.0.0.1:18789/`.
 - **Token source**: `gateway.auth.token` (or `PENGUINS_GATEWAY_TOKEN`); the UI stores a copy in localStorage after you connect.
-- **Not localhost**: use Tailscale Serve (tokenless if `gateway.auth.allowTailscale: true`), tailnet bind with a token, or an SSH tunnel. See [Web surfaces](/web).
+- **Not localhost**: use [Cloudflare Tunnel](/gateway/cloudflare-tunnel),
+  Tailscale Serve, tailnet bind with a token, or an SSH tunnel. If you use
+  Serve identity auth, also set `gateway.auth.tailscaleAllowUsers`; keep the
+  token/password for remote CLI and privileged HTTP endpoints. If you use
+  Cloudflare Access + `trusted-proxy`, keep `allowUsers` tight because that
+  identity applies to the Gateway surfaces on that hostname. See
+  [Web surfaces](/web).
 
 ## If you see “unauthorized” / 1008
 
