@@ -87,3 +87,62 @@ export function setSseHeaders(res: ServerResponse) {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders?.();
 }
+
+// ── Backpressure-aware SSE writing ──────────────────────────────────────
+
+/** High-water mark in bytes. If `res.writableLength` exceeds this, we
+ *  wait for the kernel buffer to drain before writing more data. */
+const SSE_HIGH_WATER_MARK = 64 * 1024; // 64 KiB
+
+/**
+ * Write an SSE chunk with backpressure check.
+ *
+ * Returns `false` when the client has disconnected or the response is
+ * no longer writable (caller should unsubscribe from the event source).
+ */
+export function sseWrite(res: ServerResponse, chunk: string): boolean {
+  if (res.destroyed || res.writableEnded) {
+    return false;
+  }
+  res.write(chunk);
+  return true;
+}
+
+/**
+ * Check whether the SSE buffer is above the high-water mark.
+ * Callers can use this to decide whether to drop non-critical events
+ * while the kernel buffer drains.
+ */
+export function sseIsBackpressured(res: ServerResponse): boolean {
+  return res.writableLength >= SSE_HIGH_WATER_MARK;
+}
+
+/**
+ * Wait for the writable buffer to drain if it's above the high-water mark.
+ * Returns a promise that resolves when it's safe to write again, or rejects
+ * if the response closes.
+ */
+export function sseDrainIfNeeded(res: ServerResponse): Promise<void> {
+  if (res.destroyed || res.writableEnded) {
+    return Promise.reject(new Error("response closed"));
+  }
+  if (res.writableLength < SSE_HIGH_WATER_MARK) {
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve, reject) => {
+    const onDrain = () => {
+      cleanup();
+      resolve();
+    };
+    const onClose = () => {
+      cleanup();
+      reject(new Error("response closed"));
+    };
+    const cleanup = () => {
+      res.removeListener("drain", onDrain);
+      res.removeListener("close", onClose);
+    };
+    res.once("drain", onDrain);
+    res.once("close", onClose);
+  });
+}

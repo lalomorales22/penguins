@@ -18,11 +18,6 @@ import { resolveModel } from "../agents/pi-embedded-runner/model.js";
 
 const TEMP_FILE_CLEANUP_DELAY_MS = 5 * 60 * 1000; // 5 minutes
 
-function parseNumberValue(value: string): number | undefined {
-  const parsed = Number.parseFloat(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 export function parseTtsDirectives(
   text: string,
   policy: ResolvedTtsModelOverrides,
@@ -348,4 +343,3 @@ export async function openaiTTS(params: {
     clearTimeout(timeout);
   }
 }
-

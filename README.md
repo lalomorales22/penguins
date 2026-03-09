@@ -14,7 +14,17 @@ Full docs: [docs.penguins.ai](https://docs.penguins.ai)
 - Agent tools, memory, skills, multi-agent support, and persistent sessions
 - A single place to manage config, logs, sessions, cron, skills, and health checks
 - Local, Cloudflare Tunnel, SSH-tunneled, Tailscale, and containerized deployment paths
-- Optional APIs, webhooks, nodes, and custom integrations around the core app surfaces
+- OpenAI-compatible HTTP API with streaming, tool calling, and structured responses
+- Per-user API keys with role-based access (admin/operator/viewer)
+- Usage quotas with monthly and daily token and request limits
+- Circuit breaker for provider resilience with automatic recovery
+- Backpressure-aware SSE streaming that handles slow clients gracefully
+- Per-route request timeouts with configurable overrides
+- WebSocket session resumption with event replay on reconnect
+- Prometheus metrics at `/metrics` and health checks at `/health`
+- Extension system with hook timeout enforcement
+- Horizontal scaling with Redis-backed shared state and cron leader election
+- CI/CD pipelines, security scanning, and automated Docker builds
 
 ## Built-in app surfaces
 
@@ -64,6 +74,32 @@ npm install -g penguins@latest
 ```
 
 More install methods: [Install guide](https://docs.penguins.ai/install)
+
+### Temporary installer on your own domain
+
+If you want a one-line install before you publish Penguins to npm or stand up
+the official installer host, this repo now includes temporary self-hostable
+Git-based installers in `scripts/hosted-installers/`.
+
+Serve these files over HTTPS from any domain you already own:
+
+- `scripts/hosted-installers/install.sh`
+- `scripts/hosted-installers/install.ps1`
+
+Then run:
+
+```bash
+curl -fsSL https://your-domain.example/install.sh | bash
+```
+
+```powershell
+iwr -useb https://your-domain.example/install.ps1 | iex
+```
+
+These temporary scripts clone the GitHub repo, build Penguins locally, and
+write a `penguins` wrapper. They currently expect Git and Node 22.12+ to
+already be installed. They prefer `corepack`, but can also fall back to
+`pnpm` or `npx`.
 
 ### Run onboarding
 
@@ -189,6 +225,90 @@ Gateway operations guide: [Gateway runbook](https://docs.penguins.ai/gateway)
 
 The default Gateway port is `18789`.
 
+## HTTP API
+
+Penguins exposes OpenAI-compatible HTTP endpoints (when enabled in config):
+
+| Endpoint                    | Description                                                     |
+| --------------------------- | --------------------------------------------------------------- |
+| `POST /v1/chat/completions` | OpenAI-compatible chat completion (streaming and non-streaming) |
+| `POST /v1/responses`        | Structured response with tool calling                           |
+| `POST /tools/invoke`        | Direct tool execution                                           |
+| `POST /hooks/wake`          | Trigger agent wake event                                        |
+| `POST /hooks/agent`         | Dispatch agent command                                          |
+| `GET /health`               | Health check (returns `{"ok":true}`)                            |
+| `GET /metrics`              | Prometheus metrics (connections, requests, latency, agent runs) |
+
+All endpoints require `Authorization: Bearer <token>` or `X-Penguins-Token` header.
+
+Per-route timeouts are enforced automatically (5 min for chat/responses, 5 s for health/metrics, 2 min default). Override timeouts in your config under `gateway.routeTimeouts`.
+
+Full API spec: [docs/openapi.yaml](docs/openapi.yaml)
+
+## Authentication and API keys
+
+Penguins supports two authentication methods:
+
+- **Shared token/password** — Set via config or `PENGUINS_GATEWAY_TOKEN` / `PENGUINS_GATEWAY_PASSWORD` env vars. Good for single-user setups.
+- **Per-user API keys** — `pk_`-prefixed keys with SHA-256 hashed storage and role-based access control.
+
+API key roles:
+
+| Role       | Access                                          |
+| ---------- | ----------------------------------------------- |
+| `admin`    | Full access to all endpoints and config         |
+| `operator` | Chat, tools, and hooks — no config changes      |
+| `viewer`   | Read-only access to health, metrics, and status |
+
+Keys support optional per-key rate limits. Rotate keys without downtime using the key rotation API.
+
+## Usage quotas
+
+Track and enforce token usage per user or API key:
+
+- Monthly and daily token limits
+- Daily request limits
+- Automatic rollover on period boundaries
+- Counters visible via the Control UI and metrics endpoint
+
+Configure quotas in `gateway.quotas` or per API key.
+
+## Provider resilience
+
+The gateway protects against provider outages with a built-in circuit breaker:
+
+- Tracks failures per provider (closed → open after threshold → half_open after cooldown → closed on success)
+- Configurable failure threshold and reset timeout
+- Provider-specific state visible via diagnostics
+- Automatic recovery when the provider comes back online
+
+SSE streaming responses use backpressure-aware writes that detect slow or disconnected clients and avoid buffering unbounded data in memory.
+
+## WebSocket protocol
+
+The Gateway uses a JSON-RPC-style WebSocket protocol for real-time communication between clients and the gateway.
+
+- Protocol version negotiation on connect (`minProtocol`/`maxProtocol`)
+- Challenge-based authentication handshake
+- Heartbeat ticks to detect stale connections
+- Session resumption with event replay — clients can reconnect and receive missed events via sequence-numbered ring buffers
+
+Protocol reference: [docs/gateway-protocol.md](docs/gateway-protocol.md)
+
+## Extensions
+
+Penguins has a plugin system for adding tools, hooks, commands, and channels:
+
+```
+~/.penguins/extensions/my-extension/
+  penguins.plugin.json    # metadata
+  index.ts                # entry point
+```
+
+Extension hooks run with a configurable timeout (default 30 s) to prevent runaway handlers from blocking the gateway.
+
+Extension developer guide: [docs/extensions.md](docs/extensions.md)
+
 ## Private remote access
 
 Secure default:
@@ -236,6 +356,32 @@ Remote docs:
 - [Tailscale](https://docs.penguins.ai/gateway/tailscale)
 - [Security](https://docs.penguins.ai/gateway/security)
 
+## Security
+
+The gateway ships with production security defaults:
+
+- SSRF-protected outbound fetches (blocks private/loopback IPs, follows redirects safely)
+- Security headers on all HTTP responses (CSP, HSTS, X-Content-Type-Options, X-Frame-Options)
+- CORS configuration with configurable allowed origins
+- Timing-safe token comparison to prevent timing attacks
+- SHA-256 hashed API key storage
+- Rate limiting (per-key and global)
+
+Security model documentation: [docs/security.md](docs/security.md)
+
+## Monitoring
+
+Every gateway instance exposes a Prometheus-compatible `/metrics` endpoint:
+
+- `penguins_ws_connections_active` — Current WebSocket connections
+- `penguins_http_requests_total` — HTTP request counter by route and status
+- `penguins_request_timeouts_total` — Timed-out requests
+- `penguins_agent_runs_total` — Agent execution counter
+
+The `/health` endpoint returns `{"ok":true}` for load balancer probes.
+
+Use `penguins doctor` to diagnose config, auth, and environment issues locally.
+
 ## Docker
 
 If you want a containerized deployment, the repo includes a Docker setup flow.
@@ -257,6 +403,19 @@ docker compose run --rm penguins-cli dashboard --no-open
 Then open the printed URL and paste the token into the Control UI if needed.
 
 Docker guide: [Docker install](https://docs.penguins.ai/install/docker)
+
+## Horizontal scaling
+
+Run multiple gateway instances behind a load balancer for higher availability:
+
+- nginx or HAProxy with sticky sessions (required for WebSocket affinity)
+- Redis for shared rate limiting, session locking, and usage quota counters
+- Automatic cron leader election — only one instance runs scheduled jobs
+- Docker Compose and Kubernetes deployment examples included
+
+Set `PENGUINS_REDIS_URL` on all instances to enable shared state.
+
+Full guide: [docs/horizontal-scaling.md](docs/horizontal-scaling.md)
 
 ## From source
 
@@ -307,7 +466,31 @@ pnpm check
 pnpm tsgo
 ```
 
+### Load testing
+
+The repo includes [k6](https://k6.io/) load tests for HTTP throughput and WebSocket connection stress:
+
+```bash
+PENGUINS_TOKEN=your-token k6 run test/load/http-endpoints.js
+PENGUINS_TOKEN=your-token k6 run test/load/websocket-connections.js
+```
+
+See [test/load/README.md](test/load/README.md) for details and thresholds.
+
 Contributor docs: [Install from source](https://docs.penguins.ai/install) and [Development setup](https://docs.penguins.ai/start/setup)
+
+## CI/CD
+
+The repo ships with GitHub Actions workflows:
+
+| Workflow       | What it does                                   |
+| -------------- | ---------------------------------------------- |
+| `ci.yml`       | Lint, typecheck, and test on every push and PR |
+| `security.yml` | Dependency audit and CodeQL analysis           |
+| `release.yml`  | Automated npm publish on version tags          |
+| `docker.yml`   | Build and push Docker images to GHCR           |
+
+Dependabot is configured for automated dependency updates.
 
 ## Config, state, and workspace
 
@@ -316,16 +499,19 @@ Default locations:
 - Config: `~/.penguins/penguins.json`
 - State: `~/.penguins/`
 - Workspace: `~/.penguins/workspace`
+- API keys: `~/.penguins/api-keys.json`
 
 Useful environment variables:
 
-| Variable                    | What it controls                                 |
-| --------------------------- | ------------------------------------------------ |
-| `PENGUINS_HOME`             | Base home directory for Penguins path resolution |
-| `PENGUINS_STATE_DIR`        | Override mutable state directory                 |
-| `PENGUINS_CONFIG_PATH`      | Override config file path                        |
-| `PENGUINS_GATEWAY_TOKEN`    | Gateway shared token                             |
-| `PENGUINS_GATEWAY_PASSWORD` | Gateway shared password                          |
+| Variable                     | What it controls                                 |
+| ---------------------------- | ------------------------------------------------ |
+| `PENGUINS_HOME`              | Base home directory for Penguins path resolution |
+| `PENGUINS_STATE_DIR`         | Override mutable state directory                 |
+| `PENGUINS_CONFIG_PATH`       | Override config file path                        |
+| `PENGUINS_GATEWAY_TOKEN`     | Gateway shared token                             |
+| `PENGUINS_GATEWAY_PASSWORD`  | Gateway shared password                          |
+| `PENGUINS_REDIS_URL`         | Redis URL for multi-instance shared state        |
+| `PENGUINS_EMBEDDING_BACKEND` | Embedding backend (`local` or `openai`)          |
 
 Configuration docs: [Gateway configuration](https://docs.penguins.ai/gateway/configuration)
 
@@ -353,7 +539,38 @@ penguins config get gateway.auth.token
 
 Then paste that token into the Control UI settings and reconnect.
 
-## Docs worth bookmarking
+Full troubleshooting guide: [docs/troubleshooting.md](docs/troubleshooting.md)
+
+## Migrating from OpenClaw
+
+If you're upgrading from a previous OpenClaw installation:
+
+- The `openclaw` CLI binary still works but prints a deprecation warning
+- `OPENCLAW_*` environment variables are still recognized as fallbacks
+- Storage paths and config format are unchanged
+- Run `penguins doctor` to check for any migration issues
+
+**Deprecation timeline:**
+
+- `openclaw` binary alias: will be removed in v2.0 (target: September 2026)
+- `OPENCLAW_*` env var fallbacks: will be removed in v2.0 (target: September 2026)
+- `CLAWDBOT_*` env var fallbacks: already deprecated, removed in v2.0
+
+## Docs
+
+**In-repo documentation:**
+
+- [API spec (OpenAPI)](docs/openapi.yaml) — HTTP endpoint schemas
+- [Gateway protocol](docs/gateway-protocol.md) — WebSocket protocol reference
+- [Extension guide](docs/extensions.md) — Build extensions
+- [Security](docs/security.md) — Security model and hardening
+- [Deployment](docs/deployment.md) — Production deployment options
+- [Horizontal scaling](docs/horizontal-scaling.md) — Multi-instance deployment with Redis
+- [Troubleshooting](docs/troubleshooting.md) — Common issues and solutions
+- [Runbook](docs/runbook.md) — Incident response procedures
+- [CI/CD](docs/ci.md) — Pipeline configuration
+
+**External documentation:**
 
 - [Getting started](https://docs.penguins.ai/start/getting-started)
 - [Install](https://docs.penguins.ai/install)
@@ -362,6 +579,10 @@ Then paste that token into the Control UI settings and reconnect.
 - [Remote access](https://docs.penguins.ai/gateway/remote)
 - [Docker](https://docs.penguins.ai/install/docker)
 - [CLI reference](https://docs.penguins.ai/cli)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR guidelines.
 
 ## License
 

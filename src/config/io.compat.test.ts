@@ -15,7 +15,7 @@ async function withTempHome(run: (home: string) => Promise<void>): Promise<void>
 
 async function writeConfig(
   home: string,
-  dirname: ".penguins" | ".penguins",
+  dirname: ".penguins",
   port: number,
   filename: string = "penguins.json",
 ) {

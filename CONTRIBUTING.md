@@ -46,6 +46,60 @@ Welcome to the lobster tank! 🦞
 2. **New features / architecture** → Start a [GitHub Discussion](https://github.com/penguins/penguins/discussions) or ask in Discord first
 3. **Questions** → Discord #setup-help
 
+## Development Setup
+
+### Prerequisites
+
+- Node.js 22.12.0+
+- pnpm 10+
+
+### Build from Source
+
+```bash
+git clone https://github.com/lalomorales22/penguins.git
+cd penguins
+pnpm install
+pnpm build
+```
+
+### Run from Source
+
+```bash
+pnpm penguins onboard    # First-time setup
+pnpm penguins gateway    # Start gateway
+pnpm dev                 # Watch mode with auto-reload
+pnpm gateway:dev         # Gateway in dev mode
+```
+
+### Code Style
+
+Automated formatting and linting — don't worry about style manually.
+
+- **Formatter:** oxfmt (`pnpm fmt`)
+- **Linter:** oxlint (`pnpm lint`)
+- **Type checker:** tsgo (`pnpm tsgo`)
+- **Check all:** `pnpm check`
+
+Key conventions:
+
+- TypeScript strict mode
+- `import type` for type-only imports
+- `node:` prefix for Node.js built-ins
+- `async/await` over raw Promises
+- `kebab-case.ts` file naming, `*.test.ts` for tests
+
+### Testing
+
+```bash
+pnpm test              # Unit tests
+pnpm test:e2e          # End-to-end tests
+pnpm test:gateway      # Gateway tests
+pnpm test:extensions   # Extension tests
+pnpm test -- --coverage  # With coverage
+```
+
+Coverage thresholds: 70% lines, 70% functions, 55% branches.
+
 ## Before You PR
 
 - Test locally with your Penguins instance

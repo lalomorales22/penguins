@@ -79,6 +79,9 @@ export type HookRunnerOptions = {
   logger?: HookRunnerLogger;
   /** If true, errors in hooks will be caught and logged instead of thrown */
   catchErrors?: boolean;
+  /** Maximum time (ms) a single hook handler may run before being treated as
+   *  a failure. Default: 30 000 (30 s). Set to 0 to disable. */
+  hookTimeoutMs?: number;
 };
 
 /**
@@ -96,9 +99,35 @@ function getHooksForName<K extends PluginHookName>(
 /**
  * Create a hook runner for a specific registry.
  */
+const DEFAULT_HOOK_TIMEOUT_MS = 30_000;
+
+/** Race a promise against a timeout. Rejects with a descriptive error on timeout. */
+function withHookTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  if (timeoutMs <= 0) {
+    return promise;
+  }
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`Hook handler timed out after ${timeoutMs}ms: ${label}`)),
+      timeoutMs,
+    );
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
+
 export function createHookRunner(registry: PluginRegistry, options: HookRunnerOptions = {}) {
   const logger = options.logger;
   const catchErrors = options.catchErrors ?? true;
+  const hookTimeoutMs = options.hookTimeoutMs ?? DEFAULT_HOOK_TIMEOUT_MS;
 
   /**
    * Run a hook that doesn't return a value (fire-and-forget style).
@@ -118,7 +147,8 @@ export function createHookRunner(registry: PluginRegistry, options: HookRunnerOp
 
     const promises = hooks.map(async (hook) => {
       try {
-        await (hook.handler as (event: unknown, ctx: unknown) => Promise<void>)(event, ctx);
+        const raw = (hook.handler as (event: unknown, ctx: unknown) => Promise<void>)(event, ctx);
+        await withHookTimeout(raw, hookTimeoutMs, `${hookName}/${hook.pluginId}`);
       } catch (err) {
         const msg = `[hooks] ${hookName} handler from ${hook.pluginId} failed: ${String(err)}`;
         if (catchErrors) {
@@ -153,9 +183,15 @@ export function createHookRunner(registry: PluginRegistry, options: HookRunnerOp
 
     for (const hook of hooks) {
       try {
-        const handlerResult = await (
-          hook.handler as (event: unknown, ctx: unknown) => Promise<TResult>
-        )(event, ctx);
+        const raw = (hook.handler as (event: unknown, ctx: unknown) => Promise<TResult>)(
+          event,
+          ctx,
+        );
+        const handlerResult = await withHookTimeout(
+          raw,
+          hookTimeoutMs,
+          `${hookName}/${hook.pluginId}`,
+        );
 
         if (handlerResult !== undefined && handlerResult !== null) {
           if (mergeResults && result !== undefined) {

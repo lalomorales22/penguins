@@ -32,4 +32,4 @@ export * from "./types.whatsapp.js";
 export * from "./types.memory.js";
 
 // Backwards compatibility - PenguinsConfig is the old name for PenguinsConfig
-export type { PenguinsConfig as PenguinsConfig } from "./types.penguins.js";
+export type { PenguinsConfig } from "./types.penguins.js";

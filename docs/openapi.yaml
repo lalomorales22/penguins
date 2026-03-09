@@ -1,0 +1,430 @@
+openapi: 3.1.0
+info:
+  title: Penguins Gateway API
+  version: 2026.2.15
+  description: |
+    Self-hosted AI gateway with OpenAI-compatible HTTP endpoints.
+    All endpoints require authentication via Bearer token or X-Penguins-Token header.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://127.0.0.1:18789
+    description: Local gateway (default)
+
+security:
+  - bearerAuth: []
+  - tokenHeader: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "Authorization: Bearer <gateway-token>"
+    tokenHeader:
+      type: apiKey
+      in: header
+      name: X-Penguins-Token
+      description: Alternative token header
+
+  schemas:
+    ChatMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [system, user, assistant, tool]
+        content:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+        name:
+          type: string
+
+    ChatCompletionRequest:
+      type: object
+      required: [messages]
+      properties:
+        model:
+          type: string
+          default: penguins
+          description: Model identifier (defaults to configured default)
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        stream:
+          type: boolean
+          default: false
+        user:
+          type: string
+          description: User identifier for session tracking
+        temperature:
+          type: number
+        max_tokens:
+          type: integer
+
+    ChatCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum: [chat.completion]
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+              message:
+                $ref: "#/components/schemas/ChatMessage"
+              finish_reason:
+                type: string
+                enum: [stop, length, tool_calls]
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            completion_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    ResponsesRequest:
+      type: object
+      required: [model, input]
+      properties:
+        model:
+          type: string
+        input:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+        instructions:
+          type: string
+          description: System instructions
+        stream:
+          type: boolean
+          default: false
+        max_output_tokens:
+          type: integer
+        tools:
+          type: array
+          items:
+            type: object
+        tool_choice:
+          oneOf:
+            - type: string
+              enum: [none, required, auto]
+            - type: object
+        user:
+          type: string
+
+    ResponseResource:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum: [response]
+        status:
+          type: string
+          enum: [completed, failed, in_progress]
+        output:
+          type: array
+          items:
+            type: object
+        usage:
+          type: object
+          properties:
+            input_tokens:
+              type: integer
+            output_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    ToolsInvokeRequest:
+      type: object
+      required: [tool]
+      properties:
+        tool:
+          type: string
+          description: Tool name to invoke
+        action:
+          type: string
+        args:
+          type: object
+        sessionKey:
+          type: string
+        dryRun:
+          type: boolean
+          default: false
+
+    ToolsInvokeResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        result:
+          type: object
+        error:
+          type: object
+          properties:
+            type:
+              type: string
+            message:
+              type: string
+
+    HooksWakeRequest:
+      type: object
+      properties:
+        text:
+          type: string
+        mode:
+          type: string
+          enum: [now, next-heartbeat]
+
+    HooksAgentRequest:
+      type: object
+      properties:
+        message:
+          type: string
+        name:
+          type: string
+        agentId:
+          type: string
+        wakeMode:
+          type: string
+          enum: [now, next-heartbeat]
+        sessionKey:
+          type: string
+        deliver:
+          type: boolean
+        channel:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+              enum: [api_error, timeout_error, context_overflow_error, invalid_request_error]
+            code:
+              type: string
+
+paths:
+  /v1/chat/completions:
+    post:
+      operationId: createChatCompletion
+      summary: OpenAI-compatible chat completion
+      description: |
+        Send messages to the AI agent and receive a response.
+        Supports both streaming (SSE) and non-streaming modes.
+        Max request body: 1 MB (configurable).
+      tags: [Chat]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatCompletionRequest"
+      responses:
+        "200":
+          description: Chat completion response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatCompletionResponse"
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE stream of chat.completion.chunk objects
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized — missing or invalid token
+        "429":
+          description: Rate limited
+        "504":
+          description: Upstream provider timeout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/responses:
+    post:
+      operationId: createResponse
+      summary: OpenResponses-compatible structured response
+      description: |
+        Structured agent response API with tool calling support.
+        Supports image/file input via base64 or URL.
+        Max request body: 20 MB (configurable, auto-scales for files).
+      tags: [Responses]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResponsesRequest"
+      responses:
+        "200":
+          description: Response resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseResource"
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE stream of response events
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "504":
+          description: Upstream provider timeout
+
+  /tools/invoke:
+    post:
+      operationId: invokeTool
+      summary: Direct tool execution
+      description: |
+        Execute a registered tool directly without going through the AI agent.
+        Max request body: 2 MB (configurable).
+      tags: [Tools]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToolsInvokeRequest"
+      responses:
+        "200":
+          description: Tool execution result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolsInvokeResponse"
+        "400":
+          description: Invalid request
+        "404":
+          description: Tool not found
+        "500":
+          description: Tool execution error
+
+  /hooks/wake:
+    post:
+      operationId: hooksWake
+      summary: Trigger a wake event
+      description: |
+        Wake the agent with an optional message.
+        Rate limited: 20 failed attempts per 60 seconds per IP.
+      tags: [Hooks]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HooksWakeRequest"
+      responses:
+        "200":
+          description: Wake triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  mode:
+                    type: string
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limited
+
+  /hooks/agent:
+    post:
+      operationId: hooksAgent
+      summary: Dispatch an agent command
+      description: Trigger an agent run with a message and optional delivery target.
+      tags: [Hooks]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HooksAgentRequest"
+      responses:
+        "202":
+          description: Agent run accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  runId:
+                    type: string
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limited
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Basic health check
+      description: Returns 200 if the gateway is running.
+      tags: [System]
+      security: []
+      responses:
+        "200":
+          description: Gateway is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  version:
+                    type: string
+
+tags:
+  - name: Chat
+    description: OpenAI-compatible chat completion endpoints
+  - name: Responses
+    description: OpenResponses-compatible structured response endpoints
+  - name: Tools
+    description: Direct tool invocation
+  - name: Hooks
+    description: Webhook endpoints for external triggers
+  - name: System
+    description: System health and monitoring

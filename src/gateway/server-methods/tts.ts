@@ -102,10 +102,7 @@ export const ttsHandlers: GatewayRequestHandlers = {
       respond(
         false,
         undefined,
-        errorShape(
-          ErrorCodes.INVALID_REQUEST,
-          "Invalid provider. Use openai.",
-        ),
+        errorShape(ErrorCodes.INVALID_REQUEST, "Invalid provider. Use openai."),
       );
       return;
     }

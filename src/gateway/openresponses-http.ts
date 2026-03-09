@@ -41,7 +41,7 @@ import {
   buildAgentMessageFromConversationEntries,
   type ConversationEntry,
 } from "./agent-prompt.js";
-import { sendJson, setSseHeaders, writeDone } from "./http-common.js";
+import { sendJson, setSseHeaders, writeDone, sseWrite } from "./http-common.js";
 import { handleGatewayPostJsonEndpoint } from "./http-endpoint-helpers.js";
 import { resolveAgentIdForRequest, resolveSessionKey } from "./http-utils.js";
 import {
@@ -66,9 +66,8 @@ type OpenResponsesHttpOptions = {
 const DEFAULT_BODY_BYTES = 20 * 1024 * 1024;
 const DEFAULT_MAX_URL_PARTS = 8;
 
-function writeSseEvent(res: ServerResponse, event: StreamingEvent) {
-  res.write(`event: ${event.type}\n`);
-  res.write(`data: ${JSON.stringify(event)}\n\n`);
+function writeSseEvent(res: ServerResponse, event: StreamingEvent): boolean {
+  return sseWrite(res, `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
 }
 
 function extractTextContent(content: string | ContentPart[]): string {
@@ -596,15 +595,20 @@ export async function handleOpenResponsesHttpRequest(
 
       sendJson(res, 200, response);
     } catch (err) {
-      logWarn(`openresponses: non-stream response failed: ${String(err)}`);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logWarn(`openresponses: non-stream response failed: ${errMsg}`);
+      const isTimeout = errMsg.includes("timeout") || errMsg.includes("ETIMEDOUT");
       const response = createResponseResource({
         id: responseId,
         model,
         status: "failed",
         output: [],
-        error: { code: "api_error", message: "internal error" },
+        error: {
+          code: isTimeout ? "timeout" : "api_error",
+          message: isTimeout ? "upstream provider timed out" : "internal server error",
+        },
       });
-      sendJson(res, 500, response);
+      sendJson(res, isTimeout ? 504 : 500, response);
     }
     return true;
   }
@@ -884,18 +888,23 @@ export async function handleOpenResponsesHttpRequest(
         });
       }
     } catch (err) {
-      logWarn(`openresponses: streaming response failed: ${String(err)}`);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logWarn(`openresponses: streaming response failed: ${errMsg}`);
       if (closed) {
         return;
       }
 
+      const isTimeout = errMsg.includes("timeout") || errMsg.includes("ETIMEDOUT");
       finalUsage = finalUsage ?? createEmptyUsage();
       const errorResponse = createResponseResource({
         id: responseId,
         model,
         status: "failed",
         output: [],
-        error: { code: "api_error", message: "internal error" },
+        error: {
+          code: isTimeout ? "timeout" : "api_error",
+          message: isTimeout ? "upstream provider timed out" : "internal server error",
+        },
         usage: finalUsage,
       });
 

@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { RuntimeEnv } from "../runtime.js";
-import type { ChannelChoice } from "./onboard-types.js";
 import {
   resolveAgentDir,
   resolveAgentWorkspaceDir,

@@ -121,16 +121,17 @@ eventually your own app. Here's what that actually looks like end-to-end:
 
 ### The Data Topology (What Leaves Your Machine)
 
-| Data | Goes where | Can you avoid it? |
-|---|---|---|
-| Your messages | Anthropic/OpenAI API | Only if you use Ollama locally |
-| Session files | Your disk | ✅ Already local |
-| Memory/embeddings DB | Your disk (sqlite-vec/LanceDB) | ✅ Already local |
-| Gateway auth tokens | Your disk | ✅ Already local |
-| WebChat traffic | Your machine → Cloudflare → browser | ✅ E2E if you add TLS |
-| Embedding API calls | OpenAI (for `text-embedding-3-small`) | Can replace with local |
+| Data                 | Goes where                            | Can you avoid it?              |
+| -------------------- | ------------------------------------- | ------------------------------ |
+| Your messages        | Anthropic/OpenAI API                  | Only if you use Ollama locally |
+| Session files        | Your disk                             | ✅ Already local               |
+| Memory/embeddings DB | Your disk (sqlite-vec/LanceDB)        | ✅ Already local               |
+| Gateway auth tokens  | Your disk                             | ✅ Already local               |
+| WebChat traffic      | Your machine → Cloudflare → browser   | ✅ E2E if you add TLS          |
+| Embedding API calls  | OpenAI (for `text-embedding-3-small`) | Can replace with local         |
 
 **The only things that leave your machine are:**
+
 1. Your conversation content → Anthropic/OpenAI (unavoidable if you want those models)
 2. Embedding API calls → can be replaced with a local model
 
@@ -158,12 +159,14 @@ Your instinct here is right and it's achievable. Here's what it actually takes:
 ### Phase 1: WebChat as Primary (You're Here)
 
 You already have:
+
 - A WebChat UI (`ui/`) built in Lit + TypeScript
 - A gateway server with WebSocket API
 - Authentication (token/password)
 - Cloudflare Tunnel for remote access
 
 This is already a functional "private messaging app." The gap vs. Telegram:
+
 - No push notifications
 - No mobile-native feel
 - Single user only (no multi-user rooms)
@@ -187,6 +190,7 @@ with zero native code. Add to `ui/`:
 ```
 
 Plus a service worker for offline caching and push notifications. This gives you:
+
 - "Install" button on iOS and Android (adds to home screen)
 - Runs fullscreen, no browser chrome
 - Push notifications via Web Push API (still need a push server, but it can be yours)
@@ -200,6 +204,7 @@ The gateway already has a pairing system (`src/pairing/`). Devices pair with the
 and get a session token. The gateway is the source of truth.
 
 What you need for true multi-device:
+
 - The gateway needs a stable address (Cloudflare Tunnel gives you this)
 - Sessions need to be associated with a device identity (partially built in `ui/device-identity.ts`)
 - Notifications need to know which device is "active"
@@ -224,19 +229,23 @@ You're already closer to this than Telegram is. Telegram's servers see everythin
 Keeping only these two is the correct call. Here's the logic:
 
 ### Anthropic (Primary)
+
 - Claude has the best instruction-following and the longest context window
 - Best for: agentic tasks, code, long documents, nuanced reasoning
 - The `coding-agent` skill should default here
 
 ### OpenAI (Secondary / Fallback)
+
 - GPT-4o has great multimodal support (images, audio)
 - Embeddings: `text-embedding-3-small` is cheap and good
 - TTS: `tts-1` is solid (you already simplified to OpenAI-only)
 - Fallback when Anthropic is down or rate-limited
 
 ### OAuth
+
 You already have OAuth infrastructure (`src/gateway/auth.ts`, `concepts/oauth`). For a
 personal tool this means:
+
 - Sign in with Google to your own gateway instance
 - No password management
 - Works on any device
@@ -250,11 +259,13 @@ This is the right pattern. Keep it.
 If I were building this from here, in order:
 
 ### 1. Local Embeddings (1-2 days)
+
 - Wire `node-llama.ts` to use `nomic-embed-text` via `node-llama-cpp`
 - Toggle: `PENGUINS_EMBEDDING_BACKEND=local` vs. `openai`
 - Zero API calls for memory. True local knowledge base.
 
 ### 2. `SELF.md` Self-Journal (2-3 hours)
+
 - Add a special memory file at `~/.penguins/memory/SELF.md`
 - Agent can read it (already works — it's in the memory search scope)
 - Add a `memory:self-reflect` hook that runs after every N conversations
@@ -262,17 +273,20 @@ If I were building this from here, in order:
 - Inject `SELF.md` into the system prompt at session start
 
 ### 3. `memory:save` Tool (1 day)
+
 - New tool in the agent tool registry: `memory_save(content, category, importance)`
 - Writes to a special `memories/` directory the agent controls
 - Indexed automatically by the memory watcher
 - Now the agent can deliberately remember things mid-conversation
 
 ### 4. PWA (1-2 days)
+
 - Add `manifest.json` and a service worker to `ui/public/`
 - Push notification support via Web Push API (your gateway is the push server)
 - Installable on iOS/Android/desktop from Cloudflare Tunnel URL
 
 ### 5. Memory Compression Job (3-4 days)
+
 - Cron job: runs weekly
 - Clusters similar memory embeddings (cosine similarity > 0.92)
 - Asks Claude: "Synthesize these N similar memories into one canonical fact"
@@ -280,6 +294,7 @@ If I were building this from here, in order:
 - Your memory stays lean and non-redundant over time
 
 ### 6. Temporal Memory Scoring (2-3 hours)
+
 - Add `recencyBoost = 1 / (1 + daysSinceCreated * decayRate)`
 - Multiply into the final search score
 - Recent things surface higher. Old things fade unless they're highly important.
@@ -292,6 +307,7 @@ The reason most "AI with memory" projects fail isn't technical — it's that the
 _everything_ and retrieve _nothing useful_. The memory becomes a junk drawer.
 
 What makes memory actually work is **curation**. The agent needs to:
+
 1. Know what's worth remembering (importance scoring — you have this)
 2. Know when something contradicts an old memory (conflict detection — not yet built)
 3. Know when to forget (compression + decay — partially built)
@@ -321,21 +337,25 @@ That's a genuinely new category of software. And you're most of the way there.
 ## The Honest Risks
 
 ### 1. The gateway is a single point of failure
+
 If your machine is off, your AI is off. Mitigation: run it on a VPS (Hetzner, DigitalOcean).
-The Docker deployment is already built. Cloudflare Tunnel handles the addressing. 
+The Docker deployment is already built. Cloudflare Tunnel handles the addressing.
 One `docker run` command and it's always-on.
 
 ### 2. The memory system is untested at scale
+
 The hybrid search is solid for hundreds of files. For thousands of sessions over years,
 you'll hit performance cliffs in sqlite-vec. Mitigation: LanceDB backend (already built),
 or periodic compression to keep the index lean.
 
 ### 3. The WebChat UI is functional but not polished
+
 It works. It's not beautiful. If you want it to feel like a real app — the kind you'd actually
 prefer over opening Claude.ai — it needs UI investment. The Lit/TypeScript foundation is solid.
 The components just need love.
 
 ### 4. No push notifications yet
+
 Without push notifications, you have to have the WebChat open to know the AI responded.
 For async interactions (you ask something, it does research, tells you later) this is a
 problem. The Web Push API fixes this. It's a weekend project.
@@ -351,6 +371,7 @@ web UI, that runs on your hardware, owned by you, with no data leaving except to
 two best AI APIs.**
 
 The remaining work isn't architectural. The architecture is done. It's:
+
 1. Local embeddings (cut the last API dependency for memory)
 2. Self-journal / SELF.md (give it persistent identity)
 3. PWA (make it feel like a real app on your phone)

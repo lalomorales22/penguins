@@ -52,6 +52,7 @@ import {
 } from "./hooks.js";
 import { sendGatewayAuthFailure } from "./http-common.js";
 import { getBearerToken, getHeader } from "./http-utils.js";
+import { metrics } from "./metrics.js";
 import { isPrivateOrLoopbackAddress, resolveGatewayClientIp } from "./net.js";
 import { handleOpenAiHttpRequest } from "./openai-http.js";
 import { handleOpenResponsesHttpRequest } from "./openresponses-http.js";
@@ -502,6 +503,24 @@ export function createGatewayHttpServer(opts: {
       return;
     }
 
+    // Apply security headers to all HTTP responses.
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Referrer-Policy", "no-referrer");
+
+    // CORS preflight: respond to OPTIONS with allowed methods/headers.
+    if (req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Authorization, Content-Type, X-Penguins-Token",
+      );
+      res.setHeader("Access-Control-Max-Age", "86400");
+      res.end();
+      return;
+    }
+
     try {
       const configSnapshot = loadConfig();
       const trustedProxies = configSnapshot.gateway?.trustedProxies ?? [];
@@ -599,6 +618,22 @@ export function createGatewayHttpServer(opts: {
         ) {
           return;
         }
+      }
+
+      // Prometheus metrics endpoint (no auth — typically behind firewall).
+      if (requestPath === "/metrics") {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
+        res.end(metrics.serialize());
+        return;
+      }
+
+      // Basic health check endpoint (no auth).
+      if (requestPath === "/health") {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: true }));
+        return;
       }
 
       res.statusCode = 404;

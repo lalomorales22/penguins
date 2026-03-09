@@ -12,7 +12,7 @@ import {
   buildAgentMessageFromConversationEntries,
   type ConversationEntry,
 } from "./agent-prompt.js";
-import { sendJson, setSseHeaders, writeDone } from "./http-common.js";
+import { sendJson, setSseHeaders, writeDone, sseWrite } from "./http-common.js";
 import { handleGatewayPostJsonEndpoint } from "./http-endpoint-helpers.js";
 import { resolveAgentIdForRequest, resolveSessionKey } from "./http-utils.js";
 
@@ -36,8 +36,8 @@ type OpenAiChatCompletionRequest = {
   user?: unknown;
 };
 
-function writeSse(res: ServerResponse, data: unknown) {
-  res.write(`data: ${JSON.stringify(data)}\n\n`);
+function writeSse(res: ServerResponse, data: unknown): boolean {
+  return sseWrite(res, `data: ${JSON.stringify(data)}\n\n`);
 }
 
 function asMessages(val: unknown): OpenAiChatMessage[] {
@@ -221,9 +221,20 @@ export async function handleOpenAiHttpRequest(
         usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
       });
     } catch (err) {
-      logWarn(`openai-compat: chat completion failed: ${String(err)}`);
-      sendJson(res, 500, {
-        error: { message: "internal error", type: "api_error" },
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logWarn(`openai-compat: chat completion failed: ${errMsg}`);
+      const isTimeout = errMsg.includes("timeout") || errMsg.includes("ETIMEDOUT");
+      const isOverflow = errMsg.includes("context") && errMsg.includes("overflow");
+      sendJson(res, isTimeout ? 504 : 500, {
+        error: {
+          message: isTimeout
+            ? "upstream provider timed out"
+            : isOverflow
+              ? "context length exceeded"
+              : "internal server error",
+          type: isTimeout ? "timeout_error" : isOverflow ? "context_overflow_error" : "api_error",
+          code: isTimeout ? "timeout" : isOverflow ? "context_overflow" : "internal_error",
+        },
       });
     }
     return true;
@@ -350,10 +361,12 @@ export async function handleOpenAiHttpRequest(
         });
       }
     } catch (err) {
-      logWarn(`openai-compat: streaming chat completion failed: ${String(err)}`);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logWarn(`openai-compat: streaming chat completion failed: ${errMsg}`);
       if (closed) {
         return;
       }
+      const isTimeout = errMsg.includes("timeout") || errMsg.includes("ETIMEDOUT");
       writeSse(res, {
         id: runId,
         object: "chat.completion.chunk",
@@ -362,7 +375,11 @@ export async function handleOpenAiHttpRequest(
         choices: [
           {
             index: 0,
-            delta: { content: "Error: internal error" },
+            delta: {
+              content: isTimeout
+                ? "[Error: upstream provider timed out]"
+                : "[Error: internal server error]",
+            },
             finish_reason: "stop",
           },
         ],

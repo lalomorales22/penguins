@@ -20,9 +20,7 @@ export function hasLineDirectives(text: string): boolean {
   return DIRECTIVE_REGEX.test(text);
 }
 
-export function parseLineDirectives(
-  input: ParseLineDirectivesInput,
-): ParseLineDirectivesResult {
+export function parseLineDirectives(input: ParseLineDirectivesInput): ParseLineDirectivesResult {
   const text = input.text.replace(DIRECTIVE_REGEX, "");
   return { text };
 }
